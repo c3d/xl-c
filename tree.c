@@ -177,6 +177,10 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     case TREE_THAW:
         assert(!"Not yet implemented");
         return tree;
+
+    default:
+        assert("Command not implemented");
+        return tree;
     }
 }
 

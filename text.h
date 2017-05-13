@@ -25,9 +25,9 @@
 
 typedef struct text
 // ----------------------------------------------------------------------------
-//   A blob internal representation is little more than a stream of bytes
+//   A text internal representation is little more than a stream of bytes
 // ----------------------------------------------------------------------------
-//   The bytes are allocated immediately after the blob
+//   The bytes are allocated immediately after the text_t structure
 {
     blob_t      blob;           // The base blob
 } text_t;

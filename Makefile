@@ -23,7 +23,8 @@ SOURCES     =		\
 	main.c		\
 	tree.c		\
 	blob.c		\
-	text.c
+	text.c		\
+	number.c
 
 PRODUCTS=xl.exe
 

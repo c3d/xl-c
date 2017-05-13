@@ -1,0 +1,41 @@
+// ****************************************************************************
+//  number.tbl                                      XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//    Table listing the possible numerical types in the XL compiler
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2017 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+
+NUMBER(integer, "%lld",         long long,              long long)
+NUMBER(natural, "%llu",         unsigned long long,     unsigned long long)
+
+NUMBER(i8,      "%d",           int8_t,                 int)
+NUMBER(i16,     "%d",           int16_t,                int)
+NUMBER(i32,     "%d",           int32_t,                int32_t)
+NUMBER(i64,     "%lld",         int64_t,                int64_t)
+
+NUMBER(u8,      "%u",           uint8_t,                unsigned)
+NUMBER(u16,     "%u",           uint16_t,               unsigned)
+NUMBER(u32,     "%u",           uint32_t,               uint32_t)
+NUMBER(u64,     "%llu",         uint64_t,               uint64_t)
+
+NUMBER(real,    "%g",           double,                 double)
+NUMBER(real32,  "%g",           float,                  double)
+NUMBER(real64,  "%g",           double,                 double)
+NUMBER(real80,  "%Lg",          long double,            long double)
+
+#undef NUMBER
