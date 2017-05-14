@@ -27,27 +27,53 @@
 
 // ============================================================================
 //
-//    Global positions
+//    Positions lists
 //
 // ============================================================================
 
-static unsigned global_position = 0;
+positions_p positions_new()
+// ----------------------------------------------------------------------------
+//    Allocating a new set of positions
+// ----------------------------------------------------------------------------
+{
+    positions_p result = malloc(sizeof(position_t));
+    result->position = 0;
+    result->last = NULL;
+    return result;
+}
 
-unsigned position()
+
+void positions_delete(positions_p p)
+// ----------------------------------------------------------------------------
+//   Delete positions records
+// ----------------------------------------------------------------------------
+{
+    position_file_p f = p->last;
+    while(f)
+    {
+        position_file_p prev = f->previous;
+        free((void *) f->name);
+        free(f);
+        f = prev;
+    }
+}
+
+
+unsigned position(positions_p p)
 // ----------------------------------------------------------------------------
 //    Return the current global position
 // ----------------------------------------------------------------------------
 {
-    return global_position;
+    return p->position;
 }
 
 
-unsigned position_step()
+unsigned position_step(positions_p p)
 // ----------------------------------------------------------------------------
 //   Increment the current global position, return old location
 // ----------------------------------------------------------------------------
 {
-    return global_position++;
+    return p->position++;
 }
 
 
@@ -58,40 +84,26 @@ unsigned position_step()
 //
 // ============================================================================
 
-typedef struct position_file
-// ----------------------------------------------------------------------------
-//    List of input files
-// ----------------------------------------------------------------------------
-{
-    const char *          name;
-    unsigned              start;
-    struct position_file *previous;
-} position_file_t, *position_file_p;
-
-
-static position_file_p position_files = NULL;
-
-
-unsigned position_open_source_file(const char *name)
+unsigned position_open_source_file(positions_p p, const char *name)
 // ----------------------------------------------------------------------------
 //    Open a new source file
 // ----------------------------------------------------------------------------
 {
     position_file_p file = malloc(sizeof(position_file_t));
     file->name = strdup(name);
-    file->start = position();
-    file->previous = position_files;
-    position_files = file;
+    file->start = position(p);
+    file->previous = p->last;
+    p->last = file;
     return file->start;
 }
 
 
-bool position_info(unsigned pos, position_p result)
+bool position_info(positions_p p, unsigned pos, position_p result)
 // ----------------------------------------------------------------------------
 // Converting a global position into position information
 // ----------------------------------------------------------------------------
 {
-    position_file_p file = position_files;
+    position_file_p file = p->last;
     position_file_p good = NULL;
 
     while (file && file->start <= pos)
