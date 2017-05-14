@@ -42,29 +42,11 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return a default tree type name
         return (tree_p) "text";
 
-    case TREE_SIZE:
-        // Return the size of the tree in bytes (is dynamic for texts)
-        return (tree_p) (sizeof(text_t) + text->blob.size);
-
-    case TREE_ARITY:
-        // The arity for texts is 0
-        return (tree_p) 0;
-
-    case TREE_INITIALIZE:
-        // Fetch pointer to data and size from varargs list (see text_make)
-        size = va_arg(va, size_t);
-        data = va_arg(va, const char *);
-
-        // Create text and copy data in it
-        text = (text_p) malloc(sizeof(text_t) + size);
-        memcpy(text + 1, data, size);
-        return (tree_p) text;
-
     case TREE_RENDER:
         // Dump the text as a string of characters, doubling quotes
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
-        
+
         text = (text_p) tree;
         data = text_data(text);
         size = text_size(text);
