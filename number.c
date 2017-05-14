@@ -67,6 +67,56 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
     default:                                                            \
         return tree_handler(cmd, tree, va);                             \
     }                                                                   \
+}                                                                       \
+                                                                        \
+                                                                        \
+tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
+{                                                                       \
+    based_##number##_p number = (based_##number##_p) tree;              \
+    size_t             size;                                            \
+    tree_io_fn         io;                                              \
+    reptype            value;                                           \
+    unsigned           base;                                            \
+    void *             stream;                                          \
+    char               buffer[32];                                      \
+                                                                        \
+    switch(cmd)                                                         \
+    {                                                                   \
+    case TREE_TYPENAME:                                                 \
+        return (tree_p) "based_" #number;                               \
+                                                                        \
+    case TREE_SIZE:                                                     \
+        return (tree_p) sizeof(based_##number##_t);                     \
+                                                                        \
+    case TREE_ARITY:                                                    \
+        return (tree_p) 0;                                              \
+                                                                        \
+    case TREE_INITIALIZE:                                               \
+        value = va_arg(va, va_type);                                    \
+        base = va_arg(va, unsigned);                                    \
+        number = (based_##number##_p) malloc(sizeof(*number));          \
+        number->number.value = value;                                   \
+        number->base = base;                                            \
+        return (tree_p) number;                                         \
+                                                                        \
+    case TREE_RENDER:                                                   \
+        io = va_arg(va, tree_io_fn);                                    \
+        stream = va_arg(va, void *);                                    \
+                                                                        \
+        number = (based_##number##_p) tree;                             \
+        base = number->base;                                            \
+        size = snprintf(buffer, sizeof(buffer), "%u#", base);           \
+        if (io(stream, size, buffer) != size)                           \
+            return NULL;                                                \
+        value = number->number.value;                                   \
+        size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
+        if (io(stream, size, buffer) != size)                           \
+            return NULL;                                                \
+        return tree;                                                    \
+                                                                        \
+    default:                                                            \
+        return tree_handler(cmd, tree, va);                             \
+    }                                                                   \
 }
 
 
