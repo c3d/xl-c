@@ -30,7 +30,7 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   We can append in place if:
 //   - There is only one user of this blob (who, presumably, is calling us)
-//   - The realloc can extend memory without copy    
+//   - The realloc can extend memory without copy
 {
     blob_p copy = blob;
     if (tree_ref((tree_p) blob) > 1)
@@ -45,6 +45,32 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
     }
     tree_unref((tree_p) blob);
     return result;
+}
+
+
+blob_p blob_range(blob_p blob, size_t first, size_t length)
+// ----------------------------------------------------------------------------
+//   Select a range of the blob, in place if possible
+// ----------------------------------------------------------------------------
+//   We can move in place if there is only one user of this blob
+{
+    blob_p copy = blob;
+    unsigned end = first + length;
+    if (end > blob->size)
+        end = blob->size;
+    if (first > blob->size)
+        first = blob->size;
+    unsigned resized = end - first;
+    if (tree_ref((tree_p) blob) > 1)
+    {
+        copy = (blob_p) malloc(sizeof(blob_t) + resized);
+        memcpy(copy, blob, sizeof(blob_t));
+    }
+    memmove(copy + 1, blob + 1, resized);
+    if (copy == blob)
+        copy = (blob_p) realloc(copy, sizeof(blob_t) + resized);
+    tree_unref((tree_p) blob);
+    return copy;
 }
 
 
@@ -88,7 +114,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Dump the blob as an hexadecimal string
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
-        
+
         size = snprintf(buffer, sizeof(buffer),
                         "%s %zu ",
                         tree_typename((tree_p) blob), blob->size);

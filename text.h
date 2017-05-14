@@ -36,6 +36,7 @@ typedef struct text
 inline text_p      text_new(unsigned position, size_t sz, const char *data);
 inline void        text_delete(text_p text);
 inline text_p      text_append(text_p text, size_t sz, const char *data);
+inline text_p      text_range(text_p text, size_t start, size_t length);
 inline const char *text_data(text_p text);
 inline size_t      text_size(text_p text);
 
@@ -49,9 +50,9 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
 // ============================================================================
-// 
+//
 //   Inline implementations
-// 
+//
 // ============================================================================
 
 inline text_p text_make(tree_handler_fn h, unsigned pos,
@@ -88,6 +89,15 @@ inline text_p text_append(text_p text, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 {
     return (text_p) blob_append((blob_p) text, sz, data);
+}
+
+
+inline text_p text_range(text_p text, size_t start, size_t length)
+// ----------------------------------------------------------------------------
+//   Extract a range of text, ideally in place
+// ----------------------------------------------------------------------------
+{
+    return (text_p) blob_range((blob_p) text, start, length);
 }
 
 

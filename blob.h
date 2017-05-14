@@ -39,6 +39,7 @@ typedef struct blob
 inline blob_p      blob_new(unsigned position, size_t sz, const char *data);
 inline void        blob_delete(blob_p blob);
 extern blob_p      blob_append(blob_p blob, size_t sz, const char *data);
+extern blob_p      blob_range(blob_p blob, size_t start, size_t len);
 inline const char *blob_data(blob_p blob);
 inline size_t      blob_size(blob_p blob);
 
@@ -49,9 +50,9 @@ extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
 // ============================================================================
-// 
+//
 //   Inline implementations
-// 
+//
 // ============================================================================
 
 inline blob_p blob_make(tree_handler_fn h, unsigned pos,
