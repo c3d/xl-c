@@ -40,7 +40,7 @@ inline const char *text_data(text_p text);
 inline size_t      text_size(text_p text);
 
 // Private text handler, should not be called directly in general
-extern text_p text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline text_p text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
 extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
@@ -53,6 +53,16 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //   Inline implementations
 // 
 // ============================================================================
+
+inline text_p text_make(tree_handler_fn h, unsigned pos,
+                        size_t sz, const char *data)
+// ----------------------------------------------------------------------------
+//   Create a text with the given parameters
+// ----------------------------------------------------------------------------
+{
+    return (text_p) tree_make(h, pos, sz, data);
+}
+
 
 inline text_p text_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------

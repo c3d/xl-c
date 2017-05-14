@@ -24,15 +24,6 @@
 #include <string.h>
 
 
-text_p text_make(tree_handler_fn h, unsigned pos, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//   Create a text with the given parameters
-// ----------------------------------------------------------------------------
-{
-    return (text_p) tree_make(h, pos, sz, data);
-}
-
-
 tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 //   The handler for texts deals mostly with variable-sized initialization

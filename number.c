@@ -26,12 +26,6 @@
 
 #define NUMBER(number, printf_format, reptype, va_type)                 \
                                                                         \
-number##_p number##_make(tree_handler_fn h, unsigned pos,reptype value) \
-{                                                                       \
-    return (number##_p) tree_make(h, pos, value);                       \
-}                                                                       \
-                                                                        \
-                                                                        \
 tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
 {                                                                       \
     number##_p     number = (number##_p) tree;                          \

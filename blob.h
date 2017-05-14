@@ -43,7 +43,7 @@ inline const char *blob_data(blob_p blob);
 inline size_t      blob_size(blob_p blob);
 
 // Private blob handler, should not be called directly in general
-extern blob_p blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline blob_p blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
 extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -53,6 +53,16 @@ extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //   Inline implementations
 // 
 // ============================================================================
+
+inline blob_p blob_make(tree_handler_fn h, unsigned pos,
+                        size_t sz, const char *data)
+// ----------------------------------------------------------------------------
+//   Create a blob with the given parameters
+// ----------------------------------------------------------------------------
+{
+    return (blob_p) tree_make(h, pos, sz, data);
+}
+
 
 inline blob_p blob_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------

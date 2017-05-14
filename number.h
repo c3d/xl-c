@@ -37,8 +37,14 @@ inline number##_p  number##_new(unsigned position, reptype value);      \
 inline void        number##_delete(number##_p number);                  \
 inline reptype     number##_data(number##_p number);                    \
                                                                         \
-extern number##_p  number##_make(tree_handler_fn, unsigned, reptype);   \
+inline number##_p  number##_make(tree_handler_fn, unsigned, reptype);   \
 extern tree_p      number##_handler(tree_cmd_t, tree_p, va_list);       \
+                                                                        \
+inline number##_p number##_make(tree_handler_fn h, unsigned pos,        \
+                                reptype value)                          \
+{                                                                       \
+    return (number##_p) tree_make(h, pos, value);                       \
+}                                                                       \
                                                                         \
 inline number##_p number##_new(unsigned position, reptype value)        \
 {                                                                       \

@@ -24,15 +24,6 @@
 #include <string.h>
 
 
-blob_p blob_make(tree_handler_fn h, unsigned pos, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//   Create a blob with the given parameters
-// ----------------------------------------------------------------------------
-{
-    return (blob_p) tree_make(h, pos, sz, data);
-}
-
-
 blob_p blob_append(blob_p blob, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append data to the blob - In place if possible
