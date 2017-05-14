@@ -67,6 +67,7 @@ typedef enum tree_cmd
     TREE_TYPENAME,                      // Return a unique type name for tree
     TREE_SIZE,                          // Return the size for the tree
     TREE_ARITY,                         // Return the arity for the tree
+    TREE_CHILDREN,                      // Return pointer to children of tree
     TREE_INITIALIZE,                    // Initialized the tree (from tree_new)
     TREE_DELETE,                        // Delete the tree and its children
     TREE_COPY,                          // Shallow copy of the tree
@@ -106,6 +107,7 @@ inline tree_p      tree_dispose(tree_p tree);
 inline const char *tree_typename(tree_p tree);
 inline size_t      tree_size(tree_p tree);
 inline size_t      tree_arity(tree_p tree);
+inline tree_p *    tree_children(tree_p tree);
 inline tree_p      tree_child(tree_p tree, unsigned index);
 inline tree_p      tree_set_child(tree_p tree, unsigned index, tree_p child);
 inline tree_p      tree_copy(tree_p tree);
@@ -126,7 +128,7 @@ extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
     {                                             \
         tree_p parent = (tree);                   \
         size_t arity = tree_arity(parent);        \
-        tree_p *child = (tree_p *) (parent + 1);  \
+        tree_p *child = tree_children(tree);      \
         while (arity)                             \
         {                                         \
             body;                                 \
@@ -241,13 +243,22 @@ inline size_t tree_arity(tree_p tree)
 }
 
 
+inline tree_p *tree_children(tree_p tree)
+// ----------------------------------------------------------------------------
+//   Return a pointer to the children for that tree
+// ----------------------------------------------------------------------------
+{
+    return (tree_p *) tree->handler(TREE_CHILDREN, tree, NULL);
+}
+
+
 inline tree_p tree_child(tree_p tree, unsigned index)
 // ----------------------------------------------------------------------------
 //    Return the child at the given index
 // ----------------------------------------------------------------------------
 {
     assert(index < tree_arity(tree) && "Index must be valid for this tree");
-    tree_p *children = (tree_p *) (tree + 1);
+    tree_p *children = tree_children(tree);
     return children[index];
 }
 
@@ -258,7 +269,7 @@ inline tree_p tree_set_child(tree_p tree, unsigned index, tree_p child)
 // ----------------------------------------------------------------------------
 {
     assert(index < tree_arity(tree) && "Index must be valid for this tree");
-    tree_p *children = (tree_p *) (tree + 1);
+    tree_p *children = tree_children(tree);
     if (child != children[index])
     {
         tree_ref(child);

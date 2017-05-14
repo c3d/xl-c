@@ -49,6 +49,10 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Prefix and postfix have three children
         return (tree_p) 3;
 
+    case TREE_CHILDREN:
+        // Pointer to the children is right after the tree 'header
+        return tree + 1;
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see infix_new)
         opcode = va_arg(va, text_p);

@@ -30,7 +30,6 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     block_p       block = (block_p) tree;
-    size_t        size;
     tree_io_fn    io;
     void *        stream;
     tree_p        child;
@@ -50,6 +49,10 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Blocks have one child
         return (tree_p) 1;
 
+    case TREE_CHILDREN:
+        // Return pointer to only child
+        return (tree_p) &block->child;
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see block_new)
         child = va_arg(va, tree_p);
@@ -67,13 +70,9 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         stream = va_arg(va, void *);
         delim = block->delimiters;
 
-        size = strlen(delim->opening);
-        if (io(stream, size, delim->opening) != size)
-            return NULL;
+        tree_render((tree_p) delim->opening, io, stream);
         tree_render(tree, io, stream);
-        size = strlen(delim->closing);
-        if (io(stream, size, delim->closing) != size)
-            return NULL;
+        tree_render((tree_p) delim->closing, io, stream);
         return tree;
 
     default:
@@ -91,12 +90,7 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //
 // ============================================================================
 
-static block_delim_t block_paren_data =  { "(", ")" };
-static block_delim_t block_curly_data =  { "{", "}" };
-static block_delim_t block_square_data = { "[", "]" };
-static block_delim_t block_indent_data = { "\t", "\t" };
-
-block_delim_p block_paren  = &block_paren_data;
-block_delim_p block_curly  = &block_curly_data;
-block_delim_p block_square = &block_square_data;
-block_delim_p block_indent = &block_indent_data;
+block_delim_p block_paren  = NULL;
+block_delim_p block_curly  = NULL;
+block_delim_p block_square = NULL;
+block_delim_p block_indent = NULL;

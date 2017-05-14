@@ -6,9 +6,9 @@
 //
 //   File Description:
 //
-//    Blocks are inner nodes with arity 1 (one child), used to represent
-//    things like (A), [A], {A} or indented blocks.
-//
+//    Blocks are inner nodes with arity 1, used to represent
+//    things like (A), [A,B,C], {A;B;C} or indented blocks. They are identified
+//    by opening, closing and separating symbols.
 //
 //
 //
@@ -22,15 +22,16 @@
 // ****************************************************************************
 
 #include "tree.h"
+#include "name.h"
 
 
 typedef struct block_delim
 // ----------------------------------------------------------------------------
-//    Indicates what delimiters are used for blocks
+//   Block delimiters
 // ----------------------------------------------------------------------------
 {
-    const char *opening;
-    const char *closing;
+    name_p      opening;
+    name_p      closing;
 } block_delim_t, *block_delim_p;
 
 
@@ -40,8 +41,8 @@ typedef struct block
 // ----------------------------------------------------------------------------
 {
     tree_t        tree;
-    tree_p        child;
     block_delim_p delimiters;
+    tree_p        child;
 } block_t, *block_p;
 
 

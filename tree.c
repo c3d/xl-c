@@ -132,6 +132,10 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return the arity of the tree (number of children, 0 for leaves)
         return (tree_p) 0;
 
+    case TREE_CHILDREN:
+        // Return the pointer to children for that tree type
+        return NULL;            // None if arity 0
+
     case TREE_INITIALIZE:
         // Default initialization for trees
         return (tree_p) malloc(sizeof(tree_t));
@@ -183,4 +187,3 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return tree;
     }
 }
-

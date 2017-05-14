@@ -47,6 +47,10 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Prefix and postfix have two children
         return (tree_p) 2;
 
+    case TREE_CHILDREN:
+        // Pointer to the children is right after the tree 'header
+        return tree + 1;
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see pfix_new)
         left = va_arg(va, tree_p);
