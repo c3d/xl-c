@@ -4,10 +4,9 @@
 //
 //   File Description:
 //
-//
-//
-//
-//
+//     Representation of prefix and postfix nodes
+//     Prefix nodes represent +A or sin A
+//     Postfix nodes represent A% or A km
 //
 //
 //
