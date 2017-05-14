@@ -37,4 +37,4 @@ xl_tests:
 
 # Get the rules.mk file if missing
 $(BUILD)rules.mk:
-	cd .. && git submodule update --init --recursive
+	git submodule update --init --recursive
