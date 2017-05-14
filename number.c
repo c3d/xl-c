@@ -20,6 +20,7 @@
 // ****************************************************************************
 
 #include "number.h"
+#include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
 
