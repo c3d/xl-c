@@ -28,7 +28,8 @@ SOURCES     =		\
 	number.c	\
 	block.c		\
 	pfix.c		\
-	infix.c
+	infix.c		\
+	array.c
 
 PRODUCTS=xl.exe
 
