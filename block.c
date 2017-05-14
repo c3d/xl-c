@@ -57,12 +57,12 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create block and copy data in it
         block = (block_p) malloc(sizeof(block_t));
-        block->child = child;
+        block->child = tree_refptr(child);
         block->delimiters = delim;
         return (tree_p) block;
 
     case TREE_RENDER:
-        // Dump the block as an hexadecimal string
+        // Render the opening and closing, with child inbetween
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
         delim = block->delimiters;

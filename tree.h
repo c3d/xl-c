@@ -101,6 +101,7 @@ inline tree_p      tree_new(unsigned position);
 inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
 inline unsigned    tree_unref(tree_p tree);
+inline tree_p      tree_refptr(tree_p tree);
 inline tree_p      tree_dispose(tree_p tree);
 inline const char *tree_typename(tree_p tree);
 inline size_t      tree_size(tree_p tree);
@@ -189,6 +190,16 @@ inline unsigned tree_unref(tree_p tree)
 }
 
 
+inline tree_p tree_refptr(tree_p tree)
+// ----------------------------------------------------------------------------
+//   Return a reference to the tree with incremented refcount
+// ----------------------------------------------------------------------------
+{
+    tree_ref(tree);
+    return tree;
+}
+
+
 inline tree_p tree_dispose(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Check if tree can be freed, and if so, delete it
@@ -238,7 +249,7 @@ inline tree_p tree_child(tree_p tree, unsigned index)
     assert(index < tree_arity(tree) && "Index must be valid for this tree");
     tree_p *children = (tree_p *) (tree + 1);
     return children[index];
-}    
+}
 
 
 inline tree_p tree_set_child(tree_p tree, unsigned index, tree_p child)

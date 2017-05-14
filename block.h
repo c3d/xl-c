@@ -45,7 +45,6 @@ typedef struct block
 } block_t, *block_p;
 
 
-// Indentation block
 inline block_p       block_new(unsigned position, tree_p child, block_delim_p);
 inline void          block_delete(block_p block);
 inline tree_p        block_child(block_p block);
@@ -53,7 +52,7 @@ inline block_delim_p block_delimiters(block_p block);
 
 // Private block handler, should not be called directly in general
 inline block_p block_make(tree_handler_fn h, unsigned pos,
-                          tree_p tree, block_delim_p);
+                          tree_p child, block_delim_p);
 extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -68,9 +67,9 @@ extern block_delim_p block_paren, block_curly, block_square, block_indent;
 
 
 // ============================================================================
-// 
+//
 //   Inline implementations
-// 
+//
 // ============================================================================
 
 inline block_p block_make(tree_handler_fn handler, unsigned pos,
