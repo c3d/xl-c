@@ -82,7 +82,7 @@ typedef enum tree_cmd
 typedef tree_p (*tree_handler_fn)(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Input and output functions, returns amount of data read or written
-typedef unsigned (*tree_io_fn)(void *stream, unsigned sz, const char *data);
+typedef unsigned (*tree_io_fn)(void *stream, unsigned sz, void *data);
 
 
 typedef struct tree
@@ -197,7 +197,8 @@ inline tree_p tree_refptr(tree_p tree)
 //   Return a reference to the tree with incremented refcount
 // ----------------------------------------------------------------------------
 {
-    tree_ref(tree);
+    if (tree)
+        tree_ref(tree);
     return tree;
 }
 
@@ -207,10 +208,13 @@ inline tree_p tree_dispose(tree_p tree)
 //   Check if tree can be freed, and if so, delete it
 // ----------------------------------------------------------------------------
 {
-    if (tree_unref(tree) == 0)
+    if (tree)
     {
-        tree_delete(tree);
-        tree = NULL;
+        if (tree_unref(tree) == 0)
+        {
+            tree_delete(tree);
+            tree = NULL;
+        }
     }
     return tree;
 }

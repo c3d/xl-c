@@ -58,7 +58,7 @@ tree_p tree_io(tree_cmd_t cmd, tree_p tree, ...)
 }
 
 
-static unsigned tree_text_output(void *stream, unsigned size, const char *data)
+static unsigned tree_text_output(void *stream, unsigned size, void *data)
 // ----------------------------------------------------------------------------
 //   Append incoming text to the text
 // ----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ static unsigned tree_text_output(void *stream, unsigned size, const char *data)
     // Append to the text, and if it does not happen in place, update pointer
     text_p *output = (text_p *) stream;
     text_p input = *output;
-    text_p copy = text_append(input, size, data);
+    text_p copy = text_append(input, size, (char *) data);
     if (copy && copy != input)
         *output = copy;
     return size;
@@ -84,7 +84,7 @@ text_p tree_text(tree_p tree)
 }
 
 
-static unsigned tree_print_output(void *stream, unsigned size, const char *data)
+static unsigned tree_print_output(void *stream, unsigned size, void *data)
 // ----------------------------------------------------------------------------
 //   Write data to the given FILE * stream
 // ----------------------------------------------------------------------------
