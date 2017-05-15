@@ -107,7 +107,8 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create blob and copy data in it
         blob = (blob_p) malloc(sizeof(blob_t) + size);
-        memcpy(blob + 1, data, size);
+        if (size)
+            memcpy(blob + 1, data, size);
         return (tree_p) blob;
 
     case TREE_RENDER:
