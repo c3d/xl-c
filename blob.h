@@ -136,9 +136,28 @@ inline item *name##_data(name##_p name)                                 \
     return (item *) blob_data((blob_p) name);                           \
 }                                                                       \
                                                                         \
-inline size_t name##_length(blob_p blob)                                \
+inline size_t name##_length(name##_p blob)                              \
 {                                                                       \
     return blob_size((blob_p) name) / sizeof(item);                     \
+}                                                                       \
+                                                                        \
+inline name##_p name##_push(name##_p name, item value)                  \
+{                                                                       \
+    return (name##_p) blob_append((blob_p) name,                        \
+                                  sizeof(value), &value));              \
+}                                                                       \
+                                                                        \
+inline item name##_back(name##_p name)                                  \
+{                                                                       \
+    return name##_data(name)[name##_length(name)-1];                    \
+}                                                                       \
+                                                                        \
+inline name##_p name##_pop(name##_p name)                               \
+{                                                                       \
+    assert(name_length(name) && "Can only pop if non-empty");           \
+    return name_range(name, 0, name_length(name)-1);                    \
 }
+
+
 
 #endif // BLOB_H
