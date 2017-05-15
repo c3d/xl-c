@@ -89,4 +89,13 @@ inline size_t name_length(name_p name)
     return text_length((text_p) name);
 }
 
+
+inline text_p name_text(name_p name)
+// ----------------------------------------------------------------------------
+//    Return the name in the text
+// ----------------------------------------------------------------------------
+{
+    return (text_p) name;       // For now, exact same internal representation
+}
+
 #endif // NAME_H
