@@ -67,6 +67,7 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
         memcpy(copy, blob, sizeof(blob_t));
     }
     memmove(copy + 1, blob + 1, resized);
+    copy->size = resized;
     if (copy == blob)
         copy = (blob_p) realloc(copy, sizeof(blob_t) + resized);
     blob_unref(blob);
