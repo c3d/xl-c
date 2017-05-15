@@ -101,7 +101,8 @@ inline size_t blob_size(blob_p blob)
 //
 // ============================================================================
 
-#define BLOB_TYPEDEF(item, name)                                        \
+#define blob_typedef(item, name)                                        \
+                                                                        \
 typedef const struct name *name##_p;                                    \
 typedef       struct name *name##_r;                                    \
                                                                         \
