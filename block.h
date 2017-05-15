@@ -110,7 +110,7 @@ inline tree_p block_set_child(block_p block, tree_p child)
     if (child != block->child)
     {
         tree_ref(child);
-        tree_unref(block->child);
+        tree_dispose(&block->child);
         block->child = child;
     }
     return child;

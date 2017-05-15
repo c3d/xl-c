@@ -371,7 +371,7 @@ inline tree_p tree_set_child(tree_p tree, unsigned index, tree_p child)
     if (child != children[index])
     {
         tree_ref(child);
-        tree_unref(children[index]);
+        tree_dispose(&children[index]);
         children[index] = child;
     }
     return child;

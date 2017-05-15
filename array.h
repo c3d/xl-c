@@ -108,7 +108,7 @@ inline tree_p array_set_child(array_p array, size_t index, tree_p child)
     if (child != children[index])
     {
         tree_ref(child);
-        tree_unref(children[index]);
+        tree_dispose(&children[index]);
         children[index] = child;
     }
     return child;
