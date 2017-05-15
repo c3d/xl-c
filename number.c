@@ -29,7 +29,7 @@
                                                                         \
 tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
 {                                                                       \
-    number##_p     number = (number##_p) tree;                          \
+    number##_r    number = (number##_r) tree;                           \
     size_t        size;                                                 \
     tree_io_fn    io;                                                   \
     reptype       value;                                                \
@@ -49,15 +49,13 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
                                                                         \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
-        number = (number##_p) malloc(sizeof(number##_t));               \
+        number = (number##_r) malloc(sizeof(number##_t));               \
         number->value = value;                                          \
         return (tree_p) number;                                         \
                                                                         \
     case TREE_RENDER:                                                   \
         io = va_arg(va, tree_io_fn);                                    \
         stream = va_arg(va, void *);                                    \
-                                                                        \
-        number = (number##_p) tree;                                     \
         value = number->value;                                          \
         size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
         if (io(stream, size, buffer) != size)                           \
@@ -72,7 +70,7 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
                                                                         \
 tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
 {                                                                       \
-    based_##number##_p number = (based_##number##_p) tree;              \
+    based_##number##_r number = (based_##number##_r) tree;              \
     size_t             size;                                            \
     tree_io_fn         io;                                              \
     reptype            value;                                           \
@@ -94,7 +92,7 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
         base = va_arg(va, unsigned);                                    \
-        number = (based_##number##_p) malloc(sizeof(*number));          \
+        number = (based_##number##_r) malloc(sizeof(*number));          \
         number->number.value = value;                                   \
         number->base = base;                                            \
         return (tree_p) number;                                         \
@@ -102,8 +100,6 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
     case TREE_RENDER:                                                   \
         io = va_arg(va, tree_io_fn);                                    \
         stream = va_arg(va, void *);                                    \
-                                                                        \
-        number = (based_##number##_p) tree;                             \
         base = number->base;                                            \
         size = snprintf(buffer, sizeof(buffer), "%u#", base);           \
         if (io(stream, size, buffer) != size)                           \

@@ -32,10 +32,10 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
 //   - There is only one user of this blob (who, presumably, is calling us)
 //   - The realloc can extend memory without copy
 {
-    blob_p copy = blob;
+    blob_r copy = (blob_r) blob;
     if (blob_ref(blob) > 1)
         copy = NULL;
-    blob_p result = (blob_p) realloc(copy, blob->size + sz);
+    blob_r result = (blob_r) realloc(copy, blob->size + sz);
     if (result)
     {
         if (copy == NULL)
@@ -54,7 +54,7 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
 // ----------------------------------------------------------------------------
 //   We can move in place if there is only one user of this blob
 {
-    blob_p copy = blob;
+    blob_r copy = (blob_r) blob;
     unsigned end = first + length;
     if (end > blob->size)
         end = blob->size;
@@ -63,13 +63,13 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
     unsigned resized = end - first;
     if (blob_ref(blob) > 1)
     {
-        copy = (blob_p) malloc(sizeof(blob_t) + resized);
+        copy = (blob_r) malloc(sizeof(blob_t) + resized);
         memcpy(copy, blob, sizeof(blob_t));
     }
     memmove(copy + 1, blob + 1, resized);
     copy->size = resized;
     if (copy == blob)
-        copy = (blob_p) realloc(copy, sizeof(blob_t) + resized);
+        copy = (blob_r) realloc(copy, sizeof(blob_t) + resized);
     blob_unref(blob);
     return copy;
 }
@@ -80,7 +80,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for blobs deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    blob_p        blob = (blob_p) tree;
+    blob_r        blob = (blob_r) tree;
     size_t        size, idx;
     tree_io_fn    io;
     const char  * data;
@@ -107,7 +107,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         data = va_arg(va, const char *);
 
         // Create blob and copy data in it
-        blob = (blob_p) malloc(sizeof(blob_t) + size);
+        blob = (blob_r) malloc(sizeof(blob_t) + size);
         if (size)
             memcpy(blob + 1, data, size);
         return (tree_p) blob;

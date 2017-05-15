@@ -30,11 +30,11 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The common handler for prefix and postfix
 // ----------------------------------------------------------------------------
 {
-    infix_p    infix = (infix_p) tree;
+    infix_r    infix = (infix_r) tree;
     tree_io_fn io;
     void *     stream;
-    tree_p     left, right;
-    name_p     opcode;
+    tree_r     left, right;
+    name_r     opcode;
 
     switch(cmd)
     {
@@ -56,15 +56,15 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see infix_new)
-        opcode = va_arg(va, name_p);
-        left = va_arg(va, tree_p);
-        right = va_arg(va, tree_p);
+        opcode = va_arg(va, name_r);
+        left = va_arg(va, tree_r);
+        right = va_arg(va, tree_r);
 
         // Create infix and copy data in it
-        infix = (infix_p) malloc(sizeof(infix_t));
-        infix->left = tree_refptr(left);
-        infix->right = tree_refptr(right);
-        infix->opcode = name_refptr(opcode);
+        infix = (infix_r) malloc(sizeof(infix_t));
+        infix->left = tree_use(left);
+        infix->right = tree_use(right);
+        infix->opcode = name_use(opcode);
         return (tree_p) infix;
 
     case TREE_RENDER:

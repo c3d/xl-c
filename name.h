@@ -30,10 +30,10 @@ typedef struct name
 //   The bytes are allocated immediately after the name_t structure
 {
     text_t      text;           // The base blob
-} name_t, *name_p;
+} name_t;
 tree_typedef(name);
 
-inline name_p      name_new(unsigned position, size_t sz, const char *data);
+inline name_r      name_new(unsigned position, size_t sz, const char *data);
 inline name_p      name_append(name_p name, size_t sz, const char *data);
 inline const char *name_data(name_p name);
 inline size_t      name_length(name_p name);
@@ -54,12 +54,12 @@ extern tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline name_p name_new(unsigned position, size_t sz, const char *data)
+inline name_r name_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a name with the given data
 // ----------------------------------------------------------------------------
 {
-    return (name_p) text_make(name_handler, position, sz, data);
+    return (name_r) text_make(name_handler, position, sz, data);
 }
 
 

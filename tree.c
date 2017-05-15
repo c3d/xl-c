@@ -25,7 +25,7 @@
 #include <string.h>
 
 
-tree_p tree_make(tree_handler_fn handler, unsigned position, ...)
+tree_r tree_make(tree_handler_fn handler, unsigned position, ...)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the given handler, position and pass extra args
 // ----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ tree_p tree_make(tree_handler_fn handler, unsigned position, ...)
 
     // Pass the va to TREE_INITIALIZE for dynamic types, e.g. text
     va_start(va, position);
-    tree_p tree = handler(TREE_INITIALIZE, NULL, va);
+    tree_r tree = (tree_r) handler(TREE_INITIALIZE, NULL, va);
     va_end(va);
 
     tree->handler = handler;
@@ -45,14 +45,14 @@ tree_p tree_make(tree_handler_fn handler, unsigned position, ...)
 }
 
 
-tree_p tree_io(tree_cmd_t cmd, tree_p tree, ...)
+tree_r tree_io(tree_cmd_t cmd, tree_r tree, ...)
 // ----------------------------------------------------------------------------
 //   Perform some tree I/O operation, passed over using varargs
 // ----------------------------------------------------------------------------
 {
     va_list va;
     va_start(va, tree);                    // Should really be (io, stream)
-    tree_p result = tree->handler(cmd, tree, va);
+    tree_r result = (tree_r) tree->handler(cmd, tree, va);
     va_end(va);
     return result;
 }
@@ -108,7 +108,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The default type handler for base trees
 // ----------------------------------------------------------------------------
 {
-    tree_p          copy;
+    tree_r          copy;
     size_t          size;
     tree_io_fn      io;
     void *          stream;
@@ -145,14 +145,15 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         tree_children_loop(tree, tree_dispose(child));
 
         // Free the memory associated with the tree
-        free(tree);
+        assert(tree->refcount == 0 && "Cannot free tree if still referenced");
+        free((tree_r)tree);
         return NULL;
 
     case TREE_COPY:
     case TREE_CLONE:
         // Perform a shallow or deep copy of the tree
         size = tree_size(tree);
-        copy = (tree_p) malloc(size);
+        copy = (tree_r) malloc(size);
         if (copy)
         {
             memcpy(copy, tree, size);

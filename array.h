@@ -44,17 +44,17 @@ typedef struct array
     tree_t        tree;
     array_delim_p delimiters;
     size_t        size;
-} array_t, *array_p;
+} array_t;
 tree_children_typedef_override(array);
 
 
-inline array_p       array_new(unsigned position, ...);
+inline array_r       array_new(unsigned position, ...);
 inline tree_p        array_child(array_p array, size_t index);
-inline tree_p        array_set_child(array_p array, size_t index, tree_p val);
+inline tree_p        array_set_child(array_p array, size_t index, tree_r val);
 inline array_delim_p array_delimiters(array_p array);
 
 // Private array handler, should not be called directly in general
-inline array_p array_make(tree_handler_fn h, unsigned pos, va_list va);
+extern array_r array_make(tree_handler_fn h, unsigned pos, va_list va);
 extern tree_p  array_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -74,14 +74,14 @@ extern array_delim_p array_paren, array_curly, array_square, array_indent;
 //
 // ============================================================================
 
-inline array_p array_new(unsigned position, ...)
+inline array_r array_new(unsigned position, ...)
 // ----------------------------------------------------------------------------
 //    Allocate a array with the given data
 // ----------------------------------------------------------------------------
 {
     va_list va;
     va_start(va, position);
-    array_p result = array_make(array_handler, position, va);
+    array_r result = array_make(array_handler, position, va);
     va_end(va);
     return result;
 }
@@ -98,7 +98,7 @@ inline tree_p array_child(array_p array, size_t index)
 }
 
 
-inline tree_p array_set_child(array_p array, size_t index, tree_p child)
+inline tree_p array_set_child(array_p array, size_t index, tree_r child)
 // ----------------------------------------------------------------------------
 //   Return the data for the array
 // ----------------------------------------------------------------------------

@@ -33,20 +33,20 @@ typedef struct blob
 {
     tree_t      tree;           // The base tree
     size_t      size;           // Size in bytes of the data that follows
-} blob_t, *blob_p;
+} blob_t;
 #define blob_size blob_slow_size
 tree_typedef(blob);
 #undef blob_size
 
 
-inline blob_p  blob_new(unsigned position, size_t sz, const char *data);
+inline blob_r  blob_new(unsigned position, size_t sz, const char *data);
 extern blob_p  blob_append(blob_p blob, size_t sz, const char *data);
 extern blob_p  blob_range(blob_p blob, size_t start, size_t len);
 inline char   *blob_data(blob_p blob);
 inline size_t  blob_size(blob_p blob);
 
 // Private blob handler, should not be called directly in general
-inline blob_p blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline blob_r blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
 extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -57,17 +57,17 @@ extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline blob_p blob_make(tree_handler_fn h, unsigned pos,
+inline blob_r blob_make(tree_handler_fn h, unsigned pos,
                         size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Create a blob with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (blob_p) tree_make(h, pos, sz, data);
+    return (blob_r) tree_make(h, pos, sz, data);
 }
 
 
-inline blob_p blob_new(unsigned position, size_t sz, const char *data)
+inline blob_r blob_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a blob with the given data
 // ----------------------------------------------------------------------------
@@ -102,13 +102,14 @@ inline size_t blob_size(blob_p blob)
 // ============================================================================
 
 #define BLOB_TYPEDEF(item, name)                                        \
-typedef struct name *name##_p;                                          \
+typedef const struct name *name##_p;                                    \
+typedef       struct name *name##_r;                                    \
                                                                         \
-inline name##_p name##_new(unsigned pos, size_t sz, const item *data)   \
+inline name##_r *name##_new(unsigned pos, size_t sz, const item *data)  \
 {                                                                       \
     sz *= sizeof(item);                                                 \
     const char *chardata = (const char *) data;                         \
-    return (name##_p)blob_new(pos, sz, chardata);                       \
+    return (name##_r) blob_new(pos, sz, chardata);                      \
 }                                                                       \
                                                                         \
 inline void name##_delete(name##_p name)                                \

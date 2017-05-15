@@ -28,10 +28,10 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The common handler for prefix and postfix
 // ----------------------------------------------------------------------------
 {
-    pfix_p     pfix = (pfix_p) tree;
+    pfix_r     pfix = (pfix_r) tree;
     tree_io_fn io;
     void *     stream;
-    tree_p     left, right;
+    tree_r     left, right;
 
     switch(cmd)
     {
@@ -53,13 +53,13 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see pfix_new)
-        left = va_arg(va, tree_p);
-        right = va_arg(va, tree_p);
+        left = va_arg(va, tree_r);
+        right = va_arg(va, tree_r);
 
         // Create pfix and copy data in it
-        pfix = (pfix_p) malloc(sizeof(pfix_t));
-        pfix->left = tree_refptr(left);
-        pfix->right = tree_refptr(right);
+        pfix = (pfix_r) malloc(sizeof(pfix_t));
+        pfix->left = tree_use(left);
+        pfix->right = tree_use(right);
         return (tree_p) pfix;
 
     case TREE_RENDER:

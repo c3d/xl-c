@@ -32,19 +32,19 @@ typedef struct infix
     tree_t        tree;
     tree_p        left, right;
     name_p        opcode;
-} infix_t, *infix_p;
+} infix_t;
 tree_children_typedef(infix);
 
 
-inline infix_p      infix_new(unsigned position,
-                              text_p opcode, tree_p left, tree_p right);
+inline infix_r      infix_new(unsigned position,
+                              text_r opcode, tree_r left, tree_r right);
 inline name_p       infix_opcode(infix_p infix);
 inline tree_p       infix_left(infix_p infix);
 inline tree_p       infix_right(infix_p infix);
 
 // Private infix handler, should not be called directly in general
-inline infix_p      infix_make(tree_handler_fn h, unsigned pos,
-                               text_p opcode, tree_p left, tree_p right);
+inline infix_r     infix_make(tree_handler_fn h, unsigned pos,
+                               text_r opcode, tree_r left, tree_r right);
 extern tree_p       infix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -55,18 +55,18 @@ extern tree_p       infix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline infix_p infix_make(tree_handler_fn handler, unsigned pos,
-                          text_p opcode, tree_p left, tree_p right)
+inline infix_r infix_make(tree_handler_fn handler, unsigned pos,
+                           text_r opcode, tree_r left, tree_r right)
 // ----------------------------------------------------------------------------
 //   Create a infix with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (infix_p) tree_make(handler, pos, opcode, left, right);
+    return (infix_r ) tree_make(handler, pos, opcode, left, right);
 }
 
 
-inline infix_p infix_new(unsigned position,
-                         text_p opcode, tree_p left, tree_p right)
+inline infix_r infix_new(unsigned position,
+                         text_r opcode, tree_r left, tree_r right)
 // ----------------------------------------------------------------------------
 //    Allocate a prefix with the given children
 // ----------------------------------------------------------------------------

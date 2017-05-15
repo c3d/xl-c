@@ -25,16 +25,16 @@
 
 
 
-array_p array_make(tree_handler_fn handler, unsigned position, va_list va)
+array_r array_make(tree_handler_fn handler, unsigned position, va_list va)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the given handler, position and pass extra args
 // ----------------------------------------------------------------------------
 {
-    tree_p tree = handler(TREE_INITIALIZE, NULL, va);
+    tree_r tree = (tree_r) handler(TREE_INITIALIZE, NULL, va);
     tree->handler = handler;
     tree->refcount = 0;
     tree->position = position;
-    return (array_p) tree;
+    return (array_r) tree;
 }
 
 
@@ -43,11 +43,11 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for arrays deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    array_p       array = (array_p) tree;
+    array_r       array = (array_r) tree;
     tree_io_fn    io;
     void *        stream;
     size_t        size;
-    tree_p        child;
+    tree_r        child;
     tree_p *      children;
     array_delim_p delim;
 
@@ -75,14 +75,14 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         size = va_arg(va, size_t);
 
         // Create array and copy data in it
-        array = (array_p) malloc(sizeof(array_t) + size * sizeof(tree_p));
+        array = (array_r) malloc(sizeof(array_t) + size * sizeof(tree_p));
         array->size = size;
         array->delimiters = delim;
         children = (tree_p *) (array + 1);
         while (size--)
         {
-            child = va_arg(va, tree_p);
-            *children++ = tree_refptr(child);
+            child = va_arg(va, tree_r);
+            *children++ = tree_use(child);
         }
         return (tree_p) array;
 

@@ -30,18 +30,18 @@ typedef struct text
 //   The bytes are allocated immediately after the text_t structure
 {
     blob_t      blob;           // The base blob
-} text_t, *text_p;
+} text_t;
 tree_typedef(text);
 
 
-inline text_p      text_new(unsigned position, size_t sz, const char *data);
+inline text_r      text_new(unsigned position, size_t sz, const char *data);
 inline text_p      text_append(text_p text, size_t sz, const char *data);
 inline text_p      text_range(text_p text, size_t start, size_t length);
 inline const char *text_data(text_p text);
 inline size_t      text_length(text_p text);
 
 // Private text handler, should not be called directly in general
-inline text_p text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline text_r text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
 extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
@@ -55,17 +55,17 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline text_p text_make(tree_handler_fn h, unsigned pos,
+inline text_r text_make(tree_handler_fn h, unsigned pos,
                         size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Create a text with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (text_p) tree_make(h, pos, sz, data);
+    return (text_r) tree_make(h, pos, sz, data);
 }
 
 
-inline text_p text_new(unsigned position, size_t sz, const char *data)
+inline text_r text_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a text with the given data
 // ----------------------------------------------------------------------------

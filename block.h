@@ -43,18 +43,18 @@ typedef struct block
     tree_t        tree;
     block_delim_p delimiters;
     tree_p        child;
-} block_t, *block_p;
+} block_t;
 tree_children_typedef_override(block);
 
 
-inline block_p       block_new(unsigned position, tree_p child, block_delim_p);
+inline block_r       block_new(unsigned position, tree_r child, block_delim_p);
 inline tree_p        block_child(block_p block);
-inline tree_p        block_set_child(block_p block, tree_p child);
+inline tree_p        block_set_child(block_p block, tree_r child);
 inline block_delim_p block_delimiters(block_p block);
 
 // Private block handler, should not be called directly in general
-inline block_p block_make(tree_handler_fn h, unsigned pos,
-                          tree_p child, block_delim_p);
+inline block_r block_make(tree_handler_fn h, unsigned pos,
+                           tree_r child, block_delim_p);
 extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -74,22 +74,22 @@ extern block_delim_p block_paren, block_curly, block_square, block_indent;
 //
 // ============================================================================
 
-inline block_p block_make(tree_handler_fn handler, unsigned pos,
-                          tree_p child, block_delim_p delim)
+inline block_r block_make(tree_handler_fn handler, unsigned pos,
+                          tree_r child, block_delim_p delim)
 // ----------------------------------------------------------------------------
 //   Create a block with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (block_p) tree_make(handler, pos, child, delim);
+    return (block_r) tree_make(handler, pos, child, delim);
 }
 
 
-inline block_p block_new(unsigned position, tree_p child, block_delim_p delim)
+inline block_r block_new(unsigned pos, tree_r child, block_delim_p delim)
 // ----------------------------------------------------------------------------
 //    Allocate a block with the given data
 // ----------------------------------------------------------------------------
 {
-    return block_make(block_handler, position, child, delim);
+    return block_make(block_handler, pos, child, delim);
 }
 
 
@@ -102,16 +102,17 @@ inline tree_p block_child(block_p block)
 }
 
 
-inline tree_p block_set_child(block_p block, tree_p child)
+inline tree_p block_set_child(block_p block, tree_r child)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
 {
     if (child != block->child)
     {
+        block_r b = (block_r) block;
         tree_ref(child);
-        tree_dispose(&block->child);
-        block->child = child;
+        tree_dispose(&b->child);
+        b->child = child;
     }
     return child;
 }

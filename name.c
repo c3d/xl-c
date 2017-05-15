@@ -75,7 +75,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for names deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    name_p        name = (name_p) tree;
+    name_r        name = (name_r) tree;
     size_t        size;
     tree_io_fn    io;
     const char  * data;
@@ -94,7 +94,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         assert(name_is_valid(size, data) && "Name must respect XL syntax");
 
         // Create name and copy data in it
-        name = (name_p) malloc(sizeof(name_t) + size);
+        name = (name_r) malloc(sizeof(name_t) + size);
         memcpy(name + 1, data, size);
         return (tree_p) name;
 
@@ -103,7 +103,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
 
-        name = (name_p) tree;
+        name = (name_r) tree;
         data = name_data(name);
         size = name_size(name);
         if (io(stream, size, (void *) data) != size)
