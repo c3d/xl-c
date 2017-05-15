@@ -142,7 +142,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_DELETE:
         // Check if the tree has a non-zero arity. If so, unref children
-        tree_children_loop(tree, tree_dispose(*child));
+        tree_children_loop(tree, tree_dispose(child));
 
         // Free the memory associated with the tree
         free(tree);

@@ -103,7 +103,7 @@ inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
 inline unsigned    tree_unref(tree_p tree);
 inline tree_p      tree_refptr(tree_p tree);
-inline tree_p      tree_dispose(tree_p tree);
+inline void        tree_dispose(tree_p *tree);
 inline const char *tree_typename(tree_p tree);
 inline size_t      tree_size(tree_p tree);
 inline size_t      tree_arity(tree_p tree);
@@ -160,9 +160,9 @@ inline name##_p name##_refptr(name##_p name)                    \
     return (name##_p) tree_refptr((tree_p) name);               \
 }                                                               \
                                                                 \
-inline name##_p name##_dispose(name##_p name)                   \
+inline void name##_dispose(name##_p *name)                      \
 {                                                               \
-    return (name##_p) tree_dispose((tree_p) name);              \
+    tree_dispose((tree_p *) name);                              \
 }                                                               \
                                                                 \
 inline const char *name##_typename(name##_p name)               \
@@ -299,20 +299,18 @@ inline tree_p tree_refptr(tree_p tree)
 }
 
 
-inline tree_p tree_dispose(tree_p tree)
+inline void tree_dispose(tree_p *tree)
 // ----------------------------------------------------------------------------
 //   Check if tree can be freed, and if so, delete it
 // ----------------------------------------------------------------------------
+//   This returns NULL to help with common usage: foo = tree_dispose(foo);
 {
-    if (tree)
+    if (*tree)
     {
-        if (tree_unref(tree) == 0)
-        {
-            tree_delete(tree);
-            tree = NULL;
-        }
+        if (tree_unref(*tree) == 0)
+            tree_delete(*tree);
+        *tree = NULL;
     }
-    return tree;
 }
 
 
