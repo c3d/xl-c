@@ -33,11 +33,13 @@ typedef struct blob
 {
     tree_t      tree;           // The base tree
     size_t      size;           // Size in bytes of the data that follows
-} blob_t;
+} blob_t, *blob_p;
+#define blob_size blob_slow_size
+tree_typedef(blob);
+#undef blob_size
 
 
 inline blob_p  blob_new(unsigned position, size_t sz, const char *data);
-inline void    blob_delete(blob_p blob);
 extern blob_p  blob_append(blob_p blob, size_t sz, const char *data);
 extern blob_p  blob_range(blob_p blob, size_t start, size_t len);
 inline char   *blob_data(blob_p blob);
@@ -71,15 +73,6 @@ inline blob_p blob_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 {
     return blob_make(blob_handler, position, sz, data);
-}
-
-
-inline void blob_delete(blob_p blob)
-// ----------------------------------------------------------------------------
-//   Delete the given blob
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) blob);
 }
 
 

@@ -31,13 +31,12 @@ typedef struct name
 {
     text_t      text;           // The base blob
 } name_t, *name_p;
-
+tree_typedef(name);
 
 inline name_p      name_new(unsigned position, size_t sz, const char *data);
-inline void        name_delete(name_p name);
 inline name_p      name_append(name_p name, size_t sz, const char *data);
 inline const char *name_data(name_p name);
-inline size_t      name_size(name_p name);
+inline size_t      name_length(name_p name);
 extern bool        name_is_operator(name_p name);
 extern bool        name_is_valid(size_t size, const char *data);
 
@@ -64,15 +63,6 @@ inline name_p name_new(unsigned position, size_t sz, const char *data)
 }
 
 
-inline void name_delete(name_p name)
-// ----------------------------------------------------------------------------
-//   Delete the given name
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) name);
-}
-
-
 inline name_p name_append(name_p name, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append name, possibly in place
@@ -91,12 +81,12 @@ inline const char *name_data(name_p name)
 }
 
 
-inline size_t name_size(name_p name)
+inline size_t name_length(name_p name)
 // ----------------------------------------------------------------------------
 //   Return the data for the name
 // ----------------------------------------------------------------------------
 {
-    return text_size((text_p) name);
+    return text_length((text_p) name);
 }
 
 #endif // NAME_H

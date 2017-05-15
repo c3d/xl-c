@@ -137,6 +137,102 @@ extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
         }                                         \
     } while(0)
 
+// Macro to create adapters for another type
+#define tree_typedef(name)                                      \
+                                                                \
+inline void name##_delete(name##_p name)                        \
+{                                                               \
+    return tree_delete((tree_p) name);                          \
+}                                                               \
+                                                                \
+inline unsigned name##_ref(name##_p name)                       \
+{                                                               \
+    return tree_ref((tree_p) name);                             \
+}                                                               \
+                                                                \
+inline unsigned name##_unref(name##_p name)                     \
+{                                                               \
+    return tree_unref((tree_p) name);                           \
+}                                                               \
+                                                                \
+inline name##_p name##_refptr(name##_p name)                    \
+{                                                               \
+    return (name##_p) tree_refptr((tree_p) name);               \
+}                                                               \
+                                                                \
+inline name##_p name##_dispose(name##_p name)                   \
+{                                                               \
+    return (name##_p) tree_dispose((tree_p) name);              \
+}                                                               \
+                                                                \
+inline const char *name##_typename(name##_p name)               \
+{                                                               \
+    return tree_typename((tree_p) name);                        \
+}                                                               \
+                                                                \
+inline size_t name##_size(name##_p name)                        \
+{                                                               \
+    return tree_size((tree_p) name);                            \
+}                                                               \
+                                                                \
+inline name##_p name##_copy(name##_p name)                      \
+{                                                               \
+    return (name##_p) tree_copy((tree_p) name);                 \
+}                                                               \
+                                                                \
+inline name##_p name##_clone(name##_p name)                     \
+{                                                               \
+    return (name##_p) tree_clone((tree_p) name);                \
+}                                                               \
+                                                                \
+inline bool name##_render(name##_p name,                        \
+                          tree_io_fn output, void *stream)      \
+{                                                               \
+    return tree_render((tree_p) name, output, stream);          \
+}                                                               \
+                                                                \
+inline bool name##_freeze(name##_p name,                        \
+                          tree_io_fn output, void *stream)      \
+{                                                               \
+    return tree_freeze((tree_p) name, output, stream);          \
+}                                                               \
+                                                                \
+inline name##_p name##_thaw(tree_io_fn input, void *stream)     \
+{                                                               \
+    return (name##_p) tree_thaw(input, stream);                 \
+}
+
+
+// Macro to define a type that has children but overrides child / set_child
+#define tree_children_typedef_override(name)                    \
+                                                                \
+tree_typedef(name);                                             \
+                                                                \
+inline size_t name##_arity(name##_p name)                       \
+{                                                               \
+    return tree_arity((tree_p) name);                           \
+}                                                               \
+                                                                \
+inline tree_p *name##_children(name##_p name)                   \
+{                                                               \
+    return tree_children((tree_p) name);                        \
+}                                                               \
+
+
+#define tree_children_typedef(name)                             \
+                                                                \
+tree_children_typedef_override(name);                           \
+                                                                \
+inline tree_p name##_child(name##_p name, unsigned index)       \
+{                                                               \
+    return tree_child((tree_p) name, index);                    \
+}                                                               \
+                                                                \
+inline tree_p name##_set_child(name##_p name,                   \
+                               unsigned index, tree_p child)    \
+{                                                               \
+    return tree_set_child((tree_p) name, index, child);         \
+}
 
 
 

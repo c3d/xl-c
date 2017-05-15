@@ -32,22 +32,28 @@ typedef struct pfix
     tree_t        tree;
     tree_p        left, right;
 } pfix_t, *pfix_p;
-
+tree_children_typedef(pfix);
 
 inline pfix_p       pfix_new(unsigned position, tree_p left, tree_p right);
 inline void         pfix_delete(pfix_p pfix);
 inline tree_p       pfix_left(pfix_p pfix);
 inline tree_p       pfix_right(pfix_p pfix);
 
-inline pfix_p       prefix_new(unsigned position, name_p left, tree_p right);
-inline void         prefix_delete(pfix_p pfix);
-inline name_p       prefix_operator(pfix_p prefix);
-inline tree_p       prefix_operand(pfix_p prefix);
 
-inline pfix_p       postfix_new(unsigned position, tree_p left, name_p right);
-inline void         postfix_delete(pfix_p pfix);
-inline name_p       postfix_operator(pfix_p postfix);
-inline tree_p       postfix_operand(pfix_p postfix);
+typedef struct prefix *prefix_p;
+tree_children_typedef(prefix);
+
+inline prefix_p     prefix_new(unsigned position, name_p left, tree_p right);
+inline name_p       prefix_operator(prefix_p prefix);
+inline tree_p       prefix_operand(prefix_p prefix);
+
+
+typedef struct postfix *postfix_p;
+tree_children_typedef(postfix);
+
+inline postfix_p    postfix_new(unsigned position, tree_p left, name_p right);
+inline name_p       postfix_operator(postfix_p postfix);
+inline tree_p       postfix_operand(postfix_p postfix);
 
 
 // Private pfix handler, should not be called directly in general
@@ -86,15 +92,6 @@ inline pfix_p pfix_new(unsigned position, tree_p left, tree_p right)
 }
 
 
-inline void pfix_delete(pfix_p pfix)
-// ----------------------------------------------------------------------------
-//   Delete the given pfix
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) pfix);
-}
-
-
 inline tree_p pfix_left(pfix_p pfix)
 // ----------------------------------------------------------------------------
 //   Return the data for the pfix
@@ -113,75 +110,57 @@ inline tree_p pfix_right(pfix_p pfix)
 }
 
 
-inline pfix_p prefix_new(unsigned position, name_p left, tree_p right)
+inline prefix_p prefix_new(unsigned position, name_p left, tree_p right)
 // ----------------------------------------------------------------------------
 //    Allocate a prefix with the given children
 // ----------------------------------------------------------------------------
 {
-    return pfix_make(prefix_handler, position, (tree_p) left, right);
+    return (prefix_p) pfix_make(prefix_handler, position, (tree_p) left, right);
 }
 
 
-inline void prefix_delete(pfix_p pfix)
-// ----------------------------------------------------------------------------
-//    Delete a prefix
-// ----------------------------------------------------------------------------
-{
-    pfix_delete(pfix);
-}
-
-
-inline name_p prefix_operator(pfix_p pfix)
+inline name_p prefix_operator(prefix_p pfix)
 // ----------------------------------------------------------------------------
 //   Return the operator for the prefix, a name in the left node
 // ----------------------------------------------------------------------------
 {
-    return (name_p) pfix->left;
+    return (name_p) ((pfix_p) pfix)->left;
 }
 
 
-inline tree_p prefix_operand(pfix_p pfix)
+inline tree_p prefix_operand(prefix_p pfix)
 // ----------------------------------------------------------------------------
 //   Return the operand(s) for the prefix, the tree on the right
 // ----------------------------------------------------------------------------
 {
-    return pfix->right;
+    return ((pfix_p) pfix)->right;
 }
 
 
-inline pfix_p postfix_new(unsigned position, tree_p left, name_p right)
+inline postfix_p postfix_new(unsigned position, tree_p left, name_p right)
 // ----------------------------------------------------------------------------
 //    Allocate a postfix with the given children
 // ----------------------------------------------------------------------------
 {
-    return pfix_make(postfix_handler, position, left, (tree_p) right);
+    return (postfix_p) pfix_make(postfix_handler, position, left,(tree_p)right);
 }
 
 
-inline void postfix_delete(pfix_p pfix)
-// ----------------------------------------------------------------------------
-//    Delete a postfix
-// ----------------------------------------------------------------------------
-{
-    pfix_delete(pfix);
-}
-
-
-inline name_p postfix_operator(pfix_p pfix)
+inline name_p postfix_operator(postfix_p pfix)
 // ----------------------------------------------------------------------------
 //   Return the operator for the postfix, a name in the right node
 // ----------------------------------------------------------------------------
 {
-    return (name_p) pfix->right;
+    return (name_p) ((pfix_p) pfix)->right;
 }
 
 
-inline tree_p postfix_operand(pfix_p pfix)
+inline tree_p postfix_operand(postfix_p pfix)
 // ----------------------------------------------------------------------------
 //   Return the operand(s) for the postfix, the tree on the left
 // ----------------------------------------------------------------------------
 {
-    return pfix->left;
+    return ((pfix_p) pfix)->left;
 }
 
 

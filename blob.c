@@ -33,7 +33,7 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
 //   - The realloc can extend memory without copy
 {
     blob_p copy = blob;
-    if (tree_ref((tree_p) blob) > 1)
+    if (blob_ref(blob) > 1)
         copy = NULL;
     blob_p result = (blob_p) realloc(copy, blob->size + sz);
     if (result)
@@ -43,7 +43,7 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
         char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
         memcpy(append_dst, data, sz);
     }
-    tree_unref((tree_p) blob);
+    blob_unref(blob);
     return result;
 }
 
@@ -61,7 +61,7 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
     if (first > blob->size)
         first = blob->size;
     unsigned resized = end - first;
-    if (tree_ref((tree_p) blob) > 1)
+    if (blob_ref(blob) > 1)
     {
         copy = (blob_p) malloc(sizeof(blob_t) + resized);
         memcpy(copy, blob, sizeof(blob_t));
@@ -69,7 +69,7 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
     memmove(copy + 1, blob + 1, resized);
     if (copy == blob)
         copy = (blob_p) realloc(copy, sizeof(blob_t) + resized);
-    tree_unref((tree_p) blob);
+    blob_unref(blob);
     return copy;
 }
 
@@ -118,7 +118,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         size = snprintf(buffer, sizeof(buffer),
                         "%s %zu ",
-                        tree_typename((tree_p) blob), blob->size);
+                        blob_typename(blob), blob->size);
         if (io(stream, size, buffer) != size)
             return NULL;        // Some error happened, report
         data = (const char *) (blob + 1);

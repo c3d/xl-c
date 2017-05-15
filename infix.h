@@ -31,14 +31,14 @@ typedef struct infix
 {
     tree_t        tree;
     tree_p        left, right;
-    text_p        opcode;
+    name_p        opcode;
 } infix_t, *infix_p;
+tree_children_typedef(infix);
 
 
 inline infix_p      infix_new(unsigned position,
                               text_p opcode, tree_p left, tree_p right);
-inline void         infix_delete(infix_p infix);
-inline text_p       infix_opcode(infix_p infix);
+inline name_p       infix_opcode(infix_p infix);
 inline tree_p       infix_left(infix_p infix);
 inline tree_p       infix_right(infix_p infix);
 
@@ -75,16 +75,7 @@ inline infix_p infix_new(unsigned position,
 }
 
 
-inline void infix_delete(infix_p infix)
-// ----------------------------------------------------------------------------
-//   Delete the given infix
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) infix);
-}
-
-
-inline text_p infix_opcode(infix_p infix)
+inline name_p infix_opcode(infix_p infix)
 // ----------------------------------------------------------------------------
 //   Return the data for the infix
 // ----------------------------------------------------------------------------

@@ -44,11 +44,12 @@ typedef struct block
     block_delim_p delimiters;
     tree_p        child;
 } block_t, *block_p;
+tree_children_typedef_override(block);
 
 
 inline block_p       block_new(unsigned position, tree_p child, block_delim_p);
-inline void          block_delete(block_p block);
 inline tree_p        block_child(block_p block);
+inline tree_p        block_set_child(block_p block, tree_p child);
 inline block_delim_p block_delimiters(block_p block);
 
 // Private block handler, should not be called directly in general
@@ -92,21 +93,27 @@ inline block_p block_new(unsigned position, tree_p child, block_delim_p delim)
 }
 
 
-inline void block_delete(block_p block)
-// ----------------------------------------------------------------------------
-//   Delete the given block
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) block);
-}
-
-
 inline tree_p block_child(block_p block)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
 {
     return block->child;
+}
+
+
+inline tree_p block_set_child(block_p block, tree_p child)
+// ----------------------------------------------------------------------------
+//   Return the data for the block
+// ----------------------------------------------------------------------------
+{
+    if (child != block->child)
+    {
+        tree_ref(child);
+        tree_unref(block->child);
+        block->child = child;
+    }
+    return child;
 }
 
 

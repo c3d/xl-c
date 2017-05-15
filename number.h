@@ -31,6 +31,7 @@ typedef struct number                                                   \
     tree_t      tree;                                                   \
     reptype     value;                                                  \
 } number##_t, *number##_p;                                              \
+tree_typedef(number);                                                   \
                                                                         \
                                                                         \
 typedef struct based_##number                                           \
@@ -38,12 +39,12 @@ typedef struct based_##number                                           \
     number##_t  number;                                                 \
     unsigned    base;                                                   \
 } based_##number##_t, *based_##number##_p;                              \
+tree_typedef(based_##number);                                           \
                                                                         \
                                                                         \
 inline number##_p  number##_new(unsigned position, reptype value);      \
 inline number##_p  based_##number##_new(unsigned position,              \
                                         reptype value, unsigned base);  \
-inline void        number##_delete(number##_p number);                  \
 inline reptype     number##_data(number##_p number);                    \
                                                                         \
 inline number##_p  number##_make(tree_handler_fn, unsigned pos,         \
@@ -68,14 +69,14 @@ inline number##_p based_##number##_new(unsigned position,               \
     return number##_make(based_##number##_handler,position,value,base); \
 }                                                                       \
                                                                         \
-inline void number##_delete(number##_p number)                          \
-{                                                                       \
-    tree_delete((tree_p) number);                                       \
-}                                                                       \
-                                                                        \
-inline reptype number##_data(number##_p number)                         \
+inline reptype number##_value(number##_p number)                        \
 {                                                                       \
     return number->value;                                               \
+}                                                                       \
+                                                                        \
+inline reptype based_##number##_value(based_##number##_p number)        \
+{                                                                       \
+    return number->number.value;                                        \
 }
 
 

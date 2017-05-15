@@ -20,6 +20,7 @@
 // ****************************************************************************
 
 #include "infix.h"
+#include "name.h"
 #include <stdlib.h>
 #include <strings.h>
 
@@ -33,7 +34,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     tree_io_fn io;
     void *     stream;
     tree_p     left, right;
-    text_p     opcode;
+    name_p     opcode;
 
     switch(cmd)
     {
@@ -55,7 +56,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see infix_new)
-        opcode = va_arg(va, text_p);
+        opcode = va_arg(va, name_p);
         left = va_arg(va, tree_p);
         right = va_arg(va, tree_p);
 
@@ -63,7 +64,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         infix = (infix_p) malloc(sizeof(infix_t));
         infix->left = tree_refptr(left);
         infix->right = tree_refptr(right);
-        infix->opcode = (text_p) tree_refptr((tree_p) opcode);
+        infix->opcode = name_refptr(opcode);
         return (tree_p) infix;
 
     case TREE_RENDER:
@@ -71,7 +72,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
         tree_render(infix->left, io, stream);
-        tree_render((tree_p) infix->opcode, io, stream);
+        name_render(infix->opcode, io, stream);
         tree_render(infix->right, io, stream);
         return tree;
 

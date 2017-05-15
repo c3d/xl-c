@@ -94,14 +94,14 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         size = array->size;
         children = (tree_p *) (array + 1);
 
-        tree_render((tree_p) delim->opening, io, stream);
+        name_render(delim->opening, io, stream);
         while (size--)
         {
             tree_render(*children++, io, stream);
             if (size)
-                tree_render((tree_p) delim->separating, io, stream);
+                name_render(delim->separating, io, stream);
         }
-        tree_render((tree_p) delim->closing, io, stream);
+        name_render(delim->closing, io, stream);
         return tree;
 
     default:

@@ -30,15 +30,15 @@ typedef struct text
 //   The bytes are allocated immediately after the text_t structure
 {
     blob_t      blob;           // The base blob
-} text_t;
+} text_t, *text_p;
+tree_typedef(text);
 
 
 inline text_p      text_new(unsigned position, size_t sz, const char *data);
-inline void        text_delete(text_p text);
 inline text_p      text_append(text_p text, size_t sz, const char *data);
 inline text_p      text_range(text_p text, size_t start, size_t length);
 inline const char *text_data(text_p text);
-inline size_t      text_size(text_p text);
+inline size_t      text_length(text_p text);
 
 // Private text handler, should not be called directly in general
 inline text_p text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
@@ -74,15 +74,6 @@ inline text_p text_new(unsigned position, size_t sz, const char *data)
 }
 
 
-inline void text_delete(text_p text)
-// ----------------------------------------------------------------------------
-//   Delete the given text
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) text);
-}
-
-
 inline text_p text_append(text_p text, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append text, possibly in place
@@ -110,7 +101,7 @@ inline const char *text_data(text_p text)
 }
 
 
-inline size_t text_size(text_p text)
+inline size_t text_length(text_p text)
 // ----------------------------------------------------------------------------
 //   Return the data for the text
 // ----------------------------------------------------------------------------

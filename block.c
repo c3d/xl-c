@@ -70,9 +70,9 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         stream = va_arg(va, void *);
         delim = block->delimiters;
 
-        tree_render((tree_p) delim->opening, io, stream);
+        name_render(delim->opening, io, stream);
         tree_render(tree, io, stream);
-        tree_render((tree_p) delim->closing, io, stream);
+        name_render(delim->closing, io, stream);
         return tree;
 
     default:

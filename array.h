@@ -45,10 +45,10 @@ typedef struct array
     array_delim_p delimiters;
     size_t        size;
 } array_t, *array_p;
+tree_children_typedef_override(array);
 
 
 inline array_p       array_new(unsigned position, ...);
-inline void          array_delete(array_p array);
 inline tree_p        array_child(array_p array, size_t index);
 inline tree_p        array_set_child(array_p array, size_t index, tree_p val);
 inline array_delim_p array_delimiters(array_p array);
@@ -84,15 +84,6 @@ inline array_p array_new(unsigned position, ...)
     array_p result = array_make(array_handler, position, va);
     va_end(va);
     return result;
-}
-
-
-inline void array_delete(array_p array)
-// ----------------------------------------------------------------------------
-//   Delete the given array
-// ----------------------------------------------------------------------------
-{
-    tree_delete((tree_p) array);
 }
 
 
