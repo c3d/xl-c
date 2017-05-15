@@ -90,7 +90,7 @@ static unsigned tree_print_output(void *stream, unsigned size, void *data)
 // ----------------------------------------------------------------------------
 {
     FILE *output = (FILE *) stream;
-    return fwrite(data, size, 1, output);
+    return fwrite(data, 1, size, output);
 }
 
 
