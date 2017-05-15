@@ -22,6 +22,8 @@
 // ****************************************************************************
 
 #include "blob.h"
+#include <stdarg.h>
+
 
 typedef struct text
 // ----------------------------------------------------------------------------
@@ -35,10 +37,13 @@ tree_typedef(text);
 
 
 inline text_r      text_new(unsigned position, size_t sz, const char *data);
-inline text_p      text_append(text_p text, size_t sz, const char *data);
+inline text_p      text_append_data(text_p text, size_t sz, const char *data);
+inline text_p      text_append(text_p text, text_p text2);
 inline text_p      text_range(text_p text, size_t start, size_t length);
 inline const char *text_data(text_p text);
 inline size_t      text_length(text_p text);
+extern text_r      text_printf(unsigned pos, const char *format, ...);
+extern text_r      text_vprintf(unsigned pos, const char *format, va_list va);
 
 // Private text handler, should not be called directly in general
 inline text_r text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
@@ -74,12 +79,21 @@ inline text_r text_new(unsigned position, size_t sz, const char *data)
 }
 
 
-inline text_p text_append(text_p text, size_t sz, const char *data)
+inline text_p text_append_data(text_p text, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append text, possibly in place
 // ----------------------------------------------------------------------------
 {
-    return (text_p) blob_append((blob_p) text, sz, data);
+    return (text_p) blob_append_data((blob_p) text, sz, data);
+}
+
+
+inline text_p text_append(text_p text, text_p text2)
+// ----------------------------------------------------------------------------
+//   Append text, possibly in place
+// ----------------------------------------------------------------------------
+{
+    return (text_p) blob_append((blob_p) text, (blob_p) text2);
 }
 
 

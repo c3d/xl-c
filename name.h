@@ -31,7 +31,9 @@ typedef struct name
 {
     text_t      text;           // The base blob
 } name_t;
+#define name_text name_slow_text
 tree_typedef(name);
+#undef name_text
 
 inline name_r      name_new(unsigned position, size_t sz, const char *data);
 inline name_p      name_append(name_p name, size_t sz, const char *data);
@@ -68,7 +70,7 @@ inline name_p name_append(name_p name, size_t sz, const char *data)
 //   Append name, possibly in place
 // ----------------------------------------------------------------------------
 {
-    return (name_p) text_append((text_p) name, sz, data);
+    return (name_p) text_append_data((text_p) name, sz, data);
 }
 
 

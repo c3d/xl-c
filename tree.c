@@ -66,19 +66,19 @@ static unsigned tree_text_output(void *stream, unsigned size, void *data)
     // Append to the text, and if it does not happen in place, update pointer
     text_p *output = (text_p *) stream;
     text_p input = *output;
-    text_p copy = text_append(input, size, (char *) data);
+    text_p copy = text_append_data(input, size, (char *) data);
     if (copy && copy != input)
         *output = copy;
     return size;
 }
 
 
-text_p tree_text(tree_p tree)
+text_r tree_text(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Convert the tree to text by using the render callback
 // ----------------------------------------------------------------------------
 {
-    text_p result = text_cnew(tree->position, "");
+    text_r result = text_cnew(tree->position, "");
     tree_render(tree, tree_text_output, &result);
     return result;
 }

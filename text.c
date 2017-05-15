@@ -22,6 +22,7 @@
 #include "text.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
@@ -66,4 +67,91 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Other cases are handled correctly by the tree handler
         return tree_handler(cmd, tree, va);
     }
+}
+
+
+text_r text_printf(unsigned pos, const char *format, ...)
+// ----------------------------------------------------------------------------
+//    Format input with printf-like style and %t extension for trees
+// ----------------------------------------------------------------------------
+//    The implementation requires that all %t parameters come first
+{
+    va_list va;
+    va_start(va, format);
+    text_r result = text_vprintf(pos, format, va);
+    va_end(va);
+    return result;
+}
+
+
+extern text_r text_vprintf(unsigned pos, const char *format, va_list va)
+// ----------------------------------------------------------------------------
+//   Format input with printf-style format, and %t extension for trees
+// ----------------------------------------------------------------------------
+//   The implementation requires that all %t parameters come first
+//   and all % formats before the first %t are ignored.
+{
+    unsigned size = strlen(format) + 1; // +1 for trailing 0
+    text_r result = text_new(pos, size, format);
+
+    char *base = (char *) text_data(result);
+    const char *search = base;
+
+    // First pass: replace all %t with result of tree_render
+    while(true)
+    {
+        // Find the next '%t' in the format and compute offset in result
+        char *tpos = strstr(search, "%t");
+        if (!tpos)
+            break;
+        unsigned offset = tpos - base;
+
+        // Read input tree from varargs and turn it to text format
+        tree_p tree = va_arg(va, tree_p);
+        text_p ins = tree_text(tree);
+
+        // Insertion data and size
+        const char *ins_data = text_data(ins);
+        unsigned ins_size = text_length(ins);
+
+        // Compute size after insertion and extend result as necessary
+        unsigned old_size = text_length(result);
+        unsigned new_size = old_size + ins_size - 2;
+        if (new_size > old_size)
+            result = (text_r) text_append_data(result, ins_size - 2, NULL);
+
+        // Move the text following %t up
+        char *data = (char *) text_data(result);
+        unsigned mov_size = new_size - offset - 2;
+        memmove(data + offset + ins_size, data + offset + 2, mov_size);
+
+        // Copy the insertion text in the middle
+        memcpy(data + offset, ins_data, ins_size);
+
+        // Truncate the result if the insertion is less than 2 bytes long
+        if (new_size < old_size)
+            result = (text_r) text_range(result, 0, new_size);
+
+        // Dispose of inserted text
+        text_dispose(&ins);
+
+        // Prepare for next loop. Place search after what we inserted.
+        base = (char *) text_data(result);
+        search = base + offset + ins_size;
+    }
+
+    // At that point, result contains a nul-terminated format without %t
+    // We use the format starting at 'search' because the trees may
+    // themselves have inserted for example %s.
+    size = text_length(result) - 1;
+    unsigned offset = search - base;
+    result = (text_r) text_append_data(result, 1024, NULL);
+    base = (char *) text_data(result);
+    format = base + offset;
+    unsigned act_size = vsnprintf(base + size - 1, 1024, format, va);
+
+    // Truncate result to actual size
+    result = (text_r) text_range(result, 0, size + act_size);
+
+    return result;
 }

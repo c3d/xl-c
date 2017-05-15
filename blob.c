@@ -24,7 +24,7 @@
 #include <string.h>
 
 
-blob_p blob_append(blob_p blob, size_t sz, const char *data)
+blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append data to the blob - In place if possible
 // ----------------------------------------------------------------------------
@@ -40,8 +40,11 @@ blob_p blob_append(blob_p blob, size_t sz, const char *data)
     {
         if (copy == NULL)
             memcpy(result, blob, sizeof(blob_t) + blob->size);
-        char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
-        memcpy(append_dst, data, sz);
+        if (data)
+        {
+            char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
+            memcpy(append_dst, data, sz);
+        }
     }
     blob_unref(blob);
     return result;

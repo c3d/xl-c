@@ -62,6 +62,7 @@ typedef const struct integer *integer_p;
 typedef const struct real    *real_p;
 typedef const struct blob    *blob_p;
 typedef const struct text    *text_p;
+typedef       struct text    *text_r;
 typedef const struct name    *name_p;
 typedef const struct block   *block_p;
 typedef const struct pfix    *pfix_p;
@@ -135,7 +136,7 @@ inline tree_p      tree_child(tree_p tree, unsigned index);
 inline tree_p      tree_set_child(tree_p tree, unsigned index, tree_r child);
 inline tree_r      tree_copy(tree_p tree);
 inline tree_r      tree_clone(tree_p tree);
-extern text_p      tree_text(tree_p tree);
+extern text_r      tree_text(tree_p tree);
 extern bool        tree_print(FILE *stream, tree_p tree);
 inline bool        tree_render(tree_p tree, tree_io_fn output, void *stream);
 inline bool        tree_freeze(tree_p tree, tree_io_fn output, void *stream);
@@ -210,6 +211,12 @@ inline name##_r name##_clone(name##_p name)                     \
 {                                                               \
     return (name##_r) tree_clone((tree_p) name);                \
 }                                                               \
+                                                                \
+inline text_r name##_text(name##_p name)                        \
+{                                                               \
+    return tree_text((tree_p) name);                            \
+}                                                               \
+                                                                \
                                                                 \
 inline bool name##_render(name##_p name,                        \
                           tree_io_fn output, void *stream)      \

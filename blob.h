@@ -40,7 +40,8 @@ tree_typedef(blob);
 
 
 inline blob_r  blob_new(unsigned position, size_t sz, const char *data);
-extern blob_p  blob_append(blob_p blob, size_t sz, const char *data);
+extern blob_p  blob_append_data(blob_p blob, size_t sz, const char *data);
+inline blob_p  blob_append(blob_p blob, blob_p other);
 extern blob_p  blob_range(blob_p blob, size_t start, size_t len);
 inline char   *blob_data(blob_p blob);
 inline size_t  blob_size(blob_p blob);
@@ -73,6 +74,15 @@ inline blob_r blob_new(unsigned position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 {
     return blob_make(blob_handler, position, sz, data);
+}
+
+
+inline blob_p blob_append(blob_p blob, blob_p blob2)
+// ----------------------------------------------------------------------------
+//   Append one blob to another
+// ----------------------------------------------------------------------------
+{
+    return blob_append_data(blob, blob_size(blob2), blob_data(blob2));
 }
 
 
@@ -118,11 +128,18 @@ inline void name##_delete(name##_p name)                                \
     blob_delete((blob_p) name)                                          \
 }                                                                       \
                                                                         \
-inline name##_p name##_append(name##_p name, size_t sz, const item *data) \
+inline name##_p name##_append(name##_p name, name##_p name2)            \
+{                                                                       \
+    return (name##_p) blob_append((blob_p) name, (blob_p) name2);       \
+}                                                                       \
+                                                                        \
+                                                                        \
+inline name##_p name##_append_data(name##_p name,                       \
+                                   size_t sz, const item *data)         \
 {                                                                       \
     sz *= sizeof(item);                                                 \
     const char *chardata = (const char *) data;                         \
-    return (name##_p) blob_append((blob_p) name, sz, chardata);         \
+    return (name##_p) blob_append_data((blob_p) name, sz, chardata);    \
 }                                                                       \
                                                                         \
                                                                         \
