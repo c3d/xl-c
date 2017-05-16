@@ -24,6 +24,10 @@
 #include <string.h>
 
 
+// Private blob handler, should not be called directly in general
+extern blob_r blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+
+
 blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append data to the blob - In place if possible
@@ -111,8 +115,14 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create blob and copy data in it
         blob = (blob_r) malloc(sizeof(blob_t) + size);
+        blob->size = size;
         if (size)
-            memcpy(blob + 1, data, size);
+        {
+            if (data)
+                memcpy(blob + 1, data, size);
+            else
+                memset(blob + 1, 0, size);
+        }
         return (tree_p) blob;
 
     case TREE_RENDER:

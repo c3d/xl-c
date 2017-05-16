@@ -30,6 +30,10 @@
 #include <assert.h>
 
 
+// C99 inline semantics is so broken it's not worth trying...
+#define inline static __inline__ __attribute__((gnu_inline))
+
+
 
 // ============================================================================
 //
@@ -215,6 +219,12 @@ inline name##_r name##_clone(name##_p name)                     \
 inline text_r name##_text(name##_p name)                        \
 {                                                               \
     return tree_text((tree_p) name);                            \
+}                                                               \
+                                                                \
+                                                                \
+inline bool name##_print(FILE *f, name##_p name)                \
+{                                                               \
+    return tree_print(f, (tree_p) name);                        \
 }                                                               \
                                                                 \
                                                                 \

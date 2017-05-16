@@ -34,9 +34,7 @@ typedef struct blob
     tree_t      tree;           // The base tree
     size_t      size;           // Size in bytes of the data that follows
 } blob_t;
-#define blob_size blob_slow_size
 tree_typedef(blob);
-#undef blob_size
 
 
 inline blob_r  blob_new(unsigned position, size_t sz, const char *data);
@@ -44,7 +42,7 @@ extern blob_p  blob_append_data(blob_p blob, size_t sz, const char *data);
 inline blob_p  blob_append(blob_p blob, blob_p other);
 extern blob_p  blob_range(blob_p blob, size_t start, size_t len);
 inline char   *blob_data(blob_p blob);
-inline size_t  blob_size(blob_p blob);
+inline size_t  blob_length(blob_p blob);
 
 // Private blob handler, should not be called directly in general
 inline blob_r blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
@@ -82,7 +80,7 @@ inline blob_p blob_append(blob_p blob, blob_p blob2)
 //   Append one blob to another
 // ----------------------------------------------------------------------------
 {
-    return blob_append_data(blob, blob_size(blob2), blob_data(blob2));
+    return blob_append_data(blob, blob_length(blob2), blob_data(blob2));
 }
 
 
@@ -95,7 +93,7 @@ inline char *blob_data(blob_p blob)
 }
 
 
-inline size_t blob_size(blob_p blob)
+inline size_t blob_length(blob_p blob)
 // ----------------------------------------------------------------------------
 //   Return the data for the blob
 // ----------------------------------------------------------------------------
@@ -157,7 +155,7 @@ inline item *name##_data(name##_p name)                                 \
                                                                         \
 inline size_t name##_length(name##_p blob)                              \
 {                                                                       \
-    return blob_size((blob_p) name) / sizeof(item);                     \
+    return blob_length((blob_p) name) / sizeof(item);                   \
 }                                                                       \
                                                                         \
 inline name##_p name##_push(name##_p name, item value)                  \

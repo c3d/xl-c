@@ -105,7 +105,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         name = (name_r) tree;
         data = name_data(name);
-        size = name_size(name);
+        size = name_length(name);
         if (io(stream, size, (void *) data) != size)
             return NULL;
         return tree;

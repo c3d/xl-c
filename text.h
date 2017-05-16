@@ -50,7 +50,7 @@ inline text_r text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
 extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
-#define text_cnew(pos, text)    text_new(pos, sizeof(text), text)
+#define text_cnew(pos, text)    text_new(pos, strlen(text), text)
 
 
 

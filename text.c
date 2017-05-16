@@ -50,7 +50,7 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         text = (text_p) tree;
         data = text_data(text);
-        size = text_size(text);
+        size = text_length(text);
         failed = io(stream, 1, "\"") != 1;
         while (size--)
         {
@@ -64,8 +64,8 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return failed ? NULL : tree;
 
     default:
-        // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        // Other cases are handled correctly by the blob handler
+        return blob_handler(cmd, tree, va);
     }
 }
 
