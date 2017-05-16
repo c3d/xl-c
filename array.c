@@ -24,20 +24,7 @@
 #include <strings.h>
 
 
-array_r array_make(tree_handler_fn handler, unsigned position, va_list va)
-// ----------------------------------------------------------------------------
-//   Create a new tree with the given handler, position and pass extra args
-// ----------------------------------------------------------------------------
-{
-    tree_r tree = (tree_r) handler(TREE_INITIALIZE, NULL, va);
-    tree->handler = handler;
-    tree->refcount = 0;
-    tree->position = position;
-    return (array_r) tree;
-}
-
-
-array_p array_append_data(array_p array, size_t sz, tree_p *data)
+array_p array_append_data(array_p array, size_t sz, tree_r *data)
 // ----------------------------------------------------------------------------
 //   Append data to the array - In place if possible
 // ----------------------------------------------------------------------------
@@ -168,6 +155,7 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Fetch pointer to data and size from varargs list (see array_new)
         delim = va_arg(va, array_delim_p);
         size = va_arg(va, size_t);
+        children = va_arg(va, tree_p *);
 
         // Create array and copy data in it
         array = (array_r) malloc(sizeof(array_t) + size * sizeof(tree_p));

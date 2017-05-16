@@ -171,8 +171,8 @@ inline item name##_top(name##_p name)                                   \
                                                                         \
 inline name##_p name##_pop(name##_p name)                               \
 {                                                                       \
-    assert(name_length(name) && "Can only pop if non-empty");           \
-    return name_range(name, 0, name_length(name)-1);                    \
+    assert(name##_length(name) && "Can only pop if non-empty");         \
+    return name##_range(name, 0, name_length(name)-1);                  \
 }
 
 

@@ -48,14 +48,15 @@ typedef struct array
 tree_children_typedef_override(array);
 
 
-inline array_r       array_new(unsigned position, ...);
+inline array_r       array_new(unsigned position, array_delim_p delim,
+                               size_t length, tree_r *data);
 inline tree_p        array_child(array_p array, size_t index);
 inline tree_p        array_set_child(array_p array, size_t index, tree_r val);
 inline array_delim_p array_delimiters(array_p array);
 inline tree_p *      array_data(array_p array);
 inline size_t        array_length(array_p array);
 
-extern array_p       array_append_data(array_p, size_t count, tree_p *trees);
+extern array_p       array_append_data(array_p, size_t count, tree_r *trees);
 inline array_p       array_append(array_p array, array_p other);
 extern array_p       array_range(array_p array, size_t start, size_t len);
 inline array_p       array_push(array_p array, tree_r value);
@@ -64,7 +65,6 @@ inline array_p       array_pop(array_p array);
 
 
 // Private array handler, should not be called directly in general
-extern array_r array_make(tree_handler_fn h, unsigned pos, va_list va);
 extern tree_p  array_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -77,6 +77,68 @@ extern array_delim_p array_paren, array_curly, array_square, array_indent;
 #define indent_array_new(pos, size, ...)  array_new(pos, array_indent, size, ## __VA_ARGS__)
 
 
+#define array_typedef(item, name)                                       \
+                                                                        \
+typedef const struct name *name##_p;                                    \
+typedef       struct name *name##_r;                                    \
+                                                                        \
+inline name##_r *name##_new(unsigned pos, size_t sz, item##_r *data)    \
+{                                                                       \
+    return (name##_r) array_new(pos, sz, (tree_r *) data);              \
+}                                                                       \
+                                                                        \
+inline void name##_delete(name##_p name)                                \
+{                                                                       \
+    array_delete((array_p) name)                                        \
+}                                                                       \
+                                                                        \
+inline name##_p name##_append(name##_p name, name##_p name2)            \
+{                                                                       \
+    return (name##_p) array_append((array_p) name, (array_p) name2);    \
+}                                                                       \
+                                                                        \
+                                                                        \
+inline name##_p name##_append_data(name##_p name,                       \
+                                   size_t sz, item##_r *data)           \
+{                                                                       \
+    return (name##_p) array_append_data((array_p) name,                 \
+                                        sz, (tree_r *) data);           \
+}                                                                       \
+                                                                        \
+                                                                        \
+inline name##_p name##_range(name##_p name, size_t start, size_t len)   \
+{                                                                       \
+    return (name##_p) array_range((array_p) name, start, len);          \
+}                                                                       \
+                                                                        \
+inline item##_p *name##_data(name##_p name)                             \
+{                                                                       \
+    return (item##_p *) array_data((array_p) name);                     \
+}                                                                       \
+                                                                        \
+inline size_t name##_length(name##_p array)                             \
+{                                                                       \
+    return array_length((array_p) name);                                \
+}                                                                       \
+                                                                        \
+inline name##_p name##_push(name##_p name, item##_r value)              \
+{                                                                       \
+    return (name##_p) array_push((array_p) name, (tree_r) value);       \
+}                                                                       \
+                                                                        \
+inline item##_p name##_top(name##_p name)                               \
+{                                                                       \
+    return (item##_p) array_top((array_p) name);                        \
+}                                                                       \
+                                                                        \
+inline name##_p name##_pop(name##_p name)                               \
+{                                                                       \
+    assert(name##_length(name) && "Can only pop if non-empty");         \
+    return name##_range(name, 0, name_length(name)-1);                  \
+}
+
+
+
 
 // ============================================================================
 //
@@ -84,16 +146,23 @@ extern array_delim_p array_paren, array_curly, array_square, array_indent;
 //
 // ============================================================================
 
-inline array_r array_new(unsigned position, ...)
+inline array_r array_make(tree_handler_fn h, unsigned pos, array_delim_p delim,
+                          size_t sz, tree_r *data)
+// ----------------------------------------------------------------------------
+//   Create an array with the given parameters
+// ----------------------------------------------------------------------------
+{
+    return (array_r) tree_make(h, pos, delim, sz, data);
+}
+
+
+inline array_r array_new(unsigned position, array_delim_p delim,
+                         size_t length, tree_r *data)
 // ----------------------------------------------------------------------------
 //    Allocate a array with the given data
 // ----------------------------------------------------------------------------
 {
-    va_list va;
-    va_start(va, position);
-    array_r result = array_make(array_handler, position, va);
-    va_end(va);
-    return result;
+    return array_make(array_handler, position, delim, length, data);
 }
 
 
@@ -157,7 +226,9 @@ inline array_p array_append(array_p array, array_p array2)
 //   Append one array to another
 // ----------------------------------------------------------------------------
 {
-    return array_append_data(array, array_length(array2), array_data(array2));
+    return array_append_data(array,
+                             array_length(array2),
+                             (tree_r *) array_data(array2));
 }
 
 
@@ -166,7 +237,7 @@ inline array_p array_push(array_p array, tree_r value)
 //    Push the given element at end of the array
 // ----------------------------------------------------------------------------
 {
-    return array_append_data(array, 1, (tree_p *) &value);
+    return array_append_data(array, 1, (tree_r *) &value);
 }
 
 

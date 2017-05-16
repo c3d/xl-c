@@ -24,10 +24,6 @@
 #include <string.h>
 
 
-// Private blob handler, should not be called directly in general
-extern blob_r blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
-
-
 blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append data to the blob - In place if possible
