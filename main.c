@@ -25,7 +25,10 @@
 
 int main(int argc, char *argv[])
 {
-    text_p t = text_use(text_cnew(0, "Hello world"));
+    char *x = "Hello world";
+    text_p t = text_printf(0,
+                           "The value of 42 is %d.\n"
+                           "The value of x is %p (%s)\n", 42,x,x);
     text_print(stdout, t);
     text_dispose(&t);
     return 0;

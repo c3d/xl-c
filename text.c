@@ -145,13 +145,14 @@ extern text_r text_vprintf(unsigned pos, const char *format, va_list va)
     // themselves have inserted for example %s.
     size = text_length(result) - 1;
     unsigned offset = search - base;
-    result = (text_r) text_append_data(result, 1024, NULL);
+    result = (text_r) text_append_data(result, 1024 + size, NULL);
     base = (char *) text_data(result);
     format = base + offset;
-    unsigned act_size = vsnprintf(base + size - 1, 1024, format, va);
+    unsigned act_size = vsnprintf(base + size + 1, 1023 + size, format, va);
 
     // Truncate result to actual size
-    result = (text_r) text_range(result, 0, size + act_size);
+    memmove((char *) format, base + size + 1, act_size);
+    result = (text_r) text_range(result, 0, offset + act_size);
 
     return result;
 }

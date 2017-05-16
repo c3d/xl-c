@@ -39,16 +39,17 @@ blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
     blob_r copy = (blob_r) blob;
     if (blob_ref(blob) > 1)
         copy = NULL;
-    blob_r result = (blob_r) realloc(copy, blob->size + sz);
+    blob_r result = (blob_r) realloc(copy, sizeof(blob_t) + blob->size + sz);
     if (result)
     {
         if (copy == NULL)
             memcpy(result, blob, sizeof(blob_t) + blob->size);
+        char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
         if (data)
-        {
-            char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
             memcpy(append_dst, data, sz);
-        }
+        else
+            memset(append_dst, 0, sz);
+        result->size += sz;
     }
     blob_unref(blob);
     return result;
