@@ -20,15 +20,20 @@
 // ****************************************************************************
 
 #include "text.h"
+#include "number.h"
+#include "name.h"
 #include <stdio.h>
 #include <string.h>
 
 int main(int argc, char *argv[])
 {
     char *x = "Hello world";
+    integer_p n = integer_new(0, 42);
+    name_p name = name_new(0, 1, "X");
     text_p t = text_printf(0,
-                           "The value of 42 is %d.\n"
-                           "The value of x is %p (%s)\n", 42,x,x);
+                           "Name X is %t\n"
+                           "The value of 42 is %t (%d).\n"
+                           "The value of x is %p (%s)\n", name, n, 42, x, x);
     text_print(stdout, t);
     text_dispose(&t);
     return 0;
