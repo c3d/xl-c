@@ -36,5 +36,7 @@ int main(int argc, char *argv[])
                            "The value of x is %p (%s)\n", name, n, 42, x, x);
     text_print(stdout, t);
     text_dispose(&t);
+    name_dispose(&name);
+    integer_dispose(&n);
     return 0;
 }

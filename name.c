@@ -96,7 +96,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Create name and copy data in it
         name = (name_r) malloc(sizeof(name_t) + size);
         memcpy(name + 1, data, size);
-        name->text.blob.size = size;
+        name->text.blob.length = size;
         return (tree_p) name;
 
     case TREE_RENDER:

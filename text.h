@@ -120,7 +120,7 @@ inline size_t text_length(text_p text)
 //   Return the data for the text
 // ----------------------------------------------------------------------------
 {
-    return text->blob.size;
+    return text->blob.length;
 }
 
 #endif // TEXT_H

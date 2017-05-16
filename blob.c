@@ -37,19 +37,22 @@ blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
 //   - The realloc can extend memory without copy
 {
     blob_r copy = (blob_r) blob;
-    if (blob_ref(blob) > 1)
+    if (blob_ref(blob))
         copy = NULL;
-    blob_r result = (blob_r) realloc(copy, sizeof(blob_t) + blob->size + sz);
+    blob_r result = (blob_r) realloc(copy, sizeof(blob_t) + blob->length + sz);
     if (result)
     {
-        if (copy == NULL)
-            memcpy(result, blob, sizeof(blob_t) + blob->size);
-        char *append_dst = (char *) result + sizeof(blob_t) + blob->size;
+        if (result != copy)
+        {
+            memcpy(result, blob, sizeof(blob_t) + blob->length);
+            result->tree.refcount = 0;
+        }
+        char *append_dst = blob_data(result) + blob_length(blob);
         if (data)
             memcpy(append_dst, data, sz);
         else
             memset(append_dst, 0, sz);
-        result->size += sz;
+        result->length += sz;
     }
     blob_unref(blob);
     return result;
@@ -63,19 +66,20 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
 //   We can move in place if there is only one user of this blob
 {
     blob_r copy = (blob_r) blob;
-    unsigned end = first + length;
-    if (end > blob->size)
-        end = blob->size;
-    if (first > blob->size)
-        first = blob->size;
-    unsigned resized = end - first;
-    if (blob_ref(blob) > 1)
+    size_t end = first + length;
+    if (end > blob->length)
+        end = blob->length;
+    if (first > blob->length)
+        first = blob->length;
+    size_t resized = end - first;
+    if (blob_ref(blob))
     {
         copy = (blob_r) malloc(sizeof(blob_t) + resized);
         memcpy(copy, blob, sizeof(blob_t));
+        copy->tree.refcount = 0;
     }
-    memmove(copy + 1, blob + 1, resized);
-    copy->size = resized;
+    memmove(copy + 1, blob_data(blob) + first, resized);
+    copy->length = resized;
     if (copy == blob)
         copy = (blob_r) realloc(copy, sizeof(blob_t) + resized);
     blob_unref(blob);
@@ -103,7 +107,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_SIZE:
         // Return the size of the tree in bytes (is dynamic for blobs)
-        return (tree_p) (sizeof(blob_t) + blob->size);
+        return (tree_p) (sizeof(blob_t) + blob->length);
 
     case TREE_ARITY:
         // The arity for blobs is normally 0
@@ -116,7 +120,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create blob and copy data in it
         blob = (blob_r) malloc(sizeof(blob_t) + size);
-        blob->size = size;
+        blob->length = size;
         if (size)
         {
             if (data)
@@ -131,13 +135,10 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
 
-        size = snprintf(buffer, sizeof(buffer),
-                        "%s %zu ",
-                        blob_typename(blob), blob->size);
-        if (io(stream, size, buffer) != size)
+        if (io(stream, 1, "$") != 1)
             return NULL;        // Some error happened, report
         data = (const char *) (blob + 1);
-        for (idx = 0; idx < blob->size;idx++)
+        for (idx = 0; idx < blob->length;idx++)
         {
             size = snprintf(buffer, sizeof(buffer), "%02X", data[idx]);
             if (io(stream, size, buffer) != size)

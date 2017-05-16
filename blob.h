@@ -32,7 +32,7 @@ typedef struct blob
 //   The bytes are allocated immediately after the blob
 {
     tree_t      tree;           // The base tree
-    size_t      size;           // Size in bytes of the data that follows
+    size_t      length;         // Size in bytes of the data that follows
 } blob_t;
 tree_typedef(blob);
 
@@ -98,7 +98,7 @@ inline size_t blob_length(blob_p blob)
 //   Return the data for the blob
 // ----------------------------------------------------------------------------
 {
-    return blob->size;
+    return blob->length;
 }
 
 
@@ -164,7 +164,7 @@ inline name##_p name##_push(name##_p name, item value)                  \
                                   sizeof(value), &value));              \
 }                                                                       \
                                                                         \
-inline item name##_back(name##_p name)                                  \
+inline item name##_top(name##_p name)                                   \
 {                                                                       \
     return name##_data(name)[name##_length(name)-1];                    \
 }                                                                       \
