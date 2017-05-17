@@ -60,7 +60,7 @@ static void error_display(text_p error)
     // Printout the message
     if (ok)
     {
-        fprintf(stderr, "%s:%d: %*s\n",
+        fprintf(stderr, "%s:%d: %.*s\n",
                 posinfo.file, posinfo.line,
                 (int) text_length(error), text_data(error));
 
@@ -80,7 +80,7 @@ static void error_display(text_p error)
     }
     else
     {
-        fprintf(stderr, "<unknown position>: %*s\n",
+        fprintf(stderr, "<unknown position>: %.*s\n",
                 (int) text_length(error), text_data(error));
     }
 }
