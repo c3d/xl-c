@@ -37,7 +37,7 @@ array_p array_append_data(array_p array, size_t sz, tree_r *data)
     size_t ins_size = sz * sizeof(tree_p);
     size_t new_size = old_size + ins_size;
 
-    array_r result = (array_r) realloc(copy, new_size);
+    array_r result = (array_r) tree_realloc((tree_r) copy, new_size);
     if (result)
     {
         if (result != copy)
@@ -86,7 +86,7 @@ array_p array_range(array_p array, size_t first, size_t length)
     size_t resized_bytes = sizeof(array_t) + resized * sizeof(tree_p);
     if (array_ref(array))
     {
-        copy = (array_r) malloc(resized_bytes);
+        copy = (array_r) tree_malloc(resized_bytes);
         memcpy(copy, array, sizeof(array_t));
         copy->tree.refcount = 0;
     }
@@ -113,7 +113,7 @@ array_p array_range(array_p array, size_t first, size_t length)
     if (copy == array)
     {
         // We did the copy in place: need to truncate result
-        copy = (array_r) realloc(copy, resized_bytes);
+        copy = (array_r) tree_realloc((tree_r) copy, resized_bytes);
     }
     array_unref(array);
     return copy;
@@ -158,7 +158,7 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         children = va_arg(va, tree_p *);
 
         // Create array and copy data in it
-        array = (array_r) malloc(sizeof(array_t) + size * sizeof(tree_p));
+        array = (array_r) tree_malloc(sizeof(array_t) + size * sizeof(tree_p));
         array->length = size;
         array->delimiters = delim;
         children = (tree_p *) (array + 1);

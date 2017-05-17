@@ -75,6 +75,11 @@ typedef const struct postfix *postfix_p;
 typedef const struct infix   *infix_p;
 typedef const struct array   *array_p;
 
+// Macros to indicate source position
+#define SOURCE__(L)         #L
+#define SOURCE_(F,L)        (F ":" SOURCE__(L))
+#define SOURCE              SOURCE_(__FILE__, __LINE__)
+
 
 
 // ============================================================================
@@ -120,14 +125,18 @@ typedef struct tree
     tree_handler_fn     handler;      // Handler function for the tree
     unsigned            refcount;     // Reference count (garbage collection)
     srcpos_t            position;     // Source code position
+#ifndef NDEBUG
+    const char *        source;       // Allocation position in source
+    struct tree *       previous;     // Global chain of trees for memchecks
+    struct tree *       next;
+#endif
 } tree_t;
 
 typedef       tree_t *tree_r;         // Non-persistent pointer
 typedef const tree_t *tree_p;         // Persistent pointer (ref-counted)
 
 
-// Allocate and initialize a new tree structure
-extern tree_r      tree_make(tree_handler_fn handler, srcpos_t position, ...);
+// Public interface for trees
 inline tree_r      tree_new(srcpos_t position);
 inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
@@ -150,8 +159,16 @@ inline bool        tree_freeze(tree_p tree, tree_io_fn output, void *stream);
 inline tree_r      tree_thaw(tree_io_fn input, void *stream);
 extern tree_r      tree_io(tree_cmd_t cmd, tree_r tree, ...);
 
-// Default handler for tree operations - Do not call directly
+// Internal tree operations - Normally no need to call directly
 extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+extern tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...);
+extern void   tree_memcheck();
+extern tree_r tree_malloc_(const char *where, size_t size);
+extern tree_r tree_realloc_(const char *where, tree_r old, size_t new_size);
+extern void   tree_free_(const char *where, tree_r tree);
+#define tree_malloc(sz)         tree_malloc_(SOURCE, (sz))
+#define tree_realloc(old, sz)   tree_realloc_(SOURCE, (old), (sz))
+#define tree_free(t)            tree_free_(SOURCE, (t))
 
 // Macro to loop on tree children
 #define tree_children_loop(tree, body)            \

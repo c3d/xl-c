@@ -49,7 +49,7 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
                                                                         \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
-        number = (number##_r) malloc(sizeof(number##_t));               \
+        number = (number##_r) tree_malloc(sizeof(number##_t));          \
         number->value = value;                                          \
         return (tree_p) number;                                         \
                                                                         \
@@ -92,7 +92,7 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
         base = va_arg(va, unsigned);                                    \
-        number = (based_##number##_r) malloc(sizeof(*number));          \
+        number = (based_##number##_r) tree_malloc(sizeof(*number));     \
         number->number.value = value;                                   \
         number->base = base;                                            \
         return (tree_p) number;                                         \

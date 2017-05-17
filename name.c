@@ -94,7 +94,7 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         assert(name_is_valid(size, data) && "Name must respect XL syntax");
 
         // Create name and copy data in it
-        name = (name_r) malloc(sizeof(name_t) + size);
+        name = (name_r) tree_malloc(sizeof(name_t) + size);
         memcpy(name + 1, data, size);
         name->text.blob.length = size;
         return (tree_p) name;

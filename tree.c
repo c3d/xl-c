@@ -25,6 +25,125 @@
 #include <string.h>
 
 
+#ifndef NDEBUG
+// Global list of trees for memory allocation debugging
+static tree_r trees = NULL, trees_end = NULL;
+static unsigned allocs = 0;
+#endif
+
+
+tree_r tree_malloc_(const char *source, size_t size)
+// ----------------------------------------------------------------------------
+//   Allocate a tree, clear refcount and insert in global list
+// ----------------------------------------------------------------------------
+{
+    tree_r result = malloc(size);
+    result->handler = NULL;
+    result->refcount = 0;
+    result->position = 0;
+
+#ifndef NDEBUG
+    allocs++;
+    result->source = source;
+    result->next = NULL;
+    result->previous = trees_end;
+    if (trees_end)
+        trees_end->next = result;
+    else
+        trees = result;
+    trees_end = result;
+#endif // NDEBUG
+
+    return result;
+}
+
+
+tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
+// ----------------------------------------------------------------------------
+//   Reallocate a tree
+// ----------------------------------------------------------------------------
+{
+    if (!old)
+        return tree_malloc(new_size);
+
+    assert(old->refcount <= 1 && "Do not create dangling pointers to tree");
+    tree_r result = realloc(old, new_size);
+
+#ifndef NDEBUG
+    allocs++;
+    tree_r previous = old->previous;
+    tree_r next = old->next;
+    if (result != old)
+    {
+        if (next)
+            next->previous = result;
+        else
+            trees_end = result;
+        if (previous)
+            previous->next = result;
+        else
+            trees = result;
+    }
+    result->source = source;
+#endif // NDEBUG
+
+    return result;
+}
+
+
+void tree_free_(const char *source, tree_r tree)
+// ----------------------------------------------------------------------------
+//   Free a tree
+// ----------------------------------------------------------------------------
+{
+    assert(tree->refcount == 0 && "Only non-referenced trees can be freed");
+
+#ifndef NDEBUG
+    tree_r previous = tree->previous;
+    tree_r next = tree->next;
+    if (previous)
+        previous->next = next;
+    else
+        trees = next;
+    if (next)
+        next->previous = previous;
+    else
+        trees_end = previous;
+#endif // NDEBUG
+
+    free(tree);
+}
+
+
+void tree_memcheck()
+// ----------------------------------------------------------------------------
+//   Check the list of trees to see if we have non-referenced trees in it
+// ----------------------------------------------------------------------------
+//   This can be called at any point doing memory allocations, after
+//   all trees have been tree_use'd or disposed of.
+//   It will signal any leftover (leaked) tree.
+{
+#ifndef NDEBUG
+    unsigned index = 0;
+    for (tree_r tree = trees; tree; tree = tree->next)
+    {
+        index++;
+        if ((int) tree->refcount <= 0)
+            fprintf(stderr,
+                    "%s: Tree #%u (%p) has refcount %d\n",
+                    tree->source, index, tree, (int) tree->refcount);
+        if (index > allocs)
+        {
+            fprintf(stderr,
+                    "*** More trees (%u) than what we allocated (%u)\n"
+                    "*** Maybe a corruption of the list of trees\n",
+                    index, allocs);
+        }
+    }
+#endif // NDEBUG
+}
+
+
 tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the given handler, position and pass extra args
@@ -140,7 +259,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Default initialization for trees
-        return (tree_p) malloc(sizeof(tree_t));
+        return (tree_p) tree_malloc(sizeof(tree_t));
 
     case TREE_DELETE:
         // Check if the tree has a non-zero arity. If so, unref children
@@ -155,7 +274,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     case TREE_CLONE:
         // Perform a shallow or deep copy of the tree
         size = tree_size(tree);
-        copy = (tree_r) malloc(size);
+        copy = (tree_r) tree_malloc(size);
         if (copy)
         {
             memcpy(copy, tree, size);

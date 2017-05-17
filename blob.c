@@ -35,12 +35,14 @@ blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
     blob_r copy = (blob_r) blob;
     if (blob_ref(blob))
         copy = NULL;
-    blob_r result = (blob_r) realloc(copy, sizeof(blob_t) + blob->length + sz);
+    size_t old_size = sizeof(blob_t) + blob->length;
+    size_t new_size = old_size + sz;
+    blob_r result = (blob_r) tree_realloc((tree_r) copy, new_size);
     if (result)
     {
         if (result != copy)
         {
-            memcpy(result, blob, sizeof(blob_t) + blob->length);
+            memcpy(result, blob, old_size);
             result->tree.refcount = 0;
         }
         char *append_dst = blob_data(result) + blob_length(blob);
@@ -70,14 +72,14 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
     size_t resized = end - first;
     if (blob_ref(blob))
     {
-        copy = (blob_r) malloc(sizeof(blob_t) + resized);
+        copy = (blob_r) tree_malloc(sizeof(blob_t) + resized);
         memcpy(copy, blob, sizeof(blob_t));
         copy->tree.refcount = 0;
     }
     memmove(copy + 1, blob_data(blob) + first, resized);
     copy->length = resized;
     if (copy == blob)
-        copy = (blob_r) realloc(copy, sizeof(blob_t) + resized);
+        copy = (blob_r) tree_realloc((tree_r) copy, sizeof(blob_t) + resized);
     blob_unref(blob);
     return copy;
 }
@@ -115,7 +117,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         data = va_arg(va, const char *);
 
         // Create blob and copy data in it
-        blob = (blob_r) malloc(sizeof(blob_t) + size);
+        blob = (blob_r) tree_malloc(sizeof(blob_t) + size);
         blob->length = size;
         if (size)
         {

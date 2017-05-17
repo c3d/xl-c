@@ -64,5 +64,6 @@ int main(int argc, char *argv[])
           "The variable %t does not have value %t (%f * 3)", name, n, 42.0/3);
 
     positions_delete(positions);
+    tree_memcheck();
     return 0;
 }
