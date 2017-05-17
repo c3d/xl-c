@@ -46,13 +46,13 @@ int main(int argc, char *argv[])
     error_set_positions(positions);
 
     position_open_source_file(positions, "/Users/ddd/Work/xl/main.c");
-    error(766, "The position of main should be correct at %d", 766);
+    error(1390, "The position of main should be correct at %d", 766);
 
     for (int commit = 0; commit <= 1; commit++)
     {
         errors_p errs = errors_save();
-        error(1471, "This error should be shown if commit %d is 1", commit);
-        error(1548, "The value of error pointer is %p", errs);
+        error(1558, "This error should be shown if commit %d is 1", commit);
+        error(1635, "The value of error pointer is %p", errs);
         if (commit)
             errors_commit(errs);
         else
