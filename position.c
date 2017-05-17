@@ -123,9 +123,10 @@ bool position_info(positions_p p, srcpos_t pos, position_p result)
 
     unsigned offset = pos - good->start;
     result->position = pos;
-    result->file = file->name;
+    result->file = good->name;
     result->offset = offset;
 
+    unsigned line = 1;
     unsigned line_offset = 0;
     unsigned current = 0;
     while (current < offset && !feof(f))
@@ -133,8 +134,12 @@ bool position_info(positions_p p, srcpos_t pos, position_p result)
         int c = fgetc(f);
         current++;
         if (c == '\n')
+        {
             line_offset = current;
+            line++;
+        }
     }
+    result->line = line;
     result->line_offset = line_offset;
     result->column = offset - line_offset;
     while (!feof(f))
