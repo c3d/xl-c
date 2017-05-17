@@ -22,6 +22,8 @@
 #include "text.h"
 #include "number.h"
 #include "name.h"
+#include "error.h"
+#include "position.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -35,8 +37,32 @@ int main(int argc, char *argv[])
                            "The value of 42 is %t (%d).\n"
                            "The value of x is %p (%s)\n", name, n, 42, x, x);
     text_print(stdout, t);
+
+    positions_p positions = positions_new();
+    error_set_positions(positions);
+
+    position_open_source_file(positions, "/Users/ddd/Work/xl/main.c");
+    error(766, "The position of main should be correct at %d", 766);
+
+    for (int commit = 0; commit <= 1; commit++)
+    {
+        errors_p errs = errors_save();
+        error(1471, "This error should be shown if commit %d is 1", commit);
+        error(1548, "The value of error pointer is %p", errs);
+        if (commit)
+            errors_commit(errs);
+        else
+            errors_clear(errs);
+    }
+
     text_dispose(&t);
     name_dispose(&name);
     integer_dispose(&n);
+
+    error_set_positions(NULL);
+    error(0,
+          "The variable %t does not have value %t (%f * 3)", name, n, 42.0/3);
+
+    positions_delete(positions);
     return 0;
 }

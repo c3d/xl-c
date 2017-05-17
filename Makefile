@@ -30,7 +30,8 @@ SOURCES     =		\
 	pfix.c		\
 	infix.c		\
 	array.c		\
-	position.c
+	position.c	\
+	error.c
 
 PRODUCTS=xl.exe
 
