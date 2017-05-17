@@ -31,7 +31,8 @@ SOURCES     =		\
 	infix.c		\
 	array.c		\
 	position.c	\
-	error.c
+	error.c		\
+	scanner.c
 
 PRODUCTS=xl.exe
 
