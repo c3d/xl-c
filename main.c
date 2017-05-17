@@ -23,6 +23,7 @@
 #include "name.h"
 #include "number.h"
 #include "position.h"
+#include "recorder.h"
 #include "text.h"
 
 #include <stdio.h>
@@ -30,6 +31,8 @@
 
 int main(int argc, char *argv[])
 {
+    RECORD(MAIN, "Starting %s with %d args", argv[0], argc);
+
     char *x = "Hello world";
     integer_p n = integer_new(0, 42);
     name_p name = name_new(0, 1, "X");

@@ -33,9 +33,12 @@ SOURCES     =			\
 	position.c		\
 	error.c			\
 	scanner.c		\
-	utf8.c
+	utf8.c			\
+	recorder/recorder.c
 
 PRODUCTS=xl.exe
+
+INCLUDES=recorder .
 
 BUILD=build/
 include $(BUILD)rules.mk
