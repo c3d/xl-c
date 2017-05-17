@@ -20,7 +20,10 @@
 
 #define TREE_C
 #include "tree.h"
+
+#include "recorder.h"
 #include "text.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +70,7 @@ tree_r tree_malloc_(const char *source, size_t size)
     trees_end = debug;
 #endif // NDEBUG
 
+    RECORD(ALLOC, "%s: malloc(%zu)=%p", source, size, result);
     result->handler = NULL;
     result->refcount = 0;
     result->position = 0;
@@ -109,6 +113,8 @@ tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
     debug->source = source;
 #endif // NDEBUG
 
+    RECORD(ALLOC, "%s: realloc(%p,%zu)=%p", source, old, new_size, result);
+
     return result;
 }
 
@@ -119,7 +125,7 @@ void tree_free_(const char *source, tree_r tree)
 // ----------------------------------------------------------------------------
 {
     assert(tree->refcount == 0 && "Only non-referenced trees can be freed");
-
+    RECORD(ALLOC, "%s: free(%p) refcount %u", source, tree, tree->refcount);
 #ifndef NDEBUG
     tree_debug_p debug = (tree_debug_p) tree - 1;
     tree_debug_p previous = debug->previous;
@@ -150,23 +156,31 @@ void tree_memcheck()
 {
 #ifndef NDEBUG
     unsigned index = 0;
+    bool bad = false;
     for (tree_debug_p debug = trees; debug; debug = debug->next)
     {
         index++;
-        tree_r tree = (tree_r) debug;
+        tree_r tree = (tree_r) (debug + 1);
         if ((int) tree->refcount <= 0)
+        {
             fprintf(stderr,
                     "%s: Tree #%u (%p) has refcount %d\n",
                     debug->source, index, tree, (int) tree->refcount);
+            bad = true;
+        }
         if (index > allocs)
         {
             fprintf(stderr,
                     "*** More trees (%u) than what we allocated (%u)\n"
                     "*** Maybe a corruption of the list of trees\n",
                     index, allocs);
+            bad = true;
             break;
         }
     }
+
+    if (bad)
+        recorder_dump();
 #endif // NDEBUG
 }
 
