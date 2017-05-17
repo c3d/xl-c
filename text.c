@@ -70,7 +70,7 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 }
 
 
-text_r text_printf(unsigned pos, const char *format, ...)
+text_r text_printf(srcpos_t pos, const char *format, ...)
 // ----------------------------------------------------------------------------
 //    Format input with printf-like style and %t extension for trees
 // ----------------------------------------------------------------------------
@@ -84,7 +84,7 @@ text_r text_printf(unsigned pos, const char *format, ...)
 }
 
 
-extern text_r text_vprintf(unsigned pos, const char *format, va_list va)
+extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
 // ----------------------------------------------------------------------------
 //   Format input with printf-style format, and %t extension for trees
 // ----------------------------------------------------------------------------

@@ -47,13 +47,13 @@ typedef struct block
 tree_children_typedef_override(block);
 
 
-inline block_r       block_new(unsigned position, tree_r child, block_delim_p);
+inline block_r       block_new(srcpos_t position, tree_r child, block_delim_p);
 inline tree_p        block_child(block_p block);
 inline tree_p        block_set_child(block_p block, tree_r child);
 inline block_delim_p block_delimiters(block_p block);
 
 // Private block handler, should not be called directly in general
-inline block_r block_make(tree_handler_fn h, unsigned pos,
+inline block_r block_make(tree_handler_fn h, srcpos_t pos,
                            tree_r child, block_delim_p);
 extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
@@ -74,7 +74,7 @@ extern block_delim_p block_paren, block_curly, block_square, block_indent;
 //
 // ============================================================================
 
-inline block_r block_make(tree_handler_fn handler, unsigned pos,
+inline block_r block_make(tree_handler_fn handler, srcpos_t pos,
                           tree_r child, block_delim_p delim)
 // ----------------------------------------------------------------------------
 //   Create a block with the given parameters
@@ -84,7 +84,7 @@ inline block_r block_make(tree_handler_fn handler, unsigned pos,
 }
 
 
-inline block_r block_new(unsigned pos, tree_r child, block_delim_p delim)
+inline block_r block_new(srcpos_t pos, tree_r child, block_delim_p delim)
 // ----------------------------------------------------------------------------
 //    Allocate a block with the given data
 // ----------------------------------------------------------------------------

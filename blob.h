@@ -37,7 +37,7 @@ typedef struct blob
 tree_typedef(blob);
 
 
-inline blob_r  blob_new(unsigned position, size_t sz, const char *data);
+inline blob_r  blob_new(srcpos_t position, size_t sz, const char *data);
 extern blob_p  blob_append_data(blob_p blob, size_t sz, const char *data);
 inline blob_p  blob_append(blob_p blob, blob_p other);
 extern blob_p  blob_range(blob_p blob, size_t start, size_t len);
@@ -45,7 +45,7 @@ inline char   *blob_data(blob_p blob);
 inline size_t  blob_length(blob_p blob);
 
 // Private blob handler, should not be called directly in general
-inline blob_r blob_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline blob_r blob_make(tree_handler_fn h, srcpos_t pos, size_t, const char *);
 extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
@@ -56,7 +56,7 @@ extern tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline blob_r blob_make(tree_handler_fn h, unsigned pos,
+inline blob_r blob_make(tree_handler_fn h, srcpos_t pos,
                         size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Create a blob with the given parameters
@@ -66,7 +66,7 @@ inline blob_r blob_make(tree_handler_fn h, unsigned pos,
 }
 
 
-inline blob_r blob_new(unsigned position, size_t sz, const char *data)
+inline blob_r blob_new(srcpos_t position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a blob with the given data
 // ----------------------------------------------------------------------------
@@ -109,70 +109,64 @@ inline size_t blob_length(blob_p blob)
 //
 // ============================================================================
 
-#define blob_typedef(item, name)                                        \
+#define blob_typedef(item, type)                                        \
                                                                         \
-typedef const struct name *name##_p;                                    \
-typedef       struct name *name##_r;                                    \
+tree_typedef(type);                                                     \
                                                                         \
-inline name##_r *name##_new(unsigned pos, size_t sz, const item *data)  \
+inline type##_r *type##_new(srcpos_t pos, size_t sz, const item *data)  \
 {                                                                       \
     sz *= sizeof(item);                                                 \
     const char *chardata = (const char *) data;                         \
-    return (name##_r) blob_new(pos, sz, chardata);                      \
+    return (type##_r) blob_new(pos, sz, chardata);                      \
 }                                                                       \
                                                                         \
-inline void name##_delete(name##_p name)                                \
+inline type##_p type##_append(type##_p type, type##_p type2)            \
 {                                                                       \
-    blob_delete((blob_p) name)                                          \
-}                                                                       \
-                                                                        \
-inline name##_p name##_append(name##_p name, name##_p name2)            \
-{                                                                       \
-    return (name##_p) blob_append((blob_p) name, (blob_p) name2);       \
+    return (type##_p) blob_append((blob_p) type, (blob_p) type2);       \
 }                                                                       \
                                                                         \
                                                                         \
-inline name##_p name##_append_data(name##_p name,                       \
+inline type##_p type##_append_data(type##_p type,                       \
                                    size_t sz, const item *data)         \
 {                                                                       \
     sz *= sizeof(item);                                                 \
     const char *chardata = (const char *) data;                         \
-    return (name##_p) blob_append_data((blob_p) name, sz, chardata);    \
+    return (type##_p) blob_append_data((blob_p) type, sz, chardata);    \
 }                                                                       \
                                                                         \
                                                                         \
-inline name##_p name##_range(name##_p name, size_t start, size_t len)   \
+inline type##_p type##_range(type##_p type, size_t start, size_t len)   \
 {                                                                       \
     start *= sizeof(item);                                              \
     len *= sizeof(item);                                                \
-    return (name##_p) blob_range((blob_p) name, start, len);            \
+    return (type##_p) blob_range((blob_p) type, start, len);            \
 }                                                                       \
                                                                         \
-inline item *name##_data(name##_p name)                                 \
+inline item *type##_data(type##_p type)                                 \
 {                                                                       \
-    return (item *) blob_data((blob_p) name);                           \
+    return (item *) blob_data((blob_p) type);                           \
 }                                                                       \
                                                                         \
-inline size_t name##_length(name##_p blob)                              \
+inline size_t type##_length(type##_p blob)                              \
 {                                                                       \
-    return blob_length((blob_p) name) / sizeof(item);                   \
+    return blob_length((blob_p) type) / sizeof(item);                   \
 }                                                                       \
                                                                         \
-inline name##_p name##_push(name##_p name, item value)                  \
+inline type##_p type##_push(type##_p type, item value)                  \
 {                                                                       \
-    return (name##_p) blob_append((blob_p) name,                        \
+    return (type##_p) blob_append((blob_p) type,                        \
                                   sizeof(value), &value));              \
 }                                                                       \
                                                                         \
-inline item name##_top(name##_p name)                                   \
+inline item type##_top(type##_p type)                                   \
 {                                                                       \
-    return name##_data(name)[name##_length(name)-1];                    \
+    return type##_data(type)[type##_length(type)-1];                    \
 }                                                                       \
                                                                         \
-inline name##_p name##_pop(name##_p name)                               \
+inline type##_p type##_pop(type##_p type)                               \
 {                                                                       \
-    assert(name##_length(name) && "Can only pop if non-empty");         \
-    return name##_range(name, 0, name_length(name)-1);                  \
+    assert(type##_length(type) && "Can only pop if non-empty");         \
+    return type##_range(type, 0, type##_length(type)-1);                \
 }
 
 

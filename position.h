@@ -23,12 +23,15 @@
 
 #include <stdbool.h>
 
+typedef unsigned srcpos_t;
+
+
 typedef struct position
 // ----------------------------------------------------------------------------
 //    Identify a position within a file
 // ----------------------------------------------------------------------------
 {
-    unsigned     position;      // Global position
+    srcpos_t     position;      // Global position
     const char * file;          // File name
     unsigned     offset;        // Offset in file
     unsigned     line;          // Line number in file
@@ -44,7 +47,7 @@ typedef struct position_file
 // ----------------------------------------------------------------------------
 {
     const char *          name;
-    unsigned              start;
+    srcpos_t              start;
     struct position_file *previous;
 } position_file_t, *position_file_p;
 
@@ -54,7 +57,7 @@ typedef struct positions
 //   Record positions
 // ----------------------------------------------------------------------------
 {
-    unsigned         position;
+    srcpos_t         position;
     position_file_t *last;
 } positions_t, *positions_p;
 
@@ -64,14 +67,14 @@ positions_p positions_new();
 void        positions_delete(positions_p p);
 
 // Getting and stepping the current global position
-unsigned position(positions_p p);
-unsigned position_step(positions_p p);
+srcpos_t position(positions_p p);
+srcpos_t position_step(positions_p p);
 
 // Opening and closing source files
-unsigned position_open_source_file(positions_p p, const char *name);
+srcpos_t position_open_source_file(positions_p p, const char *name);
 
 // Converting a global position into position information
-bool     position_info(positions_p p, unsigned pos, position_p result);
+bool     position_info(positions_p p, srcpos_t pos, position_p result);
 
 // Getting the source code
 bool     position_source(position_p posinfo, char *buffer, unsigned size);

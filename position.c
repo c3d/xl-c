@@ -59,7 +59,7 @@ void positions_delete(positions_p p)
 }
 
 
-unsigned position(positions_p p)
+srcpos_t position(positions_p p)
 // ----------------------------------------------------------------------------
 //    Return the current global position
 // ----------------------------------------------------------------------------
@@ -68,7 +68,7 @@ unsigned position(positions_p p)
 }
 
 
-unsigned position_step(positions_p p)
+srcpos_t position_step(positions_p p)
 // ----------------------------------------------------------------------------
 //   Increment the current global position, return old location
 // ----------------------------------------------------------------------------
@@ -84,7 +84,7 @@ unsigned position_step(positions_p p)
 //
 // ============================================================================
 
-unsigned position_open_source_file(positions_p p, const char *name)
+srcpos_t position_open_source_file(positions_p p, const char *name)
 // ----------------------------------------------------------------------------
 //    Open a new source file
 // ----------------------------------------------------------------------------
@@ -98,11 +98,14 @@ unsigned position_open_source_file(positions_p p, const char *name)
 }
 
 
-bool position_info(positions_p p, unsigned pos, position_p result)
+bool position_info(positions_p p, srcpos_t pos, position_p result)
 // ----------------------------------------------------------------------------
 // Converting a global position into position information
 // ----------------------------------------------------------------------------
 {
+    if (!p)
+        return false;
+
     position_file_p file = p->last;
     position_file_p good = NULL;
 

@@ -25,7 +25,7 @@
 #include <string.h>
 
 
-tree_r tree_make(tree_handler_fn handler, unsigned position, ...)
+tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the given handler, position and pass extra args
 // ----------------------------------------------------------------------------

@@ -36,17 +36,17 @@ typedef struct text
 tree_typedef(text);
 
 
-inline text_r      text_new(unsigned position, size_t sz, const char *data);
+inline text_r      text_new(srcpos_t position, size_t sz, const char *data);
 inline text_p      text_append_data(text_p text, size_t sz, const char *data);
 inline text_p      text_append(text_p text, text_p text2);
 inline text_p      text_range(text_p text, size_t start, size_t length);
 inline const char *text_data(text_p text);
 inline size_t      text_length(text_p text);
-extern text_r      text_printf(unsigned pos, const char *format, ...);
-extern text_r      text_vprintf(unsigned pos, const char *format, va_list va);
+extern text_r      text_printf(srcpos_t pos, const char *format, ...);
+extern text_r      text_vprintf(srcpos_t pos, const char *format, va_list va);
 
 // Private text handler, should not be called directly in general
-inline text_r text_make(tree_handler_fn h, unsigned pos, size_t, const char *);
+inline text_r text_make(tree_handler_fn h, srcpos_t pos, size_t, const char *);
 extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
@@ -60,7 +60,7 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline text_r text_make(tree_handler_fn h, unsigned pos,
+inline text_r text_make(tree_handler_fn h, srcpos_t pos,
                         size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Create a text with the given parameters
@@ -70,7 +70,7 @@ inline text_r text_make(tree_handler_fn h, unsigned pos,
 }
 
 
-inline text_r text_new(unsigned position, size_t sz, const char *data)
+inline text_r text_new(srcpos_t position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a text with the given data
 // ----------------------------------------------------------------------------

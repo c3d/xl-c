@@ -35,7 +35,7 @@ typedef struct name
 tree_typedef(name);
 #undef name_text
 
-inline name_r      name_new(unsigned position, size_t sz, const char *data);
+inline name_r      name_new(srcpos_t position, size_t sz, const char *data);
 inline name_p      name_append(name_p name, size_t sz, const char *data);
 inline const char *name_data(name_p name);
 inline size_t      name_length(name_p name);
@@ -56,7 +56,7 @@ extern tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline name_r name_new(unsigned position, size_t sz, const char *data)
+inline name_r name_new(srcpos_t position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a name with the given data
 // ----------------------------------------------------------------------------
