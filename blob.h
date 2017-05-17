@@ -113,7 +113,7 @@ inline size_t blob_length(blob_p blob)
                                                                         \
 tree_typedef(type);                                                     \
                                                                         \
-inline type##_r *type##_new(srcpos_t pos, size_t sz, const item *data)  \
+inline type##_r type##_new(srcpos_t pos, size_t sz, const item *data)   \
 {                                                                       \
     sz *= sizeof(item);                                                 \
     const char *chardata = (const char *) data;                         \
@@ -147,15 +147,16 @@ inline item *type##_data(type##_p type)                                 \
     return (item *) blob_data((blob_p) type);                           \
 }                                                                       \
                                                                         \
-inline size_t type##_length(type##_p blob)                              \
+inline size_t type##_length(type##_p type)                              \
 {                                                                       \
     return blob_length((blob_p) type) / sizeof(item);                   \
 }                                                                       \
                                                                         \
 inline type##_p type##_push(type##_p type, item value)                  \
 {                                                                       \
-    return (type##_p) blob_append((blob_p) type,                        \
-                                  sizeof(value), &value));              \
+    return (type##_p) blob_append_data((blob_p) type,                   \
+                                       sizeof(value),                   \
+                                       (const char *) &value);          \
 }                                                                       \
                                                                         \
 inline item type##_top(type##_p type)                                   \
@@ -166,9 +167,8 @@ inline item type##_top(type##_p type)                                   \
 inline type##_p type##_pop(type##_p type)                               \
 {                                                                       \
     assert(type##_length(type) && "Can only pop if non-empty");         \
-    return type##_range(type, 0, type##_length(type)-1);                \
+    size_t new_size = sizeof(item) * (type##_length(type) - 1);         \
+    return type##_range(type, 0, new_size);                             \
 }
-
-
 
 #endif // BLOB_H
