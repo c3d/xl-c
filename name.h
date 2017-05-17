@@ -31,8 +31,13 @@ typedef struct name
 {
     text_t      text;           // The base blob
 } name_t;
+
+#ifdef NAME_C
+#define inline extern inline
+#endif
+
 #define name_text name_slow_text
-tree_typedef(name);
+tree_type(name);
 #undef name_text
 
 inline name_r      name_new(srcpos_t position, size_t sz, const char *data);
@@ -47,6 +52,8 @@ extern tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
 #define name_cnew(pos, name)    name_new(pos, sizeof(name), name)
+
+#undef inline
 
 
 

@@ -33,9 +33,13 @@ typedef struct infix
     tree_p        left, right;
     name_p        opcode;
 } infix_t;
-tree_children_typedef(infix);
 
 
+#ifdef INFIX_C
+#define inline extern inline
+#endif // INFIX_C
+
+tree_children_type(infix);
 inline infix_r      infix_new(srcpos_t position,
                               text_r opcode, tree_r left, tree_r right);
 inline name_p       infix_opcode(infix_p infix);
@@ -46,6 +50,8 @@ inline tree_p       infix_right(infix_p infix);
 inline infix_r     infix_make(tree_handler_fn h, srcpos_t pos,
                                text_r opcode, tree_r left, tree_r right);
 extern tree_p       infix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+
+#undef inline
 
 
 

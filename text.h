@@ -33,9 +33,12 @@ typedef struct text
 {
     blob_t      blob;           // The base blob
 } text_t;
-tree_typedef(text);
 
+#ifdef TEXT_C
+#define inline extern inline
+#endif
 
+tree_type(text);
 inline text_r      text_new(srcpos_t position, size_t sz, const char *data);
 inline text_p      text_append_data(text_p text, size_t sz, const char *data);
 inline text_p      text_append(text_p text, text_p text2);
@@ -51,6 +54,8 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
 #define text_cnew(pos, text)    text_new(pos, strlen(text), text)
+
+#undef inline
 
 
 

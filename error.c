@@ -31,11 +31,10 @@
 #include <stdlib.h>
 
 
-// Silence warning about unused inline functions defined in .c file
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-array_typedef(text, errors);
-#pragma GCC diagnostic pop
+// Create an array type to record errors
+#define inline extern inline
+array_type(text, errors);
+#undef inline
 
 static errors_p    errors    = NULL;
 static positions_p positions = NULL;

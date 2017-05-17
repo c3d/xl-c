@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define ARRAY_C
 #include "array.h"
 #include <stdlib.h>
 #include <strings.h>

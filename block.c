@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define BLOCK_C
 #include "block.h"
 #include <stdlib.h>
 #include <strings.h>

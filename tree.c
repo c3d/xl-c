@@ -18,6 +18,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define TREE_C
 #include "tree.h"
 #include "text.h"
 #include <stdio.h>
@@ -26,9 +27,21 @@
 
 
 #ifndef NDEBUG
+
+typedef struct tree_debug
+// ----------------------------------------------------------------------------
+//   Header containing debug information for tree debugging
+// ----------------------------------------------------------------------------
+{
+    const char *        source; // Allocation position in source
+    struct tree_debug * previous; // Global chain of trees for memchecks
+    struct tree_debug * next;
+} tree_debug_t, *tree_debug_p;
+
 // Global list of trees for memory allocation debugging
-static tree_r trees = NULL, trees_end = NULL;
+static tree_debug_p trees = NULL, trees_end = NULL;
 static unsigned allocs = 0;
+
 #endif
 
 
@@ -37,22 +50,26 @@ tree_r tree_malloc_(const char *source, size_t size)
 //   Allocate a tree, clear refcount and insert in global list
 // ----------------------------------------------------------------------------
 {
+#ifdef NDEBUG
     tree_r result = malloc(size);
+#else
+    tree_debug_p debug = malloc(sizeof(tree_debug_t) + size);
+    tree_r result = (tree_r) (debug + 1);
+
+    allocs++;
+    debug->source = source;
+    debug->next = NULL;
+    debug->previous = trees_end;
+    if (trees_end)
+        trees_end->next = debug;
+    else
+        trees = debug;
+    trees_end = debug;
+#endif // NDEBUG
+
     result->handler = NULL;
     result->refcount = 0;
     result->position = 0;
-
-#ifndef NDEBUG
-    allocs++;
-    result->source = source;
-    result->next = NULL;
-    result->previous = trees_end;
-    if (trees_end)
-        trees_end->next = result;
-    else
-        trees = result;
-    trees_end = result;
-#endif // NDEBUG
 
     return result;
 }
@@ -67,24 +84,29 @@ tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
         return tree_malloc(new_size);
 
     assert(old->refcount <= 1 && "Do not create dangling pointers to tree");
-    tree_r result = realloc(old, new_size);
 
-#ifndef NDEBUG
+#ifdef NDEBUG
+    tree_r result = realloc(old, new_size);
+#else
+    tree_debug_p old_dbg = (tree_debug_p) old - 1;
+    tree_debug_p previous = old_dbg->previous;
+    tree_debug_p next = old_dbg->next;
+    tree_debug_p debug = realloc(old_dbg, sizeof(tree_debug_t) + new_size);
+    tree_r result = (tree_r) (debug + 1);
+
     allocs++;
-    tree_r previous = old->previous;
-    tree_r next = old->next;
-    if (result != old)
+    if (debug != old_dbg)
     {
         if (next)
-            next->previous = result;
+            next->previous = debug;
         else
-            trees_end = result;
+            trees_end = debug;
         if (previous)
-            previous->next = result;
+            previous->next = debug;
         else
-            trees = result;
+            trees = debug;
     }
-    result->source = source;
+    debug->source = source;
 #endif // NDEBUG
 
     return result;
@@ -99,8 +121,9 @@ void tree_free_(const char *source, tree_r tree)
     assert(tree->refcount == 0 && "Only non-referenced trees can be freed");
 
 #ifndef NDEBUG
-    tree_r previous = tree->previous;
-    tree_r next = tree->next;
+    tree_debug_p debug = (tree_debug_p) tree - 1;
+    tree_debug_p previous = debug->previous;
+    tree_debug_p next = debug->next;
     if (previous)
         previous->next = next;
     else
@@ -109,9 +132,11 @@ void tree_free_(const char *source, tree_r tree)
         next->previous = previous;
     else
         trees_end = previous;
+    free(debug);
+#else
+    free(tree);
 #endif // NDEBUG
 
-    free(tree);
 }
 
 
@@ -125,19 +150,21 @@ void tree_memcheck()
 {
 #ifndef NDEBUG
     unsigned index = 0;
-    for (tree_r tree = trees; tree; tree = tree->next)
+    for (tree_debug_p debug = trees; debug; debug = debug->next)
     {
         index++;
+        tree_r tree = (tree_r) debug;
         if ((int) tree->refcount <= 0)
             fprintf(stderr,
                     "%s: Tree #%u (%p) has refcount %d\n",
-                    tree->source, index, tree, (int) tree->refcount);
+                    debug->source, index, tree, (int) tree->refcount);
         if (index > allocs)
         {
             fprintf(stderr,
                     "*** More trees (%u) than what we allocated (%u)\n"
                     "*** Maybe a corruption of the list of trees\n",
                     index, allocs);
+            break;
         }
     }
 #endif // NDEBUG
@@ -267,7 +294,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Free the memory associated with the tree
         assert(tree->refcount == 0 && "Cannot free tree if still referenced");
-        free((tree_r)tree);
+        tree_free((tree_r)tree);
         return NULL;
 
     case TREE_COPY:

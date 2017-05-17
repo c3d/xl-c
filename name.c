@@ -19,12 +19,11 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define NAME_C
 #include "name.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-
 
 bool name_is_operator(name_p name)
 // ----------------------------------------------------------------------------

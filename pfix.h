@@ -33,7 +33,12 @@ typedef struct pfix
     tree_t        tree;
     tree_p        left, right;
 } pfix_t;
-tree_children_typedef(pfix);
+
+#ifdef PFIX_C
+#define inline extern inline
+#endif
+
+tree_children_type(pfix);
 
 inline pfix_r       pfix_new(srcpos_t position, tree_r left, tree_r right);
 inline void         pfix_delete(pfix_p pfix);
@@ -42,7 +47,7 @@ inline tree_p       pfix_right(pfix_p pfix);
 
 
 typedef struct prefix prefix_t;
-tree_children_typedef(prefix);
+tree_children_type(prefix);
 
 inline prefix_r     prefix_new(srcpos_t position, name_r left, tree_r right);
 inline name_p       prefix_operator(prefix_p prefix);
@@ -50,7 +55,7 @@ inline tree_p       prefix_operand(prefix_p prefix);
 
 
 typedef struct postfix postfix_t;
-tree_children_typedef(postfix);
+tree_children_type(postfix);
 
 inline postfix_r    postfix_new(srcpos_t position, tree_r left, name_r right);
 inline name_p       postfix_operator(postfix_p postfix);
@@ -63,6 +68,8 @@ inline pfix_r       pfix_make(tree_handler_fn h, srcpos_t pos,
 extern tree_p       pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 extern tree_p       prefix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 extern tree_p       postfix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+
+#undef inline
 
 
 

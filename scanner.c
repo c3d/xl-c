@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define SCANNER_C
 #include "scanner.h"
 
 #include "error.h"
@@ -171,7 +172,7 @@ static int scanner_getchar(scanner_p s)
 }
 
 
-inline void scanner_ungetchar(scanner_p s, char c)
+static inline void scanner_ungetchar(scanner_p s, char c)
 // ----------------------------------------------------------------------------
 //   Unget last character from input stream
 // ----------------------------------------------------------------------------
@@ -182,7 +183,7 @@ inline void scanner_ungetchar(scanner_p s, char c)
 }
 
 
-inline unsigned scanner_position(scanner_p s)
+static inline unsigned scanner_position(scanner_p s)
 // ----------------------------------------------------------------------------
 //   Return the current position, taking into account chars we returned
 // ----------------------------------------------------------------------------
@@ -193,7 +194,7 @@ inline unsigned scanner_position(scanner_p s)
 }
 
 
-inline void scanner_consume(scanner_p s, char c)
+static inline void scanner_consume(scanner_p s, char c)
 // ----------------------------------------------------------------------------
 //   Update position and token input after consuming one character
 // ----------------------------------------------------------------------------
@@ -204,7 +205,7 @@ inline void scanner_consume(scanner_p s, char c)
 }
 
 
-inline int scanner_nextchar(scanner_p s, char c)
+static inline int scanner_nextchar(scanner_p s, char c)
 // ----------------------------------------------------------------------------
 //   Consume current character and get the next one
 // ----------------------------------------------------------------------------

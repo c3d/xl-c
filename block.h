@@ -44,9 +44,12 @@ typedef struct block
     block_delim_p delimiters;
     tree_p        child;
 } block_t;
-tree_children_typedef_override(block);
 
+#ifdef BLOCK_C
+#define inline extern inline
+#endif
 
+tree_arity_type(block);
 inline block_r       block_new(srcpos_t position, tree_r child, block_delim_p);
 inline tree_p        block_child(block_p block);
 inline tree_p        block_set_child(block_p block, tree_r child);
@@ -65,6 +68,8 @@ extern block_delim_p block_paren, block_curly, block_square, block_indent;
 #define curly_new(pos, child)   block_new(pos, child, block_curly)
 #define square_new(pos, child)  block_new(pos, child, block_square)
 #define indent_new(pos, child)  block_new(pos, child, block_indent)
+
+#undef inline
 
 
 

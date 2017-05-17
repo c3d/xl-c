@@ -45,9 +45,12 @@ typedef struct array
     array_delim_p delimiters;
     size_t        length;
 } array_t;
-tree_children_typedef_override(array);
 
+#ifdef ARRAY_C
+#define inline extern inline
+#endif
 
+tree_arity_type(array);
 inline array_r       array_new(srcpos_t position, array_delim_p delim,
                                size_t length, tree_r *data);
 inline tree_p        array_child(array_p array, size_t index);
@@ -66,6 +69,10 @@ inline array_p       array_pop(array_p array);
 
 // Private array handler, should not be called directly in general
 extern tree_p  array_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+inline array_r array_make(tree_handler_fn h, srcpos_t pos, array_delim_p delim,
+                          size_t sz, tree_r *data);
+
+#undef inline
 
 
 // Standard array separators
@@ -75,62 +82,6 @@ extern array_delim_p array_paren, array_curly, array_square, array_indent;
 #define curly_array_new(pos, size, ...)   array_new(pos, array_curly, size, ## __VA_ARGS__)
 #define square_array_new(pos, size, ...)  array_new(pos, array_square, size, ## __VA_ARGS__)
 #define indent_array_new(pos, size, ...)  array_new(pos, array_indent, size, ## __VA_ARGS__)
-
-
-#define array_typedef(item, type)                                       \
-                                                                        \
-tree_typedef(type);                                                     \
-                                                                        \
-inline type##_r type##_new(srcpos_t pos, size_t sz, item##_r *data)     \
-{                                                                       \
-    return (type##_r) square_array_new(pos, sz, (tree_r *) data);       \
-}                                                                       \
-                                                                        \
-inline type##_p type##_append(type##_p type, type##_p type2)            \
-{                                                                       \
-    return (type##_p) array_append((array_p) type, (array_p) type2);    \
-}                                                                       \
-                                                                        \
-                                                                        \
-inline type##_p type##_append_data(type##_p type,                       \
-                                   size_t sz, item##_r *data)           \
-{                                                                       \
-    return (type##_p) array_append_data((array_p) type,                 \
-                                        sz, (tree_r *) data);           \
-}                                                                       \
-                                                                        \
-                                                                        \
-inline type##_p type##_range(type##_p type, size_t start, size_t len)   \
-{                                                                       \
-    return (type##_p) array_range((array_p) type, start, len);          \
-}                                                                       \
-                                                                        \
-inline item##_p *type##_data(type##_p type)                             \
-{                                                                       \
-    return (item##_p *) array_data((array_p) type);                     \
-}                                                                       \
-                                                                        \
-inline size_t type##_length(type##_p type)                              \
-{                                                                       \
-    return array_length((array_p) type);                                \
-}                                                                       \
-                                                                        \
-inline type##_p type##_push(type##_p type, item##_r value)              \
-{                                                                       \
-    return (type##_p) array_push((array_p) type, (tree_r) value);       \
-}                                                                       \
-                                                                        \
-inline item##_p type##_top(type##_p type)                               \
-{                                                                       \
-    return (item##_p) array_top((array_p) type);                        \
-}                                                                       \
-                                                                        \
-inline type##_p type##_pop(type##_p type)                               \
-{                                                                       \
-    assert(type##_length(type) && "Can only pop if non-empty");         \
-    return type##_range(type, 0, type##_length(type)-1);                \
-}
-
 
 
 
@@ -252,5 +203,67 @@ inline array_p array_pop(array_p array)
     assert(array_length(array) && "Can only pop from non-empty array");
     return array_range(array, 0, array_length(array) - 1);
 }
+
+
+
+// ============================================================================
+//
+//   Definition of specific array types
+//
+// ============================================================================
+
+#define array_type(item, type)                                          \
+                                                                        \
+    tree_type(type);                                                    \
+                                                                        \
+    inline type##_r type##_new(srcpos_t pos, size_t sz, item##_r *data) \
+    {                                                                   \
+        return (type##_r) square_array_new(pos, sz, (tree_r *) data);   \
+    }                                                                   \
+                                                                        \
+    inline type##_p type##_append(type##_p t1, type##_p t2)             \
+    {                                                                   \
+        return (type##_p) array_append((array_p)t1, (array_p)t2);       \
+    }                                                                   \
+                                                                        \
+                                                                        \
+    inline type##_p type##_append_data(type##_p type,                   \
+                                       size_t sz, item##_r *data)       \
+    {                                                                   \
+        return (type##_p) array_append_data((array_p) type,             \
+                                            sz, (tree_r *) data);       \
+    }                                                                   \
+                                                                        \
+                                                                        \
+    inline type##_p type##_range(type##_p t, size_t start, size_t len)  \
+    {                                                                   \
+        return (type##_p) array_range((array_p) t, start, len);         \
+    }                                                                   \
+                                                                        \
+    inline item##_p *type##_data(type##_p type)                         \
+    {                                                                   \
+        return (item##_p *) array_data((array_p) type);                 \
+    }                                                                   \
+                                                                        \
+    inline size_t type##_length(type##_p type)                          \
+    {                                                                   \
+        return array_length((array_p) type);                            \
+    }                                                                   \
+                                                                        \
+    inline type##_p type##_push(type##_p type, item##_r value)          \
+    {                                                                   \
+        return (type##_p) array_push((array_p) type, (tree_r) value);   \
+    }                                                                   \
+                                                                        \
+    inline item##_p type##_top(type##_p type)                           \
+    {                                                                   \
+        return (item##_p) array_top((array_p) type);                    \
+    }                                                                   \
+                                                                        \
+    inline type##_p type##_pop(type##_p type)                           \
+    {                                                                   \
+        assert(type##_length(type) && "Can only pop if non-empty");     \
+        return type##_range(type, 0, type##_length(type)-1);            \
+    }
 
 #endif // ARRAY_H

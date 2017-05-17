@@ -111,6 +111,9 @@
 #include "number.h"
 #include "position.h"
 
+#ifdef SCANNER_C
+#define inline extern inline
+#endif
 
 typedef enum token
 // ----------------------------------------------------------------------------
@@ -139,7 +142,6 @@ typedef enum token
 } token_t;
 
 
-
 typedef union scanned
 // ----------------------------------------------------------------------------
 //    Possible outputs for the scanner
@@ -154,7 +156,7 @@ typedef union scanned
 } scanned_t, *scanned_p;
 
 
-blob_typedef(unsigned, indents);
+blob_type(unsigned, indents);
 
 typedef struct scanner
 // ----------------------------------------------------------------------------
@@ -189,5 +191,7 @@ extern void      scanner_close_stream(scanner_p scan, void *stream);
 
 extern token_t   scanner_read(scanner_p scan);
 extern text_p    scanner_comment(scanner_p scan, name_p closing);
+
+#undef inline
 
 #endif // SCANNER_H

@@ -31,7 +31,6 @@ typedef struct number                                                   \
     tree_t      tree;                                                   \
     reptype     value;                                                  \
 } number##_t;                                                           \
-tree_typedef(number);                                                   \
                                                                         \
                                                                         \
 typedef struct based_##number                                           \
@@ -39,7 +38,18 @@ typedef struct based_##number                                           \
     number##_t  number;                                                 \
     unsigned    base;                                                   \
 } based_##number##_t;                                                   \
-tree_typedef(based_##number);                                           \
+
+#include "number.tbl"
+
+#ifdef NUMBER_C
+#define inline extern inline
+#endif
+
+
+#define NUMBER(number, printf_format, reptype, vatype)                  \
+                                                                        \
+tree_type(number);                                                      \
+tree_type(based_##number);                                              \
                                                                         \
                                                                         \
 inline number##_r  number##_new(srcpos_t position, reptype value);      \
@@ -50,7 +60,14 @@ inline reptype     number##_value(number##_p number);                   \
 inline number##_r  number##_make(tree_handler_fn, srcpos_t pos,         \
                                  reptype value, unsigned base);         \
 extern tree_p      number##_handler(tree_cmd_t, tree_p, va_list);       \
-extern tree_p      based_##number##_handler(tree_cmd_t,tree_p,va_list); \
+extern tree_p      based_##number##_handler(tree_cmd_t,tree_p,va_list);
+
+#include "number.tbl"
+
+#undef inline
+
+
+#define NUMBER(number, printf_format, reptype, vatype)                  \
                                                                         \
 inline number##_r number##_make(tree_handler_fn h, srcpos_t pos,        \
                                 reptype value, unsigned base)           \
@@ -78,7 +95,6 @@ inline reptype based_##number##_value(based_##number##_p number)        \
 {                                                                       \
     return number->number.value;                                        \
 }
-
 
 #include "number.tbl"
 

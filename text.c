@@ -19,11 +19,12 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define TEXT_C
 #include "text.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
 
 tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------

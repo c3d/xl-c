@@ -19,11 +19,12 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-#include "text.h"
-#include "number.h"
-#include "name.h"
 #include "error.h"
+#include "name.h"
+#include "number.h"
 #include "position.h"
+#include "text.h"
+
 #include <stdio.h>
 #include <string.h>
 

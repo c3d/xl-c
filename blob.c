@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define BLOB_C
 #include "blob.h"
 #include <stdlib.h>
 #include <string.h>

@@ -22,6 +22,22 @@
 // ****************************************************************************
 
 #include <ctype.h>
+#include <stdbool.h>
+
+#ifdef UTF8_C
+#define inline extern inline
+#endif
+
+inline bool utf8_is_first(int c);
+inline bool utf8_is_next(int c);
+inline bool utf8_isalpha(int c);
+inline unsigned utf8_previous(const char *text, unsigned position);
+inline unsigned utf8_next(const char *text, unsigned position);
+inline unsigned utf8_code(const char *text);
+inline unsigned utf8_length(const char *text);
+
+#undef inline
+
 
 inline bool utf8_is_first(int c)
 // ----------------------------------------------------------------------------
@@ -31,6 +47,7 @@ inline bool utf8_is_first(int c)
     return c >= 0xC0 && c <= 0xFD;
 }
 
+
 inline bool utf8_is_next(int c)
 // ----------------------------------------------------------------------------
 //   Recognize if a given code represents a valid 'next' in a UTF-8 sequence
@@ -38,6 +55,7 @@ inline bool utf8_is_next(int c)
 {
     return c >= 0x80 && c <= 0xBF;
 }
+
 
 inline bool utf8_isalpha(int c)
 // ----------------------------------------------------------------------------

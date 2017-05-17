@@ -19,20 +19,21 @@
 #  See LICENSE file for details.
 #******************************************************************************
 
-SOURCES     =		\
-	main.c		\
-	tree.c		\
-	blob.c		\
-	text.c		\
-	name.c		\
-	number.c	\
-	block.c		\
-	pfix.c		\
-	infix.c		\
-	array.c		\
-	position.c	\
-	error.c		\
-	scanner.c
+SOURCES     =			\
+	main.c			\
+	tree.c			\
+	blob.c			\
+	text.c			\
+	name.c			\
+	number.c		\
+	block.c			\
+	pfix.c			\
+	infix.c			\
+	array.c			\
+	position.c		\
+	error.c			\
+	scanner.c		\
+	utf8.c
 
 PRODUCTS=xl.exe
 

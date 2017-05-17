@@ -18,6 +18,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define PFIX_C
 #include "pfix.h"
 #include <stdlib.h>
 #include <strings.h>

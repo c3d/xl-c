@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define NUMBER_C
 #include "number.h"
 #include <wchar.h>
 #include <stdlib.h>
