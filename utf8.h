@@ -44,7 +44,7 @@ inline bool utf8_isalpha(int c)
 //   Return true if character is alphanumeric or part of a UTF-8 sequence
 // ----------------------------------------------------------------------------
 {
-    return isalpha(c) || utf8_isfirst(c) || utf8_isnext(c);
+    return isalpha(c) || utf8_is_first(c) || utf8_is_next(c);
 }
 
 
@@ -123,7 +123,7 @@ inline unsigned utf8_length(const char *text)
 // ----------------------------------------------------------------------------
 {
     unsigned result = 0;
-    while (int c = *value++)
+    for (int c = *text++; c; c = *text++)
         result += !utf8_is_next(c);
     return result;
 }
