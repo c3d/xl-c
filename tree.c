@@ -78,6 +78,8 @@ text_r tree_text(tree_p tree)
 //   Convert the tree to text by using the render callback
 // ----------------------------------------------------------------------------
 {
+    if (!tree)
+        return text_cnew(0, "<null>");
     text_r result = text_cnew(tree->position, "");
     tree_render(tree, tree_text_output, &result);
     return result;
