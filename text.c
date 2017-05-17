@@ -148,6 +148,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
     result = (text_r) text_append_data(result, 1024 + size, NULL);
     base = (char *) text_data(result);
     format = base + offset;
+    base[size] = 0;             // Make sure format is null-terminated
     unsigned act_size = vsnprintf(base + size + 1, 1023 + size, format, va);
 
     // Truncate result to actual size
