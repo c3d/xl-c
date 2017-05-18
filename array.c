@@ -25,28 +25,29 @@
 #include <strings.h>
 
 
-array_p array_append_data(array_p array, size_t sz, tree_r *data)
+void array_append_data(array_p *array_ptr, size_t sz, tree_r *data)
 // ----------------------------------------------------------------------------
 //   Append data to the array - In place if possible
 // ----------------------------------------------------------------------------
 //   This is very similar to blobs, but does ref-counting of elements
 {
-    array_r copy = (array_r) array;
+    array_p array = *array_ptr;
+    array_r in_place = (array_r) array;
     if (array_ref(array))
-        copy = NULL;
+        in_place = NULL;
     size_t old_size = sizeof(array_t) + array->length * sizeof(tree_p);
     size_t ins_size = sz * sizeof(tree_p);
     size_t new_size = old_size + ins_size;
 
-    array_r result = (array_r) tree_realloc((tree_r) copy, new_size);
+    array_r result = (array_r) tree_realloc((tree_r) in_place, new_size);
     if (result)
     {
-        if (result != copy)
+        if (!in_place)
         {
             memcpy(result, array, old_size);
             result->tree.refcount = 0;
 
-            // Since we make a new copy, we must reference these items
+            // Since we make a new in_place, we must reference these items
             tree_p *children = array_data(result);
             size_t length = array_length(result);
             for (size_t i = 0; i < length; i++)
@@ -67,17 +68,19 @@ array_p array_append_data(array_p array, size_t sz, tree_r *data)
         result->length += sz;
     }
     array_unref(array);
-    return result;
+    if (result != array)
+        array_set(array_ptr, result);
 }
 
 
-array_p array_range(array_p array, size_t first, size_t length)
+void array_range(array_p *array_ptr, size_t first, size_t length)
 // ----------------------------------------------------------------------------
 //   Select a range of the array, in place if possible
 // ----------------------------------------------------------------------------
 //   We can move in place if there is only one user of this array
 {
-    array_r copy = (array_r) array;
+    array_p array = *array_ptr;
+    array_r in_place = (array_r) array;
     size_t end = first + length;
     if (end > array->length)
         end = array->length;
@@ -87,13 +90,13 @@ array_p array_range(array_p array, size_t first, size_t length)
     size_t resized_bytes = sizeof(array_t) + resized * sizeof(tree_p);
     if (array_ref(array))
     {
-        copy = (array_r) tree_malloc(resized_bytes);
-        memcpy(copy, array, sizeof(array_t));
-        copy->tree.refcount = 0;
+        in_place = (array_r) tree_malloc(resized_bytes);
+        memcpy(in_place, array, sizeof(array_t));
+        in_place->tree.refcount = 0;
     }
     tree_p *src_data = array_data(array) + first;
-    tree_p *dst_data = array_data(copy);
-    if (copy == array)
+    tree_p *dst_data = array_data(in_place);
+    if (in_place == array)
     {
         // Unreference all elements in array that we are not keeping
         for (size_t i = 0; i < first; i++)
@@ -106,18 +109,19 @@ array_p array_range(array_p array, size_t first, size_t length)
     }
     else
     {
-        // Copy data and incrementits reference count
+        // In_Place data and incrementits reference count
         for (size_t i = 0; i < resized; i++)
-            dst_data[i] = tree_use((tree_r) src_data[i]);
+            tree_set(&dst_data[i], (tree_r) src_data[i]);
     }
-    copy->length = resized;
-    if (copy == array)
+    in_place->length = resized;
+    if (in_place == array)
     {
-        // We did the copy in place: need to truncate result
-        copy = (array_r) tree_realloc((tree_r) copy, resized_bytes);
+        // We did the in_place in place: need to truncate result
+        in_place = (array_r) tree_realloc((tree_r) in_place, resized_bytes);
     }
     array_unref(array);
-    return copy;
+    if (in_place != array)
+        array_set(array_ptr, in_place);
 }
 
 
@@ -166,7 +170,7 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         while (size--)
         {
             child = va_arg(va, tree_r);
-            *children++ = tree_use(child);
+            tree_set(children++, child);
         }
         return (tree_p) array;
 

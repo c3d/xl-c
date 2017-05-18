@@ -59,8 +59,8 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create pfix and copy data in it
         pfix = (pfix_r) tree_malloc(sizeof(pfix_t));
-        pfix->left = tree_use(left);
-        pfix->right = tree_use(right);
+        tree_set(&pfix->left, left);
+        tree_set(&pfix->right, right);
         return (tree_p) pfix;
 
     case TREE_RENDER:

@@ -135,7 +135,7 @@ inline tree_r      tree_new(srcpos_t position);
 inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
 inline unsigned    tree_unref(tree_p tree);
-inline tree_p      tree_use(tree_r tree);
+inline void        tree_set(tree_p *ptr, tree_r tree);
 inline void        tree_dispose(tree_p *tree);
 inline const char *tree_typename(tree_p tree);
 inline size_t      tree_size(tree_p tree);
@@ -210,6 +210,29 @@ inline void tree_delete(tree_p tree)
 }
 
 
+#ifdef __GNUC__
+
+// GCC-compatible compiler: use built-in atomic operations
+#define tree_fetch_add(Value, Offset)                        \
+    __atomic_fetch_add(&Value, Offset, __ATOMIC_ACQUIRE)
+
+#define tree_add_fetch(Value, Offset)                        \
+    __atomic_add_fetch(&Value, Offset, __ATOMIC_ACQUIRE)
+
+#define tree_compare_exchange(Value, Expected, New)                     \
+    __atomic_compare_exchange_n(&Value, &Expected, New,                 \
+                                0, __ATOMIC_RELEASE, __ATOMIC_RELAXED)
+
+#else // ! __GNUC__
+
+#warning "Compiler not supported yet - Not thread safe"
+#define tree_fetch_add(Value, OFfset)   (Value += Offset)
+#define tree_add_fetch(Value, Offset)   ((Value += Offset) + Offset)
+#define tree_compare_exchange(Value, Expected, New)   Value = New
+
+#endif
+
+
 inline unsigned tree_ref(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Increment reference count of the tree
@@ -217,12 +240,7 @@ inline unsigned tree_ref(tree_p tree)
 {
     tree_r t = (tree_r) tree;
     assert(tree->refcount + 1 != 0 && "Suspiciously too many references");
-#ifdef __GNUC__
-    return __atomic_fetch_add(&t->refcount, 1, __ATOMIC_ACQUIRE);
-#else // !__GNUC__
-#warning "No atomic support for this compiler: no thread safety"
-    return t->refcount++;
-#endif // __GNUC__
+    return tree_fetch_add(t->refcount, 1);
 }
 
 
@@ -233,23 +251,8 @@ inline unsigned tree_unref(tree_p tree)
 {
     tree_r t = (tree_r) tree;
     assert(tree->refcount && "Cannot unref if never referenced");
-#ifdef __GNUC__
-    unsigned count = __atomic_add_fetch(&t->refcount, -1, __ATOMIC_ACQUIRE);
-#else // !__GNUC__
-    unsigned count = --t->refcount;
-#endif // __GNUC__
+    unsigned count = tree_add_fetch(t->refcount, -1);
     return count;
-}
-
-
-inline tree_p tree_use(tree_r tree)
-// ----------------------------------------------------------------------------
-//   Return a reference to the tree with incremented refcount
-// ----------------------------------------------------------------------------
-{
-    if (tree)
-        tree_ref(tree);
-    return (tree_p) tree;
 }
 
 
@@ -264,6 +267,22 @@ inline void tree_dispose(tree_p *tree)
         if ((*tree)->refcount == 0 || tree_unref(*tree) == 0)
             tree_delete(*tree);
         *tree = NULL;
+    }
+}
+
+
+inline void tree_set(tree_p *ptr, tree_r tree)
+// ----------------------------------------------------------------------------
+//   Return a reference to the tree with incremented refcount
+// ----------------------------------------------------------------------------
+{
+    if (*ptr != tree)
+    {
+        if (tree)
+            tree_ref(tree);
+        if (*ptr)
+            tree_dispose(ptr);
+        *ptr = tree;
     }
 }
 
@@ -331,12 +350,7 @@ inline tree_p tree_set_child(tree_p tree, unsigned index, tree_r child)
 {
     assert(index < tree_arity(tree) && "Index must be valid for this tree");
     tree_p *children = tree_children(tree);
-    if (child != children[index])
-    {
-        tree_ref(child);
-        tree_dispose(&children[index]);
-        children[index] = child;
-    }
+    tree_set(children + index, child);
     return child;
 }
 
@@ -414,9 +428,9 @@ inline tree_r tree_thaw(tree_io_fn input, void *stream)
         return tree_unref((tree_p) type);                       \
     }                                                           \
                                                                 \
-    inline type##_p type##_use(type##_r type)                   \
+    inline void type##_set(type##_p *type, type##_r value)      \
     {                                                           \
-        return (type##_p) tree_use((tree_r) type);              \
+        tree_set((tree_p *) type, (tree_r) value);              \
     }                                                           \
                                                                 \
     inline void type##_dispose(type##_p *type)                  \

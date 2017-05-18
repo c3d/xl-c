@@ -36,75 +36,16 @@ typedef struct name
 #define inline extern inline
 #endif
 
-#define name_text name_slow_text
-tree_type(name);
-#undef name_text
-
-inline name_r      name_new(srcpos_t position, size_t sz, const char *data);
-inline name_p      name_append(name_p name, size_t sz, const char *data);
-inline const char *name_data(name_p name);
-inline size_t      name_length(name_p name);
-extern bool        name_is_operator(name_p name);
-extern bool        name_is_valid(size_t size, const char *data);
+blob_type(char, name);
+extern bool     name_is_operator(name_p name);
+extern bool     name_is_valid(size_t size, const char *data);
 
 // Private name handler, should not be called directly in general
-extern tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+extern tree_p   name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
 #define name_cnew(pos, name)    name_new(pos, sizeof(name), name)
 
 #undef inline
-
-
-
-// ============================================================================
-//
-//   Inline implementations
-//
-// ============================================================================
-
-inline name_r name_new(srcpos_t position, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//    Allocate a name with the given data
-// ----------------------------------------------------------------------------
-{
-    return (name_r) text_make(name_handler, position, sz, data);
-}
-
-
-inline name_p name_append(name_p name, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//   Append name, possibly in place
-// ----------------------------------------------------------------------------
-{
-    return (name_p) text_append_data((text_p) name, sz, data);
-}
-
-
-inline const char *name_data(name_p name)
-// ----------------------------------------------------------------------------
-//   Return the data for the name
-// ----------------------------------------------------------------------------
-{
-    return text_data((text_p) name);
-}
-
-
-inline size_t name_length(name_p name)
-// ----------------------------------------------------------------------------
-//   Return the data for the name
-// ----------------------------------------------------------------------------
-{
-    return text_length((text_p) name);
-}
-
-
-inline text_p name_text(name_p name)
-// ----------------------------------------------------------------------------
-//    Return the name in the text
-// ----------------------------------------------------------------------------
-{
-    return (text_p) name;       // For now, exact same internal representation
-}
 
 #endif // NAME_H

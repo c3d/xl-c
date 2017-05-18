@@ -200,7 +200,7 @@ static inline void scanner_consume(scanner_p s, char c)
 // ----------------------------------------------------------------------------
 {
     if (c)
-        s->source = text_append_data(s->source, 1, &c);
+        text_append_data(&s->source, 1, &c);
     position_step(s->positions);
 }
 
@@ -266,7 +266,7 @@ token_t scanner_read(scanner_p s)
     text_dispose(&s->scanned.text);
 
     // Create new source text
-    s->source = text_use(text_new(pos, 0, NULL));
+    text_set(&s->source, text_new(pos, 0, NULL));
 
     // Check if we have something to read
     if (!s->reader)
@@ -276,7 +276,7 @@ token_t scanner_read(scanner_p s)
     s->had_space_before = true;
     if (indents_length(s->indents) > 0 && indents_top(s->indents) > s->indent)
     {
-        s->indents = indents_pop(s->indents);
+        indents_pop(&s->indents);
         return tokUNINDENT;
     }
 
@@ -321,7 +321,7 @@ token_t scanner_read(scanner_p s)
         if (s->setting_indent)
         {
             // We set a new indent, for instance after opening paren
-            s->indents = indents_push(s->indents, s->indent);
+            indents_push(&s->indents, s->indent);
             s->indent = s->column;
             s->setting_indent = false;
             return tokNEWLINE;
@@ -330,13 +330,13 @@ token_t scanner_read(scanner_p s)
         {
             // Strictly deeper indent : report
             s->indent = s->column;
-            s->indents = indents_push(s->indents, s->indent);
+            indents_push(&s->indents, s->indent);
             return tokINDENT;
         }
         else if (s->column < indents_top(s->indents))
         {
             // Unindenting: remove rightmost indent level
-            s->indents = indents_pop(s->indents);
+            indents_pop(&s->indents);
             s->indent = s->column;
 
             // If we unindented, but did not go as far as the
@@ -364,17 +364,17 @@ token_t scanner_read(scanner_p s)
 	return tokEOF;
 
     // Clear spelling from whitespaces
-    s->source = text_range(s->source, 0, 0);
+    text_range(&s->source, 0, 0);
 
     // Update position to match first non-space
     pos = scanner_position(s);
 
     // Check if we have a blob
-    blob_r blob = NULL;
+    blob_p blob = NULL;
     if (c == '$')
     {
         c = scanner_nextchar(s, c);
-        blob = blob_new(pos, 0, NULL);
+        blob_set(&blob, blob_new(pos, 0, NULL));
     }
 
     // Look for numbers
@@ -437,14 +437,14 @@ token_t scanner_read(scanner_p s)
                         if (blob_maxbits == 8)
                         {
                             char blob_byte = blob_chunk;
-                            blob = (blob_r) blob_append_data(blob, 1, &blob_byte);
+                            blob_append_data(&blob, 1, &blob_byte);
                         }
                         else
                         {
                             char blob_bytes[3] = { (char) (blob_chunk >> 16),
                                                    (char) (blob_chunk >> 8),
                                                    (char) blob_chunk };
-                            blob = (blob_r) blob_append_data(blob, 3, blob_bytes);
+                            blob_append_data(&blob, 3, blob_bytes);
                         }
                     }
 
@@ -482,7 +482,7 @@ token_t scanner_read(scanner_p s)
                 else if (blob)
                 {
                     // Remove any byte we may have recorded in the blob
-                    blob = (blob_r) blob_range(blob, 0, 0);
+                    blob_range(&blob, 0, 0);
                     blob_bits = 0;
                     blob_chunk = 0;
 
@@ -525,17 +525,17 @@ token_t scanner_read(scanner_p s)
                 if (blob_maxbits == 8)
                 {
                     char blob_byte = blob_chunk;
-                    blob = (blob_r) blob_append_data(blob, 1, &blob_byte);
+                    blob_append_data(&blob, 1, &blob_byte);
                 }
                 else
                 {
                     char blob_bytes[3] = { (char) (blob_chunk >> 16),
                                            (char) (blob_chunk >> 8),
                                            (char) blob_chunk };
-                    blob = (blob_r) blob_append_data(blob, 3, blob_bytes);
+                    blob_append_data(&blob, 3, blob_bytes);
                 }
             }
-            s->scanned.blob = blob_use(blob);
+            blob_set(&s->scanned.blob, (blob_r) blob);
             return tokBLOB;
         }
 
@@ -550,7 +550,7 @@ token_t scanner_read(scanner_p s)
                 scanner_ungetchar(s, mantissa_digit);
                 scanner_ungetchar(s, c);
                 s->had_space_after = false;
-                s->scanned.natural = natural_use(n);
+                natural_set(&s->scanned.natural, n);
                 return tokINTEGER;
             }
             else
@@ -645,10 +645,10 @@ token_t scanner_read(scanner_p s)
         s->had_space_after = isspace(c);
         if (floating_point)
         {
-            s->scanned.real = real_use(real_new(pos, real_value));
+            real_set(&s->scanned.real, real_new(pos, real_value));
             return tokREAL;
         }
-        s->scanned.natural = natural_use(natural_new(pos, natural_value));
+        natural_set(&s->scanned.natural, natural_new(pos, natural_value));
         return tokINTEGER;
     } // End of numbers
 
@@ -661,7 +661,7 @@ token_t scanner_read(scanner_p s)
         s->had_space_after = isspace(c);
 
         // Check if this is a block marker
-        s->scanned.name = name_use(scanner_normalize(s->source));
+        name_set(&s->scanned.name,scanner_normalize(s->source));
         if (syntax_is_block_open(s->scanned.name))
             return tokOPEN;
         else if (syntax_is_block_close(s->scanned.name))
@@ -673,7 +673,7 @@ token_t scanner_read(scanner_p s)
     else if (c == '"' || c == '\'')
     {
         char eos = c;
-        text_r text = text_new(pos, 0, NULL);
+        text_p text = text_new(pos, 0, NULL);
         c = scanner_nextchar(s, c);
         for(;;)
         {
@@ -695,11 +695,11 @@ token_t scanner_read(scanner_p s)
             {
                 error(pos, "End of input in the middle of a text");
                 s->had_space_after = false;
-                s->scanned.text = text_use(text);
+                text_set(&s->scanned.text, (text_r) text);
                 return eos == '"' ? tokTEXT : tokCHARACTER;
             }
             char ch = (char) c;
-            text = (text_r) text_append_data(text, 1, &ch);
+            text_append_data(&text, 1, &ch);
             c = scanner_nextchar(s, c);
         }
     } // End of text handling
@@ -709,7 +709,7 @@ token_t scanner_read(scanner_p s)
     bool is_close = !is_open && syntax_is_block_close_character(c);
     if (is_open || is_close)
     {
-        s->scanned.name = name_use(scanner_normalize(s->source));
+        name_set(&s->scanned.name, scanner_normalize(s->source));
         s->had_space_after = false;
         return is_open ? tokOPEN : tokCLOSE;
     }
@@ -725,7 +725,7 @@ token_t scanner_read(scanner_p s)
     }
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
-    s->scanned.name = name_use(scanner_normalize(s->source));
+    name_set(&s->scanned.name, scanner_normalize(s->source));
     if (syntax_is_block_open(s->scanned.name))
         return tokOPEN;
     if (syntax_is_block_close(s->scanned.name))
@@ -742,7 +742,7 @@ text_p scanner_comment(scanner_p s, name_p closing)
     const char *eoc      = name_data(closing);
     const char *match    = eoc;
     unsigned    position = scanner_position(s);
-    text_r      comment  = text_new(position, 0, NULL);
+    text_p      comment  = text_new(position, 0, NULL);
     int         c        = 0;
     bool        skip     = false;
 
@@ -795,12 +795,12 @@ text_p scanner_comment(scanner_p s, name_p closing)
         if (!skip)
         {
             char ch = (char) c;
-            comment = (text_r) text_append_data(comment, 1, &ch);
+            text_append_data(&comment, 1, &ch);
         }
     }
 
     // Strip the termination from the comment being returned
     size_t comment_length = text_length(comment) - (match - eoc);
-    comment = (text_r) text_range(comment, 0, comment_length);
+    text_range(&comment, 0, comment_length);
     return comment;
 }

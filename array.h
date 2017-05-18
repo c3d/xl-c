@@ -59,12 +59,12 @@ inline array_delim_p array_delimiters(array_p array);
 inline tree_p *      array_data(array_p array);
 inline size_t        array_length(array_p array);
 
-extern array_p       array_append_data(array_p, size_t count, tree_r *trees);
-inline array_p       array_append(array_p array, array_p other);
-extern array_p       array_range(array_p array, size_t start, size_t len);
-inline array_p       array_push(array_p array, tree_r value);
+extern void          array_append_data(array_p *, size_t count, tree_r *trees);
+inline void          array_append(array_p *array, array_p other);
+extern void          array_range(array_p *array, size_t start, size_t len);
+inline void          array_push(array_p *array, tree_r value);
 inline tree_p        array_top(array_p array);
-inline array_p       array_pop(array_p array);
+inline void          array_pop(array_p *array);
 
 
 // Private array handler, should not be called directly in general
@@ -166,7 +166,7 @@ inline size_t array_length(array_p array)
 }
 
 
-inline array_p array_append(array_p array, array_p array2)
+inline void array_append(array_p *array, array_p array2)
 // ----------------------------------------------------------------------------
 //   Append one array to another
 // ----------------------------------------------------------------------------
@@ -177,12 +177,12 @@ inline array_p array_append(array_p array, array_p array2)
 }
 
 
-inline array_p array_push(array_p array, tree_r value)
+inline void array_push(array_p *array, tree_r value)
 // ----------------------------------------------------------------------------
 //    Push the given element at end of the array
 // ----------------------------------------------------------------------------
 {
-    return array_append_data(array, 1, (tree_r *) &value);
+    array_append_data(array, 1, (tree_r *) &value);
 }
 
 
@@ -195,13 +195,13 @@ inline tree_p array_top(array_p array)
     return array_child(array, array_length(array) - 1);
 }
 
-inline array_p array_pop(array_p array)
+inline void array_pop(array_p *array)
 // ----------------------------------------------------------------------------
 //   Pop last element at end of array
 // ----------------------------------------------------------------------------
 {
-    assert(array_length(array) && "Can only pop from non-empty array");
-    return array_range(array, 0, array_length(array) - 1);
+    assert(array_length(*array) && "Can only pop from non-empty array");
+    return array_range(array, 0, array_length(*array) - 1);
 }
 
 
@@ -221,23 +221,22 @@ inline array_p array_pop(array_p array)
         return (type##_r) square_array_new(pos, sz, (tree_r *) data);   \
     }                                                                   \
                                                                         \
-    inline type##_p type##_append(type##_p t1, type##_p t2)             \
+    inline void type##_append(type##_p *t1, type##_p t2)                \
     {                                                                   \
-        return (type##_p) array_append((array_p)t1, (array_p)t2);       \
+        array_append((array_p *) t1, (array_p) t2);                     \
     }                                                                   \
                                                                         \
                                                                         \
-    inline type##_p type##_append_data(type##_p type,                   \
-                                       size_t sz, item##_r *data)       \
+    inline void type##_append_data(type##_p *type,                      \
+                                   size_t sz, item##_r *data)           \
     {                                                                   \
-        return (type##_p) array_append_data((array_p) type,             \
-                                            sz, (tree_r *) data);       \
+        array_append_data((array_p *) type, sz, (tree_r *) data);       \
     }                                                                   \
                                                                         \
                                                                         \
-    inline type##_p type##_range(type##_p t, size_t start, size_t len)  \
+    inline void type##_range(type##_p *t, size_t start, size_t len)     \
     {                                                                   \
-        return (type##_p) array_range((array_p) t, start, len);         \
+        array_range((array_p *) t, start, len);                         \
     }                                                                   \
                                                                         \
     inline item##_p *type##_data(type##_p type)                         \
@@ -250,9 +249,9 @@ inline array_p array_pop(array_p array)
         return array_length((array_p) type);                            \
     }                                                                   \
                                                                         \
-    inline type##_p type##_push(type##_p type, item##_r value)          \
+    inline void type##_push(type##_p * type, item##_r value)            \
     {                                                                   \
-        return (type##_p) array_push((array_p) type, (tree_r) value);   \
+        array_push((array_p *) type, (tree_r) value);                   \
     }                                                                   \
                                                                         \
     inline item##_p type##_top(type##_p type)                           \
@@ -260,10 +259,10 @@ inline array_p array_pop(array_p array)
         return (item##_p) array_top((array_p) type);                    \
     }                                                                   \
                                                                         \
-    inline type##_p type##_pop(type##_p type)                           \
+    inline void type##_pop(type##_p *type)                              \
     {                                                                   \
-        assert(type##_length(type) && "Can only pop if non-empty");     \
-        return type##_range(type, 0, type##_length(type)-1);            \
+        assert(type##_length(*type) && "Can only pop if non-empty");    \
+        type##_range(type, 0, type##_length(*type)-1);                  \
     }
 
 #endif // ARRAY_H

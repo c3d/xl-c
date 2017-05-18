@@ -38,13 +38,7 @@ typedef struct text
 #define inline extern inline
 #endif
 
-tree_type(text);
-inline text_r      text_new(srcpos_t position, size_t sz, const char *data);
-inline text_p      text_append_data(text_p text, size_t sz, const char *data);
-inline text_p      text_append(text_p text, text_p text2);
-inline text_p      text_range(text_p text, size_t start, size_t length);
-inline const char *text_data(text_p text);
-inline size_t      text_length(text_p text);
+blob_type(char, text);
 extern text_r      text_printf(srcpos_t pos, const char *format, ...);
 extern text_r      text_vprintf(srcpos_t pos, const char *format, va_list va);
 
@@ -56,76 +50,5 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 #define text_cnew(pos, text)    text_new(pos, strlen(text), text)
 
 #undef inline
-
-
-
-// ============================================================================
-//
-//   Inline implementations
-//
-// ============================================================================
-
-inline text_r text_make(tree_handler_fn h, srcpos_t pos,
-                        size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//   Create a text with the given parameters
-// ----------------------------------------------------------------------------
-{
-    return (text_r) tree_make(h, pos, sz, data);
-}
-
-
-inline text_r text_new(srcpos_t position, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//    Allocate a text with the given data
-// ----------------------------------------------------------------------------
-{
-    return text_make(text_handler, position, sz, data);
-}
-
-
-inline text_p text_append_data(text_p text, size_t sz, const char *data)
-// ----------------------------------------------------------------------------
-//   Append text, possibly in place
-// ----------------------------------------------------------------------------
-{
-    return (text_p) blob_append_data((blob_p) text, sz, data);
-}
-
-
-inline text_p text_append(text_p text, text_p text2)
-// ----------------------------------------------------------------------------
-//   Append text, possibly in place
-// ----------------------------------------------------------------------------
-{
-    return (text_p) blob_append((blob_p) text, (blob_p) text2);
-}
-
-
-inline text_p text_range(text_p text, size_t start, size_t length)
-// ----------------------------------------------------------------------------
-//   Extract a range of text, ideally in place
-// ----------------------------------------------------------------------------
-{
-    return (text_p) blob_range((blob_p) text, start, length);
-}
-
-
-inline const char *text_data(text_p text)
-// ----------------------------------------------------------------------------
-//   Return the data for the text
-// ----------------------------------------------------------------------------
-{
-    return (const char *) (text + 1);
-}
-
-
-inline size_t text_length(text_p text)
-// ----------------------------------------------------------------------------
-//   Return the data for the text
-// ----------------------------------------------------------------------------
-{
-    return text->blob.length;
-}
 
 #endif // TEXT_H

@@ -71,9 +71,7 @@ tree_r tree_malloc_(const char *source, size_t size)
 #endif // NDEBUG
 
     RECORD(ALLOC, "%s: malloc(%zu)=%p", source, size, result);
-    result->handler = NULL;
-    result->refcount = 0;
-    result->position = 0;
+    memset(result, 0, size);
 
     return result;
 }
@@ -225,10 +223,7 @@ static unsigned tree_text_output(void *stream, unsigned size, void *data)
 {
     // Append to the text, and if it does not happen in place, update pointer
     text_p *output = (text_p *) stream;
-    text_p input = *output;
-    text_p copy = text_append_data(input, size, (char *) data);
-    if (copy && copy != input)
-        *output = copy;
+    text_append_data(output, size, (char *) data);
     return size;
 }
 

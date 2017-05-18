@@ -125,7 +125,7 @@ void errorv(srcpos_t position, const char *message, va_list va)
 {
     text_r err = text_vprintf(position, message, va);
     if (errors)
-        errors = errors_push(errors, err);
+        errors_push(&errors, err);
     else
         error_display(err);
 }
@@ -172,7 +172,7 @@ errors_p errors_save()
 {
     errors_p result = errors;
     srcpos_t position = positions ? positions->position : 0;
-    errors = errors_use(errors_new(position, 0, NULL));
+    errors_set(&errors, errors_new(position, 0, NULL));
     return result;
 }
 
@@ -185,9 +185,8 @@ void errors_commit(errors_p saved_errors)
     if (saved_errors)
     {
         // Append errors to previous ones
-        saved_errors = errors_append(saved_errors, errors);
-        errors_dispose(&errors);
-        errors = saved_errors;
+        errors_append(&saved_errors, errors);
+        errors_set(&errors, (errors_r) saved_errors);
     }
     else
     {

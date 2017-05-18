@@ -61,7 +61,7 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create block and copy data in it
         block = (block_r) tree_malloc(sizeof(block_t));
-        block->child = tree_use(child);
+        tree_set(&block->child, child);
         block->delimiters = delim;
         return (tree_p) block;
 

@@ -93,7 +93,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
 //   and all % formats before the first %t are ignored.
 {
     unsigned size = strlen(format) + 1; // +1 for trailing 0
-    text_r result = text_new(pos, size, format);
+    text_p result = text_new(pos, size, format);
 
     char *base = (char *) text_data(result);
     const char *search = base;
@@ -119,7 +119,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
         unsigned old_size = text_length(result);
         unsigned new_size = old_size + ins_size - 2;
         if (new_size > old_size)
-            result = (text_r) text_append_data(result, ins_size - 2, NULL);
+            text_append_data(&result, ins_size - 2, NULL);
 
         // Move the text following %t up
         char *data = (char *) text_data(result);
@@ -131,7 +131,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
 
         // Truncate the result if the insertion is less than 2 bytes long
         if (new_size < old_size)
-            result = (text_r) text_range(result, 0, new_size);
+            text_range(&result, 0, new_size);
 
         // Dispose of inserted text
         text_dispose(&ins);
@@ -146,7 +146,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
     // themselves have inserted for example %s.
     size = text_length(result) - 1;
     unsigned offset = search - base;
-    result = (text_r) text_append_data(result, 1024 + size, NULL);
+    text_append_data(&result, 1024 + size, NULL);
     base = (char *) text_data(result);
     format = base + offset;
     base[size] = 0;             // Make sure format is null-terminated
@@ -154,7 +154,7 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
 
     // Truncate result to actual size
     memmove((char *) format, base + size + 1, act_size);
-    result = (text_r) text_range(result, 0, offset + act_size);
+    text_range(&result, 0, offset + act_size);
 
-    return result;
+    return (text_r) result;
 }

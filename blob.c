@@ -25,7 +25,7 @@
 #include <string.h>
 
 
-blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
+void blob_append_data(blob_p *blob_ptr, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Append data to the blob - In place if possible
 // ----------------------------------------------------------------------------
@@ -33,15 +33,16 @@ blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
 //   - There is only one user of this blob (who, presumably, is calling us)
 //   - The realloc can extend memory without copy
 {
-    blob_r copy = (blob_r) blob;
+    blob_p blob = *blob_ptr;
+    blob_r in_place = (blob_r) blob;
     if (blob_ref(blob))
-        copy = NULL;
+        in_place = NULL;
     size_t old_size = sizeof(blob_t) + blob->length;
     size_t new_size = old_size + sz;
-    blob_r result = (blob_r) tree_realloc((tree_r) copy, new_size);
+    blob_r result = (blob_r) tree_realloc((tree_r) in_place, new_size);
     if (result)
     {
-        if (result != copy)
+        if (!in_place)
         {
             memcpy(result, blob, old_size);
             result->tree.refcount = 0;
@@ -54,17 +55,24 @@ blob_p blob_append_data(blob_p blob, size_t sz, const char *data)
         result->length += sz;
     }
     blob_unref(blob);
-    return result;
+    if (result != blob)
+    {
+        if (in_place)
+            *blob_ptr = result;
+        else
+            blob_set(blob_ptr, result);
+    }
 }
 
 
-blob_p blob_range(blob_p blob, size_t first, size_t length)
+void blob_range(blob_p *blob_ptr, size_t first, size_t length)
 // ----------------------------------------------------------------------------
 //   Select a range of the blob, in place if possible
 // ----------------------------------------------------------------------------
 //   We can move in place if there is only one user of this blob
 {
-    blob_r copy = (blob_r) blob;
+    blob_p blob = *blob_ptr;
+    blob_r in_place = (blob_r) blob;
     size_t end = first + length;
     if (end > blob->length)
         end = blob->length;
@@ -73,16 +81,18 @@ blob_p blob_range(blob_p blob, size_t first, size_t length)
     size_t resized = end - first;
     if (blob_ref(blob))
     {
-        copy = (blob_r) tree_malloc(sizeof(blob_t) + resized);
-        memcpy(copy, blob, sizeof(blob_t));
-        copy->tree.refcount = 0;
+        in_place = (blob_r) tree_malloc(sizeof(blob_t) + resized);
+        memcpy(in_place, blob, sizeof(blob_t));
+        in_place->tree.refcount = 0;
     }
-    memmove(copy + 1, blob_data(blob) + first, resized);
-    copy->length = resized;
-    if (copy == blob)
-        copy = (blob_r) tree_realloc((tree_r) copy, sizeof(blob_t) + resized);
+    memmove(in_place + 1, blob_data(blob) + first, resized);
+    in_place->length = resized;
+    if (in_place == blob)
+        in_place = (blob_r) tree_realloc((tree_r) in_place, sizeof(blob_t) + resized);
     blob_unref(blob);
-    return copy;
+
+    if (in_place != blob)
+        blob_set(blob_ptr, in_place);
 }
 
 

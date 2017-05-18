@@ -156,6 +156,7 @@ typedef union scanned
 } scanned_t, *scanned_p;
 
 
+#define indents_handler blob_handler
 blob_type(unsigned, indents);
 
 typedef struct scanner
