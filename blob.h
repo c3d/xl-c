@@ -46,6 +46,7 @@ inline void     blob_append(blob_p *blob, blob_p other);
 extern void     blob_range(blob_p *blob, size_t start, size_t len);
 inline char   * blob_data(blob_p blob);
 inline size_t   blob_length(blob_p blob);
+extern int      blob_compare(blob_p blob1, blob_p blob2);
 
 // Private blob handler, should not be called directly in general
 inline blob_r   blob_make(tree_handler_fn h, srcpos_t, size_t, const char *);
@@ -164,6 +165,11 @@ inline size_t blob_length(blob_p blob)
     inline size_t type##_length(type##_p type)                          \
     {                                                                   \
         return blob_length((blob_p) type) / sizeof(item);               \
+    }                                                                   \
+                                                                        \
+    inline int type##_compare(type##_p t1, type##_p t2)                 \
+    {                                                                   \
+        return blob_compare((blob_p) t1, (blob_p) t2);                  \
     }                                                                   \
                                                                         \
     inline void type##_push(type##_p *type, item value)                 \

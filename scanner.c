@@ -39,7 +39,7 @@
 //
 // ============================================================================
 
-scanner_p scanner_new(positions_p positions)
+scanner_p scanner_new(positions_p positions, syntax_p syntax)
 // ----------------------------------------------------------------------------
 //    Create a new scanner
 // ----------------------------------------------------------------------------
@@ -48,15 +48,16 @@ scanner_p scanner_new(positions_p positions)
     s->positions = positions;
     s->reader = NULL;
     s->stream = NULL;
+    s->syntax = syntax;
     s->source = NULL;
     s->scanned.text = NULL;
     s->indents = indents_new(position(positions), 0, NULL);
+    s->block_close = NULL;
     s->indent = 0;
     s->column = 0;
     s->pending_char[0] = 0;
     s->pending_char[1] = 0;
     s->indent_char = 0;
-    s->reading_syntax  = false;
     s->checking_indent = false;
     s->setting_indent = false;
     s->had_space_before = false;
@@ -73,6 +74,7 @@ void scanner_delete(scanner_p s)
     text_dispose(&s->source);
     text_dispose(&s->scanned.text);
     indents_dispose(&s->indents);
+    text_dispose(&s->block_close);
     free(s);
 }
 
@@ -664,10 +666,19 @@ token_t scanner_read(scanner_p s)
 
         // Check if this is a block marker
         name_set(&s->scanned.name,scanner_normalize(s->source));
-        if (syntax_is_block_open(s->syntax, s->scanned.name))
-            return tokOPEN;
-        else if (syntax_is_block_close(s->syntax, s->scanned.name))
-            return tokCLOSE;
+        if (s->syntax)
+        {
+            if (syntax_is_block(s->syntax, s->scanned.text, &s->block_close))
+            {
+                return tokOPEN;
+            }
+            else if (s->block_close &&
+                     text_compare(s->scanned.text, s->block_close))
+            {
+                text_dispose(&s->block_close);
+                return tokCLOSE;
+            }
+        }
         return tokNAME;
     } // End of names
 
@@ -706,33 +717,39 @@ token_t scanner_read(scanner_p s)
         }
     } // End of text handling
 
-    // Look for single-char block delimiters (parentheses, etc)
-    bool is_open = syntax_is_block_open_character(s->syntax, c);
-    bool is_close = !is_open && syntax_is_block_close_character(s->syntax, c);
-    if (is_open || is_close)
+    // Look for other symbols
+    token_t tok = tokSYMBOL;
+    if (s->syntax)
     {
-        name_set(&s->scanned.name, scanner_normalize(s->source));
-        s->had_space_after = false;
-        return is_open ? tokOPEN : tokCLOSE;
+        // Normal scanning mode: check if operators exist in syntax
+        while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
+               syntax_is_operator(s->syntax, s->source))
+        {
+            c = scanner_nextchar(s, c);
+            if (syntax_is_block(s->syntax, s->source, &s->block_close))
+            {
+                tok = tokOPEN;
+                break;
+            }
+            else if (s->block_close && text_compare(s->source, s->block_close))
+            {
+                text_dispose(&s->block_close);
+                tok = tokCLOSE;
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Syntax discovery mode: accept any operator
+        while (ispunct(c) && c != '\'' && c != '"' && c != EOF)
+            c = scanner_nextchar(s, c);
     }
 
-    // Look for other symbols
-    while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
-           !syntax_is_block_open_character(s->syntax, c) &&
-           !syntax_is_block_close_character(s->syntax, c))
-    {
-        c = scanner_nextchar(s, c);
-        if (!s->reading_syntax && !syntax_is_operator(s->syntax, s->source))
-            break;
-    }
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
-    name_set(&s->scanned.name, scanner_normalize(s->source));
-    if (syntax_is_block_open(s->syntax, s->scanned.name))
-        return tokOPEN;
-    if (syntax_is_block_close(s->syntax, s->scanned.name))
-        return tokCLOSE;
-    return tokSYMBOL;
+    name_set(&s->scanned.name, (name_r) s->source);
+    return tok;
 }
 
 

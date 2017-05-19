@@ -30,9 +30,7 @@
 #define inline extern inline
 #endif // SYNTAX_C
 
-struct syntax;
-#define syntaxes_handler blob_handler
-blob_type(struct syntax *, syntaxes);
+tree_type(syntax);
 
 #undef inline
 
@@ -42,40 +40,45 @@ typedef struct syntax
 //   Internal description of the syntax configuration in xl.syntax
 // ----------------------------------------------------------------------------
 {
+    tree_t              tree;
+
     // File name we read the syntax from
     text_p              filename;
 
+    // Known operators
+    array_p             known;
+
     // Priorities: sorted array of pairs (name, priority)
-    array_p             infix;
-    array_p             prefix;
-    array_p             postfix;
+    array_p             infixes;
+    array_p             prefixes;
+    array_p             postfixes;
 
     // Delimiters: array of pairs (opening, closing)
-    array_p             comment;
-    array_p             text;
-    array_p             block;
+    array_p             comments;
+    array_p             texts;
+    array_p             blocks;
 
     // Delimiters for child syntax, and the table itself
-    array_p             syntax;
-    syntaxes_p          syntaxes;
+    array_p             syntaxes;
 
     // Priorities
     int                 default_priority;
     int                 statement_priority;
     int                 function_priority;
-} syntax_t, *syntax_p;
+} syntax_t;
 
 
 // Create and delete syntax files
 extern syntax_p syntax_new(const char *file);
-extern void     syntax_delete(syntax_p s);
+extern tree_p   syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 
 // Checking syntax elements
 extern bool syntax_is_operator(syntax_p, text_p name);
-extern bool syntax_is_block_open(syntax_p, name_p name);
-extern bool syntax_is_block_close(syntax_p, name_p name);
-extern bool syntax_is_block_open_character(syntax_p, char name);
-extern bool syntax_is_block_close_character(syntax_p, char name);
+extern bool syntax_is_block(syntax_p, text_p name, text_p *closing);
+
+// Internal representation of block indent and unindent
+#define SYNTAX_INDENT    "\t"
+#define SYNTAX_UNINDENT  "\b"
 
 #endif // SYNTAX_H

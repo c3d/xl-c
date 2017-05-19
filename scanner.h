@@ -172,11 +172,11 @@ typedef struct scanner
     text_p      source;                 // Source form of the parsed token
     scanned_t   scanned;                // Scanned result
     indents_p   indents;                // Stack of indents
+    text_p      block_close;            // Matching block close
     unsigned    indent;                 // Current level of indentation
     unsigned    column;                 // Current column during indentation
     char        pending_char[2];        // Read-ahead pending chars
     char        indent_char;            // To detect if mixing space/tabs
-    bool        reading_syntax   : 1;   // Reading a syntax file
     bool        checking_indent  : 1;   // At beginning of line
     bool        setting_indent   : 1;   // Parenthesis sets indent
     bool        had_space_before : 1;   // Had space before token
@@ -184,7 +184,7 @@ typedef struct scanner
 } scanner_t, *scanner_p;
 
 
-extern scanner_p scanner_new(positions_p positions);
+extern scanner_p scanner_new(positions_p positions, syntax_p syntax);
 extern void      scanner_delete(scanner_p scan);
 extern FILE *    scanner_open(scanner_p scan, const char *file);
 extern void      scanner_close(scanner_p scan, FILE *f);

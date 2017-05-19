@@ -96,6 +96,28 @@ void blob_range(blob_p *blob_ptr, size_t first, size_t length)
 }
 
 
+int blob_compare(blob_p b1, blob_p b2)
+// ----------------------------------------------------------------------------
+//   Compare two blobs (lexical order)
+// ----------------------------------------------------------------------------
+{
+    char *  p1  = blob_data(b1);
+    char *  p2  = blob_data(b2);
+    size_t  l1  = blob_length(b1);
+    size_t  l2  = blob_length(b2);
+    size_t  l   = l1 < l2 ? l1 : l2;
+    int     cmp = memcmp(p1, p2, l);
+    if (cmp == 0)
+    {
+        if (l1 < l2)
+            cmp = -1;
+        else if (l1 > l2)
+            cmp = 1;
+    }
+    return cmp;
+}
+
+
 tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 //   The handler for blobs deals mostly with variable-sized initialization
