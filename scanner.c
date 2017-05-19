@@ -512,6 +512,16 @@ token_t scanner_read(scanner_p s)
         // Check if there is still something to record in the blob
         if (blob)
         {
+            // Check = terminator in base64
+            if (blob_base == 64 && c == '=')
+                c = scanner_nextchar(s, c);
+
+            // Check if there is a $ at end of blob
+            if (c == '$')
+                scanner_consume(s, c);
+            else
+                scanner_ungetchar(s, c);
+
             if (blob_bits)
             {
                 // Pad with 0 as necessary
