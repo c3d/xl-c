@@ -32,14 +32,6 @@
 #include <string.h>
 
 
-// Workaround for now
-#define syntax_is_block_open(...) false
-#define syntax_is_block_close(...) false
-#define syntax_is_block_open_character(...) false
-#define syntax_is_block_close_character(...) false
-#define syntax_known(...) false
-
-
 
 // ============================================================================
 //
@@ -672,9 +664,9 @@ token_t scanner_read(scanner_p s)
 
         // Check if this is a block marker
         name_set(&s->scanned.name,scanner_normalize(s->source));
-        if (syntax_is_block_open(s->scanned.name))
+        if (syntax_is_block_open(s->syntax, s->scanned.name))
             return tokOPEN;
-        else if (syntax_is_block_close(s->scanned.name))
+        else if (syntax_is_block_close(s->syntax, s->scanned.name))
             return tokCLOSE;
         return tokNAME;
     } // End of names
@@ -715,8 +707,8 @@ token_t scanner_read(scanner_p s)
     } // End of text handling
 
     // Look for single-char block delimiters (parentheses, etc)
-    bool is_open = syntax_is_block_open_character(c);
-    bool is_close = !is_open && syntax_is_block_close_character(c);
+    bool is_open = syntax_is_block_open_character(s->syntax, c);
+    bool is_close = !is_open && syntax_is_block_close_character(s->syntax, c);
     if (is_open || is_close)
     {
         name_set(&s->scanned.name, scanner_normalize(s->source));
@@ -726,19 +718,19 @@ token_t scanner_read(scanner_p s)
 
     // Look for other symbols
     while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
-           !syntax_is_block_open_character(c) &&
-           !syntax_is_block_close_character(c))
+           !syntax_is_block_open_character(s->syntax, c) &&
+           !syntax_is_block_close_character(s->syntax, c))
     {
         c = scanner_nextchar(s, c);
-        if (!s->reading_syntax && !syntax_known(s->source))
+        if (!s->reading_syntax && !syntax_is_operator(s->syntax, s->source))
             break;
     }
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
     name_set(&s->scanned.name, scanner_normalize(s->source));
-    if (syntax_is_block_open(s->scanned.name))
+    if (syntax_is_block_open(s->syntax, s->scanned.name))
         return tokOPEN;
-    if (syntax_is_block_close(s->scanned.name))
+    if (syntax_is_block_close(s->syntax, s->scanned.name))
         return tokCLOSE;
     return tokSYMBOL;
 }

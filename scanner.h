@@ -110,6 +110,7 @@
 #include "text.h"
 #include "number.h"
 #include "position.h"
+#include "syntax.h"
 
 #ifdef SCANNER_C
 #define inline extern inline
@@ -167,6 +168,7 @@ typedef struct scanner
     positions_p positions;              // Description of file positions
     tree_io_fn  reader;                 // Reading function
     void *      stream;                 // Stream we read from
+    syntax_p    syntax;                 // Source code syntax
     text_p      source;                 // Source form of the parsed token
     scanned_t   scanned;                // Scanned result
     indents_p   indents;                // Stack of indents

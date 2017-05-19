@@ -33,6 +33,7 @@ SOURCES     =			\
 	position.c		\
 	error.c			\
 	scanner.c		\
+	syntax.c		\
 	utf8.c			\
 	recorder/recorder.c
 
