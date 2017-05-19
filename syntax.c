@@ -367,6 +367,53 @@ static inline int search(array_p array, text_p key, size_t skip)
 }
 
 
+int syntax_infix_priority(syntax_p s, text_p name)
+// ----------------------------------------------------------------------------
+//    Return the priority for the given infix, or default_priority
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->infixes, name, 2);
+    if (index >= 0)
+    {
+        natural_p n = (natural_p) array_child(s->infixes, index+1);
+        return natural_value(n);
+    }
+    return s->default_priority;
+
+}
+
+
+int syntax_prefix_priority(syntax_p s, text_p name)
+// ----------------------------------------------------------------------------
+//    Return the priority for the given infix, or default_priority
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->prefixes, name, 2);
+    if (index >= 0)
+    {
+        natural_p n = (natural_p) array_child(s->prefixes, index+1);
+        return natural_value(n);
+    }
+    return s->default_priority;
+
+}
+
+
+int syntax_postfix_priority(syntax_p s, text_p name)
+// ----------------------------------------------------------------------------
+//    Return the priority for the given infix, or default_priority
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->postfixes, name, 2);
+    if (index >= 0)
+    {
+        natural_p n = (natural_p) array_child(s->postfixes, index+1);
+        return natural_value(n);
+    }
+    return s->default_priority;
+
+}
+
 
 bool syntax_is_operator(syntax_p s, text_p name)
 // ----------------------------------------------------------------------------
@@ -408,6 +455,36 @@ bool syntax_is_block(syntax_p s, text_p name, text_p *closing)
     if (index >= 0)
     {
         text_set(closing, (text_r) array_child(s->blocks, index+1));
+        return true;
+    }
+    return false;
+}
+
+
+bool syntax_is_text(syntax_p s, text_p name, text_p *closing)
+// ----------------------------------------------------------------------------
+//    Check if the given name opens a block
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->texts, name, 2);
+    if (index >= 0)
+    {
+        text_set(closing, (text_r) array_child(s->texts, index+1));
+        return true;
+    }
+    return false;
+}
+
+
+bool syntax_is_comment(syntax_p s, text_p name, text_p *closing)
+// ----------------------------------------------------------------------------
+//    Check if the given name opens a block
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->comments, name, 2);
+    if (index >= 0)
+    {
+        text_set(closing, (text_r) array_child(s->comments, index+1));
         return true;
     }
     return false;
