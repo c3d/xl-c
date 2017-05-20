@@ -23,6 +23,7 @@
 
 #include "blob.h"
 #include <stdarg.h>
+#include <string.h>
 
 
 typedef struct text
@@ -41,6 +42,7 @@ typedef struct text
 blob_type(char, text);
 extern text_r      text_printf(srcpos_t pos, const char *format, ...);
 extern text_r      text_vprintf(srcpos_t pos, const char *format, va_list va);
+inline bool        text_eq(text_p, const char *value);
 
 // Private text handler, should not be called directly in general
 inline text_r text_make(tree_handler_fn h, srcpos_t pos, size_t, const char *);
@@ -50,5 +52,21 @@ extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 #define text_cnew(pos, text)    text_new(pos, strlen(text), text)
 
 #undef inline
+
+// ============================================================================
+//
+//   Inline implementations
+//
+// ============================================================================
+
+inline bool text_eq(text_p text, const char *str)
+// ----------------------------------------------------------------------------
+//   Check if the text matches some string constant
+// ----------------------------------------------------------------------------
+{
+    size_t len = text_length(text);
+    const char *data = text_data(text);
+    return memcmp(str, data, len) && str[len] == 0;
+}
 
 #endif // TEXT_H

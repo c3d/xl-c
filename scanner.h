@@ -166,9 +166,9 @@ typedef struct scanner
 // ----------------------------------------------------------------------------
 {
     positions_p positions;              // Description of file positions
+    syntax_p    syntax;                 // Source code syntax
     tree_io_fn  reader;                 // Reading function
     void *      stream;                 // Stream we read from
-    syntax_p    syntax;                 // Source code syntax
     text_p      source;                 // Source form of the parsed token
     scanned_t   scanned;                // Scanned result
     indents_p   indents;                // Stack of indents
