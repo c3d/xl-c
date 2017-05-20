@@ -34,7 +34,6 @@ tree_type(syntax);
 
 #undef inline
 
-
 typedef struct syntax
 // ----------------------------------------------------------------------------
 //   Internal description of the syntax configuration in xl.syntax
@@ -67,9 +66,14 @@ typedef struct syntax
     int                 function_priority;
 } syntax_t;
 
+// Forward declaration
+typedef struct scanner *scanner_p;
+
 
 // Create and delete syntax files
 extern syntax_p syntax_new(const char *file);
+extern void     syntax_read_file(syntax_r syntax, const char *file);
+extern void     syntax_read(syntax_r syntax, scanner_p scanner);
 extern tree_p   syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Checking syntax elements

@@ -27,9 +27,6 @@
 #include <string.h>
 
 
-static void syntax_read(syntax_r syntax, const char *file);
-
-
 syntax_p syntax_new(const char *file)
 // ----------------------------------------------------------------------------
 //   Create a new syntax configuration, normally from a syntax file
@@ -51,7 +48,7 @@ syntax_p syntax_new(const char *file)
     if (file)
     {
         text_set(&result->filename, text_cnew(0, file));
-        syntax_read(result, file);
+        syntax_read_file(result, file);
     }
 
     return result;
@@ -166,9 +163,26 @@ static inline void sort(array_p array, size_t count)
 }
 
 
-static void syntax_read(syntax_r syntax, const char *file)
+void syntax_read_file(syntax_r syntax, const char *filename)
 // ----------------------------------------------------------------------------
-//   Read a syntax file
+//   Read a whole syntax file
+// ----------------------------------------------------------------------------
+{
+    positions_p  positions = positions_new();
+    scanner_p    scanner   = scanner_new(positions, NULL);
+    FILE        *file      = scanner_open(scanner, filename);
+
+    syntax_read(syntax, scanner);
+
+    scanner_close(scanner, file);
+    scanner_delete(scanner);
+    positions_delete(positions);
+}
+
+
+void syntax_read(syntax_r syntax, scanner_p scanner)
+// ----------------------------------------------------------------------------
+//   Read syntax from the given scanner (either a whole file or a source code)
 // ----------------------------------------------------------------------------
 {
     typedef enum state
@@ -180,24 +194,25 @@ static void syntax_read(syntax_r syntax, const char *file)
         SYNTAX_NAME, SYNTAX, SYNTAX_END
     } state_t;
 
-    state_t      state     = UNKNOWN;
-    positions_p  positions = positions_new();
-    scanner_p    s         = scanner_new(positions, NULL);
-    FILE        *f         = scanner_open(s, file);
-    int          priority  = 0;
-    text_p       entry     = NULL;
-    syntax_p     child     = NULL;
-    token_t      token;
+    state_t  state    = UNKNOWN;
+    int      priority = 0;
+    text_p   entry    = NULL;
+    syntax_p child    = NULL;
+    token_t  token    = tokNONE;
+    unsigned indent   = 0;
+    bool     done     = false;
 
-    while ((token = scanner_read(s)) != tokEOF)
+    while (!done)
     {
         text_p known_token = NULL;
         text_p text = NULL;
 
+        token = scanner_read(scanner);
+
         switch(token)
         {
         case tokINTEGER:
-            priority = natural_value(s->scanned.natural);
+            priority = natural_value(scanner->scanned.natural);
             break;
         case tokTEXT:
         case tokCHARACTER:
@@ -206,7 +221,7 @@ static void syntax_read(syntax_r syntax, const char *file)
             /* Fall through */
 
         case tokNAME:
-            text = s->scanned.text;
+            text = scanner->scanned.text;
 
             if (eq(text, "NEWLINE"))
                 set(&text, "\n");
@@ -292,17 +307,29 @@ static void syntax_read(syntax_r syntax, const char *file)
                 break;
             }
             break;
+
+        case tokEOF:
+            done = true;
+            break;
+
+        case tokINDENT:
+            indent++;
+            break;
+        case tokUNINDENT:
+            done = (--indent == 0);
+            break;
+
         default:
             // Any other stuff (indents, etc) is skipped
             break;
-        }
+        } // switch
 
         // If we read an operator name, insert it in list of known operators
         if (known_token)
             array_push(&syntax->known, (tree_r) known_token);
 
         text_dispose(&text);
-    }
+    } // while
 
     // Sort the various arrays
     sort(syntax->known, 1);
@@ -318,9 +345,6 @@ static void syntax_read(syntax_r syntax, const char *file)
     sort(syntax->syntaxes, 3);
 
     text_dispose(&entry);
-    scanner_close(s, f);
-    scanner_delete(s);
-    positions_delete(positions);
 }
 
 
