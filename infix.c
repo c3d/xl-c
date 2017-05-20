@@ -50,6 +50,12 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Prefix and postfix have three children
         return (tree_p) 3;
 
+    case TREE_CAST:
+        // Check if we cast to infix type, if so, success
+        if (tree_cast_handler(va) == infix_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_CHILDREN:
         // Pointer to the children is right after the tree 'header
         return tree + 1;
@@ -78,6 +84,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     default:
         // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    return tree_handler(cmd, tree, va);
 }

@@ -156,6 +156,12 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return pointer to first child, which is right after the array
         return (tree_p) (array + 1);
 
+    case TREE_CAST:
+        // Check if we cast to array type, if so, success
+        if (tree_cast_handler(va) == array_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see array_new)
         delim = va_arg(va, array_delim_p);
@@ -194,8 +200,9 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     default:
         // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    return tree_handler(cmd, tree, va);
 }
 
 

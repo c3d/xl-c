@@ -44,6 +44,12 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return a default tree type name
         return (tree_p) "text";
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == text_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_RENDER:
         // Dump the text as a string of characters, doubling quotes
         io = va_arg(va, tree_io_fn);
@@ -65,9 +71,10 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return failed ? NULL : tree;
 
     default:
-        // Other cases are handled correctly by the blob handler
-        return blob_handler(cmd, tree, va);
+        break;
     }
+    // Other cases are handled correctly by the blob handler
+    return blob_handler(cmd, tree, va);
 }
 
 

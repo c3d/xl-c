@@ -74,13 +74,20 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // There are ten children in a syntax
         return (tree_p) 10;
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == syntax_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_CHILDREN:
         // Return the pointer to children for that tree type
         return (tree_p) (tree + 1);
 
     default:
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    return tree_handler(cmd, tree, va);
 }
 
 

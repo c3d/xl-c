@@ -48,7 +48,12 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
     case TREE_ARITY:                                                    \
         return (tree_p) 0;                                              \
                                                                         \
-    case TREE_INITIALIZE:                                               \
+    case TREE_CAST:                                                     \
+        if (tree_cast_handler(va) == number##_handler)                  \
+            return tree;                                                \
+        break;                                                          \
+                                                                        \
+case TREE_INITIALIZE:                                                   \
         value = va_arg(va, va_type);                                    \
         number = (number##_r) tree_malloc(sizeof(number##_t));          \
         number->value = value;                                          \
@@ -64,8 +69,9 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
         return tree;                                                    \
                                                                         \
     default:                                                            \
-        return tree_handler(cmd, tree, va);                             \
+        break;                                                          \
     }                                                                   \
+    return tree_handler(cmd, tree, va);                                 \
 }                                                                       \
                                                                         \
                                                                         \
@@ -90,6 +96,11 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
     case TREE_ARITY:                                                    \
         return (tree_p) 0;                                              \
                                                                         \
+    case TREE_CAST:                                                     \
+        if (tree_cast_handler(va) == based_##number##_handler)          \
+            return tree;                                                \
+        break;                                                          \
+                                                                        \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
         base = va_arg(va, unsigned);                                    \
@@ -112,8 +123,9 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
         return tree;                                                    \
                                                                         \
     default:                                                            \
-        return tree_handler(cmd, tree, va);                             \
+        break;                                                          \
     }                                                                   \
+    return number##_handler(cmd, tree, va);                             \
 }
 
 

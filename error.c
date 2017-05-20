@@ -214,3 +214,6 @@ unsigned errors_count()
     assert(errors && "Cannot count errors if not recording them");
     return errors_length(errors);
 }
+
+
+blob_type_handler(errors);

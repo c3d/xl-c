@@ -119,8 +119,6 @@ inline size_t blob_length(blob_p blob)
                                                                         \
     tree_type(type);                                                    \
                                                                         \
-    extern tree_p type##_handler(tree_cmd_t cmd,tree_p tree,va_list va);\
-                                                                        \
     inline text_r type##_make(tree_handler_fn h, srcpos_t pos,          \
                               size_t sz, const item *data)              \
     {                                                                   \
@@ -189,5 +187,26 @@ inline size_t blob_length(blob_p blob)
         size_t new_size = (type##_length(*type) - 1);                   \
         return type##_range(type, 0, new_size);                         \
     }
+
+
+#define blob_type_handler(type)                                         \
+                                                                        \
+    tree_p type##_handler(tree_cmd_t cmd,tree_p tree,va_list va)        \
+    {                                                                   \
+        switch(cmd)                                                     \
+        {                                                               \
+        case TREE_TYPENAME:                                             \
+            return (tree_p) #type;                                      \
+                                                                        \
+        case TREE_CAST:                                                 \
+            if (tree_cast_handler(va) == type##_handler)                \
+                return tree;                                            \
+            break;                                                      \
+        default:                                                        \
+            break;                                                      \
+        }                                                               \
+        return blob_handler(cmd, tree, va);                             \
+    }
+
 
 #endif // BLOB_H

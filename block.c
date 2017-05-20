@@ -50,6 +50,12 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Blocks have one child
         return (tree_p) 1;
 
+    case TREE_CAST:
+        // Check if we cast to block type, if so, success
+        if (tree_cast_handler(va) == block_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_CHILDREN:
         // Return pointer to only child
         return (tree_p) &block->child;
@@ -78,8 +84,9 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     default:
         // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    return tree_handler(cmd, tree, va);
 }
 
 

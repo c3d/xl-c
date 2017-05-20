@@ -48,6 +48,12 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Prefix and postfix have two children
         return (tree_p) 2;
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == pfix_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_CHILDREN:
         // Pointer to the children is right after the tree 'header
         return tree + 1;
@@ -72,9 +78,10 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return tree;
 
     default:
-        // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    // Other cases are handled correctly by the tree handler
+    return tree_handler(cmd, tree, va);
 }
 
 
@@ -89,10 +96,17 @@ tree_p prefix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return a default tree type name
         return (tree_p) "prefix";
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == prefix_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     default:
-        // Other cases are handled correctly by the tree handler
-        return pfix_handler(cmd, tree, va);
+        break;
     }
+    // Other cases are handled correctly by the tree handler
+    return pfix_handler(cmd, tree, va);
 }
 
 
@@ -107,8 +121,15 @@ tree_p postfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return a default tree type name
         return (tree_p) "postfix";
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == postfix_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     default:
         // Other cases are handled correctly by the tree handler
-        return pfix_handler(cmd, tree, va);
+        break;
     }
+    return pfix_handler(cmd, tree, va);
 }

@@ -86,6 +86,12 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Return a default tree type name
         return (tree_p) "name";
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == name_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see name_make)
         size = va_arg(va, size_t);
@@ -111,7 +117,9 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return tree;
 
     default:
-        // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+
+    // Other cases are handled correctly by the blob handler
+    return blob_handler(cmd, tree, va);
 }

@@ -753,9 +753,9 @@ token_t scanner_read(scanner_p s)
 }
 
 
-text_p scanner_comment(scanner_p s, name_p closing)
+text_p scanner_skip(scanner_p s, name_p closing)
 // ----------------------------------------------------------------------------
-//    Read ahead until end of comment, save comment in 'source'
+//    Read ahead until we find the closing marker (for comments or long text)
 // ----------------------------------------------------------------------------
 {
     const char *eoc      = name_data(closing);
@@ -823,3 +823,7 @@ text_p scanner_comment(scanner_p s, name_p closing)
     text_range(&comment, 0, comment_length);
     return comment;
 }
+
+
+// Generate the default handler for indents
+blob_type_handler(indents);

@@ -144,6 +144,12 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // The arity for blobs is normally 0
         return (tree_p) 0;
 
+    case TREE_CAST:
+        // Check if we cast to blob type, if so, success
+        if (tree_cast_handler(va) == blob_handler)
+            return tree;
+        break;                      // Pass on to base class handler
+
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see blob_new)
         size = va_arg(va, size_t);
@@ -179,6 +185,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     default:
         // Other cases are handled correctly by the tree handler
-        return tree_handler(cmd, tree, va);
+        break;
     }
+    return tree_handler(cmd, tree, va);
 }

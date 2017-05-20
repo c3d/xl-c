@@ -129,6 +129,7 @@ typedef enum token
     tokREAL,                    // Real number,
     tokTEXT,                    // Double-quoted text
     tokCHARACTER,               // Single-quoted text
+    tokLONGTEXT,                // Delimited text, e.g. << Hello >>
     tokNAME,                    // Alphanumeric name
     tokSYMBOL,                  // Punctuation symbol
     tokBLOB,                    // Binary object
@@ -157,8 +158,8 @@ typedef union scanned
 } scanned_t, *scanned_p;
 
 
-#define indents_handler blob_handler
 blob_type(unsigned, indents);
+
 
 typedef struct scanner
 // ----------------------------------------------------------------------------
@@ -193,7 +194,7 @@ extern void      scanner_open_stream(scanner_p scan, const char *name,
 extern void      scanner_close_stream(scanner_p scan, void *stream);
 
 extern token_t   scanner_read(scanner_p scan);
-extern text_p    scanner_comment(scanner_p scan, name_p closing);
+extern text_p    scanner_skip(scanner_p scan, name_p closing);
 
 #undef inline
 

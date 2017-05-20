@@ -93,6 +93,7 @@ typedef enum tree_cmd
     TREE_SIZE,                          // Return the size for the tree
     TREE_ARITY,                         // Return the arity for the tree
     TREE_CHILDREN,                      // Return pointer to children of tree
+    TREE_CAST,                          // Check class of pointer
     TREE_INITIALIZE,                    // Initialized the tree (from tree_new)
     TREE_DELETE,                        // Delete the tree and its children
     TREE_COPY,                          // Shallow copy of the tree
@@ -152,6 +153,8 @@ inline bool        tree_render(tree_p tree, tree_io_fn output, void *stream);
 inline bool        tree_freeze(tree_p tree, tree_io_fn output, void *stream);
 inline tree_r      tree_thaw(tree_io_fn input, void *stream);
 extern tree_r      tree_io(tree_cmd_t cmd, tree_r tree, ...);
+inline tree_p      tree_cast_(tree_p tree, ...);
+
 
 // Internal tree operations - Normally no need to call directly
 extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
@@ -160,9 +163,11 @@ extern void   tree_memcheck();
 extern tree_r tree_malloc_(const char *where, size_t size);
 extern tree_r tree_realloc_(const char *where, tree_r old, size_t new_size);
 extern void   tree_free_(const char *where, tree_r tree);
+inline tree_handler_fn tree_cast_handler(va_list va);
 #define tree_malloc(sz)         tree_malloc_(SOURCE, (sz))
 #define tree_realloc(old, sz)   tree_realloc_(SOURCE, (old), (sz))
 #define tree_free(t)            tree_free_(SOURCE, (t))
+#define tree_cast(type, tree)   tree_cast_(tree, type##_handler)
 
 // Macro to loop on tree children
 #define tree_children_loop(tree, body)            \
@@ -400,6 +405,35 @@ inline tree_r tree_thaw(tree_io_fn input, void *stream)
 }
 
 
+inline tree_p tree_cast_(tree_p tree, ...)
+// ----------------------------------------------------------------------------
+//   Convert the tree to the type given by handler, or return NULL
+// ----------------------------------------------------------------------------
+{
+    if (tree)
+    {
+        va_list va;
+        va_start(va, tree);
+        tree = (tree_p) tree->handler(TREE_CAST, tree, va);
+        va_end(va);
+    }
+    return tree;
+}
+
+
+inline tree_handler_fn tree_cast_handler(va_list va)
+// ----------------------------------------------------------------------------
+//    Extract the handler function passed to tree_cast_
+// ----------------------------------------------------------------------------
+{
+    va_list va2;
+    va_copy(va2, va);
+    tree_handler_fn result = va_arg(va2, tree_handler_fn);
+    va_end(va2);
+    return result;
+}
+
+
 
 // ============================================================================
 //
@@ -408,88 +442,95 @@ inline tree_r tree_thaw(tree_io_fn input, void *stream)
 // ============================================================================
 
 // Macro to create adapters for another type
-#define tree_type(type)                                         \
-                                                                \
-    typedef       struct type *type##_r;                        \
-    typedef const struct type *type##_p;                        \
-                                                                \
-    inline void type##_delete(type##_p type)                    \
-    {                                                           \
-        return tree_delete((tree_p) type);                      \
-    }                                                           \
-                                                                \
-    inline unsigned type##_ref(type##_p type)                   \
-    {                                                           \
-        return tree_ref((tree_p) type);                         \
-    }                                                           \
-                                                                \
-    inline unsigned type##_unref(type##_p type)                 \
-    {                                                           \
-        return tree_unref((tree_p) type);                       \
-    }                                                           \
-                                                                \
-    inline void type##_set(type##_p *type, type##_r value)      \
-    {                                                           \
-        tree_set((tree_p *) type, (tree_r) value);              \
-    }                                                           \
-                                                                \
-    inline void type##_dispose(type##_p *type)                  \
-    {                                                           \
-        tree_dispose((tree_p *) type);                          \
-    }                                                           \
-                                                                \
-    inline const char *type##_typename(type##_p type)           \
-    {                                                           \
-        return tree_typename((tree_p) type);                    \
-    }                                                           \
-                                                                \
-    inline size_t type##_size(type##_p type)                    \
-    {                                                           \
-        return tree_size((tree_p) type);                        \
-    }                                                           \
-                                                                \
-    inline srcpos_t type##_position(type##_p type)              \
-    {                                                           \
-        return tree_position((tree_p) type);                    \
-    }                                                           \
-                                                                \
-    inline type##_r type##_copy(type##_p type)                  \
-    {                                                           \
-        return (type##_r) tree_copy((tree_p) type);             \
-    }                                                           \
-                                                                \
-    inline type##_r type##_clone(type##_p type)                 \
-    {                                                           \
-        return (type##_r) tree_clone((tree_p) type);            \
-    }                                                           \
-                                                                \
-    inline text_r type##_text(type##_p type)                    \
-    {                                                           \
-        return tree_text((tree_p) type);                        \
-    }                                                           \
-                                                                \
-                                                                \
-    inline bool type##_print(FILE *f, type##_p type)            \
-    {                                                           \
-        return tree_print(f, (tree_p) type);                    \
-    }                                                           \
-                                                                \
-                                                                \
-    inline bool type##_render(type##_p type,                    \
-                              tree_io_fn output, void *stream)  \
-    {                                                           \
-        return tree_render((tree_p) type, output, stream);      \
-    }                                                           \
-                                                                \
-    inline bool type##_freeze(type##_p type,                    \
-                              tree_io_fn output, void *stream)  \
-    {                                                           \
-        return tree_freeze((tree_p) type, output, stream);      \
-    }                                                           \
-                                                                \
-    inline type##_r type##_thaw(tree_io_fn input, void *stream) \
-    {                                                           \
-        return (type##_r) tree_thaw(input, stream);             \
+#define tree_type(type)                                                 \
+                                                                        \
+    typedef       struct type *type##_r;                                \
+    typedef const struct type *type##_p;                                \
+    extern tree_p type##_handler(tree_cmd_t cmd,tree_p tree,va_list va); \
+                                                                        \
+                                                                        \
+    inline void type##_delete(type##_p type)                            \
+    {                                                                   \
+        return tree_delete((tree_p) type);                              \
+    }                                                                   \
+                                                                        \
+    inline unsigned type##_ref(type##_p type)                           \
+    {                                                                   \
+        return tree_ref((tree_p) type);                                 \
+    }                                                                   \
+                                                                        \
+    inline unsigned type##_unref(type##_p type)                         \
+    {                                                                   \
+        return tree_unref((tree_p) type);                               \
+    }                                                                   \
+                                                                        \
+    inline void type##_set(type##_p *type, type##_r value)              \
+    {                                                                   \
+        tree_set((tree_p *) type, (tree_r) value);                      \
+    }                                                                   \
+                                                                        \
+    inline void type##_dispose(type##_p *type)                          \
+    {                                                                   \
+        tree_dispose((tree_p *) type);                                  \
+    }                                                                   \
+                                                                        \
+    inline type##_p type##_cast(const void * tree)                      \
+    {                                                                   \
+        return (type##_p) tree_cast(type, (tree_p) tree);               \
+    }                                                                   \
+                                                                        \
+    inline const char *type##_typename(type##_p type)                   \
+    {                                                                   \
+        return tree_typename((tree_p) type);                            \
+    }                                                                   \
+                                                                        \
+    inline size_t type##_size(type##_p type)                            \
+    {                                                                   \
+        return tree_size((tree_p) type);                                \
+    }                                                                   \
+                                                                        \
+    inline srcpos_t type##_position(type##_p type)                      \
+    {                                                                   \
+        return tree_position((tree_p) type);                            \
+    }                                                                   \
+                                                                        \
+    inline type##_r type##_copy(type##_p type)                          \
+    {                                                                   \
+        return (type##_r) tree_copy((tree_p) type);                     \
+    }                                                                   \
+                                                                        \
+    inline type##_r type##_clone(type##_p type)                         \
+    {                                                                   \
+        return (type##_r) tree_clone((tree_p) type);                    \
+    }                                                                   \
+                                                                        \
+    inline text_r type##_text(type##_p type)                            \
+    {                                                                   \
+        return tree_text((tree_p) type);                                \
+    }                                                                   \
+                                                                        \
+                                                                        \
+    inline bool type##_print(FILE *f, type##_p type)                    \
+    {                                                                   \
+        return tree_print(f, (tree_p) type);                            \
+    }                                                                   \
+                                                                        \
+                                                                        \
+    inline bool type##_render(type##_p type,                            \
+                              tree_io_fn output, void *stream)          \
+    {                                                                   \
+        return tree_render((tree_p) type, output, stream);              \
+    }                                                                   \
+                                                                        \
+    inline bool type##_freeze(type##_p type,                            \
+                              tree_io_fn output, void *stream)          \
+    {                                                                   \
+        return tree_freeze((tree_p) type, output, stream);              \
+    }                                                                   \
+                                                                        \
+    inline type##_r type##_thaw(tree_io_fn input, void *stream)         \
+    {                                                                   \
+        return (type##_r) tree_thaw(input, stream);                     \
     }
 
 
@@ -509,6 +550,7 @@ inline tree_r tree_thaw(tree_io_fn input, void *stream)
     }
 
 
+// Macro to define a type that has children and uses regular child functions
 #define tree_children_type(type)                                        \
                                                                         \
     tree_arity_type(type);                                              \
@@ -523,6 +565,8 @@ inline tree_r tree_thaw(tree_io_fn input, void *stream)
     {                                                                   \
         return tree_set_child((tree_p) type, index, child);             \
     }
+
+
 
 
 #endif // TREE_H
