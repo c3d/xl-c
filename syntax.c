@@ -99,9 +99,7 @@ static inline bool eq(text_p text, const char *str)
 //    Compare the name value with a C string
 // ----------------------------------------------------------------------------
 {
-    size_t len = text_length(text);
-    const char *data = text_data(text);
-    return memcmp(str, data, len) && str[len] == 0;
+    return text_eq(text, str);
 }
 
 
