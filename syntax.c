@@ -33,7 +33,7 @@ syntax_p syntax_new(const char *file)
 // ----------------------------------------------------------------------------
 {
     // Zero-initialize the memory
-    syntax_r result = (syntax_r) tree_malloc(sizeof(syntax_t));
+    syntax_p result = (syntax_p) tree_malloc(sizeof(syntax_t));
 
     array_set(&result->infixes, square_array_new(0, 0, NULL));
     array_set(&result->prefixes, square_array_new(0, 0, NULL));
@@ -122,8 +122,8 @@ static inline void set_priority(array_p *array, int priority, text_p text)
 // ----------------------------------------------------------------------------
 {
     natural_p prio = natural_new(0, priority);
-    array_push(array, (tree_r) text);
-    array_push(array, (tree_r) prio);
+    array_push(array, (tree_p) text);
+    array_push(array, (tree_p) prio);
 }
 
 
@@ -132,8 +132,8 @@ static inline void set_delimiter(array_p *array, text_p open, text_p close)
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
 {
-    array_push(array, (tree_r) open);
-    array_push(array, (tree_r) close);
+    array_push(array, (tree_p) open);
+    array_push(array, (tree_p) close);
 }
 
 
@@ -143,9 +143,9 @@ static inline void set_syntax(array_p *array,
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
 {
-    array_push(array, (tree_r) open);
-    array_push(array, (tree_r) close);
-    array_push(array, (tree_r) syntax);
+    array_push(array, (tree_p) open);
+    array_push(array, (tree_p) close);
+    array_push(array, (tree_p) syntax);
 }
 
 
@@ -170,7 +170,7 @@ static inline void sort(array_p array, size_t count)
 }
 
 
-void syntax_read_file(syntax_r syntax, const char *filename)
+void syntax_read_file(syntax_p syntax, const char *filename)
 // ----------------------------------------------------------------------------
 //   Read a whole syntax file
 // ----------------------------------------------------------------------------
@@ -187,7 +187,7 @@ void syntax_read_file(syntax_r syntax, const char *filename)
 }
 
 
-void syntax_read(syntax_r syntax, scanner_p scanner)
+void syntax_read(syntax_p syntax, scanner_p scanner)
 // ----------------------------------------------------------------------------
 //   Read syntax from the given scanner (either a whole file or a source code)
 // ----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
                 set_priority(&syntax->infixes, priority, text);
                 break;
             case COMMENT:
-                text_set(&entry, (text_r) text);
+                text_set(&entry, (text_p) text);
                 state = COMMENT_END;
                 break;
             case COMMENT_END:
@@ -281,7 +281,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
                 state = COMMENT;
                 break;
             case TEXT:
-                text_set(&entry, (text_r) text);
+                text_set(&entry, (text_p) text);
                 state = TEXT_END;
                 break;
             case TEXT_END:
@@ -289,7 +289,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
                 state = TEXT;
                 break;
             case BLOCK:
-                text_set(&entry, (text_r) text);
+                text_set(&entry, (text_p) text);
                 state = BLOCK_END;
                 set_priority(&syntax->infixes, priority, text);
                 break;
@@ -305,7 +305,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
                 state = SYNTAX;
                 break;
             case SYNTAX:
-                text_set(&entry, (text_r) text);
+                text_set(&entry, (text_p) text);
                 state = SYNTAX_END;
                 break;
             case SYNTAX_END:
@@ -333,7 +333,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
 
         // If we read an operator name, insert it in list of known operators
         if (known_token)
-            array_push(&syntax->known, (tree_r) known_token);
+            array_push(&syntax->known, (tree_p) known_token);
 
         text_dispose(&text);
     } // while
@@ -483,7 +483,7 @@ bool syntax_is_block(syntax_p s, name_p name, name_p *closing)
     int index = search(s->blocks, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_r) array_child(s->blocks, index+1));
+        name_set(closing, (name_p) array_child(s->blocks, index+1));
         return true;
     }
     return false;
@@ -498,7 +498,7 @@ bool syntax_is_text(syntax_p s, name_p name, name_p *closing)
     int index = search(s->texts, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_r) array_child(s->texts, index+1));
+        name_set(closing, (name_p) array_child(s->texts, index+1));
         return true;
     }
     return false;
@@ -513,7 +513,7 @@ bool syntax_is_comment(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_r) array_child(s->comments, index+1));
+        name_set(closing, (name_p) array_child(s->comments, index+1));
         return true;
     }
     return false;
@@ -528,7 +528,7 @@ syntax_p syntax_is_special(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 3);
     if (index >= 0)
     {
-        name_set(closing, (name_r) array_child(s->comments, index+1));
+        name_set(closing, (name_p) array_child(s->comments, index+1));
         return (syntax_p) array_child(s->comments, index+2);
     }
     return NULL;

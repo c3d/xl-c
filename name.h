@@ -39,7 +39,7 @@ typedef struct name
 blob_type(char, name);
 extern bool name_is_operator(name_p name);
 extern bool name_is_valid(size_t size, const char *data);
-inline bool name_eq(text_p, const char *value);
+inline bool name_eq(name_p, const char *value);
 
 // Private name handler, should not be called directly in general
 extern tree_p   name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
@@ -56,7 +56,7 @@ extern tree_p   name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline bool name_eq(text_p name, const char *str)
+inline bool name_eq(name_p name, const char *str)
 // ----------------------------------------------------------------------------
 //   Check if the text matches some string constant
 // ----------------------------------------------------------------------------

@@ -78,7 +78,7 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 }
 
 
-text_r text_printf(srcpos_t pos, const char *format, ...)
+text_p text_printf(srcpos_t pos, const char *format, ...)
 // ----------------------------------------------------------------------------
 //    Format input with printf-like style and %t extension for trees
 // ----------------------------------------------------------------------------
@@ -86,13 +86,13 @@ text_r text_printf(srcpos_t pos, const char *format, ...)
 {
     va_list va;
     va_start(va, format);
-    text_r result = text_vprintf(pos, format, va);
+    text_p result = text_vprintf(pos, format, va);
     va_end(va);
     return result;
 }
 
 
-extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
+extern text_p text_vprintf(srcpos_t pos, const char *format, va_list va)
 // ----------------------------------------------------------------------------
 //   Format input with printf-style format, and %t extension for trees
 // ----------------------------------------------------------------------------
@@ -163,5 +163,5 @@ extern text_r text_vprintf(srcpos_t pos, const char *format, va_list va)
     memmove((char *) format, base + size + 1, act_size);
     text_range(&result, 0, offset + act_size);
 
-    return (text_r) result;
+    return (text_p) result;
 }

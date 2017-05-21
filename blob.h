@@ -40,7 +40,7 @@ typedef struct blob
 #endif
 
 tree_type(blob);
-inline blob_r   blob_new(srcpos_t position, size_t sz, const char *data);
+inline blob_p   blob_new(srcpos_t position, size_t sz, const char *data);
 extern void     blob_append_data(blob_p *blob, size_t sz, const char *data);
 inline void     blob_append(blob_p *blob, blob_p other);
 extern void     blob_range(blob_p *blob, size_t start, size_t len);
@@ -49,7 +49,7 @@ inline size_t   blob_length(blob_p blob);
 extern int      blob_compare(blob_p blob1, blob_p blob2);
 
 // Private blob handler, should not be called directly in general
-inline blob_r   blob_make(tree_handler_fn h, srcpos_t, size_t, const char *);
+inline blob_p   blob_make(tree_handler_fn h, srcpos_t, size_t, const char *);
 extern tree_p   blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 #undef inline
@@ -62,17 +62,17 @@ extern tree_p   blob_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline blob_r blob_make(tree_handler_fn h, srcpos_t pos,
+inline blob_p blob_make(tree_handler_fn h, srcpos_t pos,
                         size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //   Create a blob with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (blob_r) tree_make(h, pos, sz, data);
+    return (blob_p) tree_make(h, pos, sz, data);
 }
 
 
-inline blob_r blob_new(srcpos_t position, size_t sz, const char *data)
+inline blob_p blob_new(srcpos_t position, size_t sz, const char *data)
 // ----------------------------------------------------------------------------
 //    Allocate a blob with the given data
 // ----------------------------------------------------------------------------
@@ -119,17 +119,17 @@ inline size_t blob_length(blob_p blob)
                                                                         \
     tree_type(type);                                                    \
                                                                         \
-    inline text_r type##_make(tree_handler_fn h, srcpos_t pos,          \
+    inline text_p type##_make(tree_handler_fn h, srcpos_t pos,          \
                               size_t sz, const item *data)              \
     {                                                                   \
         sz *= sizeof(item);                                             \
-        return (text_r) tree_make(h, pos, sz, data);                    \
+        return (text_p) tree_make(h, pos, sz, data);                    \
     }                                                                   \
                                                                         \
-    inline type##_r type##_new(srcpos_t pos,                            \
+    inline type##_p type##_new(srcpos_t pos,                            \
                                size_t sz, const item *data)             \
     {                                                                   \
-        return (type##_r) type##_make(type##_handler, pos,sz, data);    \
+        return (type##_p) type##_make(type##_handler, pos,sz, data);    \
     }                                                                   \
                                                                         \
     inline void type##_append(type##_p *type, type##_p type2)           \

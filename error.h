@@ -23,9 +23,9 @@
 
 #include <stdarg.h>
 
-typedef unsigned             srcpos_t;
-typedef struct positions    *positions_p;
-typedef struct errors const *errors_p;
+typedef unsigned          srcpos_t;
+typedef struct positions *positions_p;
+typedef struct errors    *errors_p;
 
 // Reporting errors - This accepts an extended printf format with %t for trees
 // Note that an implementation limitation requires trees to come first in args

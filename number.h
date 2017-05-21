@@ -52,12 +52,12 @@ tree_type(number);                                                      \
 tree_type(based_##number);                                              \
                                                                         \
                                                                         \
-inline number##_r  number##_new(srcpos_t position, reptype value);      \
-inline number##_r  based_##number##_new(srcpos_t position,              \
+inline number##_p  number##_new(srcpos_t position, reptype value);      \
+inline number##_p  based_##number##_new(srcpos_t position,              \
                                         reptype value, unsigned base);  \
 inline reptype     number##_value(number##_p number);                   \
                                                                         \
-inline number##_r  number##_make(tree_handler_fn, srcpos_t pos,         \
+inline number##_p  number##_make(tree_handler_fn, srcpos_t pos,         \
                                  reptype value, unsigned base);         \
 extern tree_p      number##_handler(tree_cmd_t, tree_p, va_list);       \
 extern tree_p      based_##number##_handler(tree_cmd_t,tree_p,va_list);
@@ -69,18 +69,18 @@ extern tree_p      based_##number##_handler(tree_cmd_t,tree_p,va_list);
 
 #define NUMBER(number, printf_format, reptype, vatype)                  \
                                                                         \
-inline number##_r number##_make(tree_handler_fn h, srcpos_t pos,        \
+inline number##_p number##_make(tree_handler_fn h, srcpos_t pos,        \
                                 reptype value, unsigned base)           \
 {                                                                       \
-    return (number##_r) tree_make(h, pos, value, base);                 \
+    return (number##_p) tree_make(h, pos, value, base);                 \
 }                                                                       \
                                                                         \
-inline number##_r number##_new(srcpos_t position, reptype value)        \
+inline number##_p number##_new(srcpos_t position, reptype value)        \
 {                                                                       \
     return number##_make(number##_handler, position, value, 10);        \
 }                                                                       \
                                                                         \
-inline number##_r based_##number##_new(srcpos_t position,               \
+inline number##_p based_##number##_new(srcpos_t position,               \
                                        reptype value, unsigned base)    \
 {                                                                       \
     return number##_make(based_##number##_handler,position,value,base); \

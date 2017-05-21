@@ -31,7 +31,7 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     tree_io_fn       io;
     void *           stream;
     tree_handler_fn  cast_type;
-    delimited_text_r dt;
+    delimited_text_p dt;
     text_p           value;
     name_p           opening, closing;
 
@@ -65,10 +65,10 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         opening = va_arg(va, name_p);
         closing = va_arg(va, name_p);
 
-        dt = (delimited_text_r) tree_malloc(sizeof(delimited_text_t));
-        text_set(&dt->value, (text_r) value);
-        name_set(&dt->opening, (name_r) opening);
-        name_set(&dt->closing, (name_r) closing);
+        dt = (delimited_text_p) tree_malloc(sizeof(delimited_text_t));
+        text_set(&dt->value, (text_p) value);
+        name_set(&dt->opening, (name_p) opening);
+        name_set(&dt->closing, (name_p) closing);
 
     case TREE_DELETE:
     case TREE_COPY:
@@ -80,7 +80,7 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Default rendering simply shows the tree address and handler address
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
-        dt = (delimited_text_r) tree;
+        dt = (delimited_text_p) tree;
         if (!name_render(dt->opening, io, stream))
             return NULL;
         size = text_length(dt->value);
@@ -102,6 +102,6 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     }
 
     // Other cases are dealt with by considering the text part
-    dt = (delimited_text_r) tree;
+    dt = (delimited_text_p) tree;
     return text_handler(cmd, (tree_p) dt->value, va);
 }

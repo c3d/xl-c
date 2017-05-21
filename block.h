@@ -40,15 +40,15 @@ typedef struct block
 #endif
 
 tree_arity_type(block);
-inline block_r       block_new(srcpos_t position, tree_p child,
+inline block_p       block_new(srcpos_t position, tree_p child,
                                name_p open, name_p close);
 inline tree_p        block_child(block_p block);
-inline tree_p        block_set_child(block_p block, tree_r child);
+inline tree_p        block_set_child(block_p block, tree_p child);
 inline name_p        block_opening(block_p block);
 inline name_p        block_closing(block_p block);
 
 // Private block handler, should not be called directly in general
-inline block_r block_make(tree_handler_fn h, srcpos_t pos,
+inline block_p block_make(tree_handler_fn h, srcpos_t pos,
                           tree_p child, name_p open, name_p close);
 extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
@@ -62,17 +62,17 @@ extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline block_r block_make(tree_handler_fn handler, srcpos_t pos,
+inline block_p block_make(tree_handler_fn handler, srcpos_t pos,
                           tree_p child, name_p open, name_p close)
 // ----------------------------------------------------------------------------
 //   Create a block with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (block_r) tree_make(handler, pos, child, open, close);
+    return (block_p) tree_make(handler, pos, child, open, close);
 }
 
 
-inline block_r block_new(srcpos_t pos, tree_p child, name_p open, name_p close)
+inline block_p block_new(srcpos_t pos, tree_p child, name_p open, name_p close)
 // ----------------------------------------------------------------------------
 //    Allocate a block with the given data
 // ----------------------------------------------------------------------------
@@ -90,14 +90,14 @@ inline tree_p block_child(block_p block)
 }
 
 
-inline tree_p block_set_child(block_p block, tree_r child)
+inline tree_p block_set_child(block_p block, tree_p child)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
 {
     if (child != block->child)
     {
-        block_r b = (block_r) block;
+        block_p b = (block_p) block;
         tree_ref(child);
         tree_dispose(&b->child);
         b->child = child;

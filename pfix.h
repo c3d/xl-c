@@ -40,7 +40,7 @@ typedef struct pfix
 
 tree_children_type(pfix);
 
-inline pfix_r       pfix_new(srcpos_t position, tree_r left, tree_r right);
+inline pfix_p       pfix_new(srcpos_t position, tree_p left, tree_p right);
 inline void         pfix_delete(pfix_p pfix);
 inline tree_p       pfix_left(pfix_p pfix);
 inline tree_p       pfix_right(pfix_p pfix);
@@ -49,7 +49,7 @@ inline tree_p       pfix_right(pfix_p pfix);
 typedef struct prefix prefix_t;
 tree_children_type(prefix);
 
-inline prefix_r     prefix_new(srcpos_t position, name_r left, tree_r right);
+inline prefix_p     prefix_new(srcpos_t position, name_p left, tree_p right);
 inline name_p       prefix_operator(prefix_p prefix);
 inline tree_p       prefix_operand(prefix_p prefix);
 
@@ -57,14 +57,14 @@ inline tree_p       prefix_operand(prefix_p prefix);
 typedef struct postfix postfix_t;
 tree_children_type(postfix);
 
-inline postfix_r    postfix_new(srcpos_t position, tree_r left, name_r right);
+inline postfix_p    postfix_new(srcpos_t position, tree_p left, name_p right);
 inline name_p       postfix_operator(postfix_p postfix);
 inline tree_p       postfix_operand(postfix_p postfix);
 
 
 // Private pfix handler, should not be called directly in general
-inline pfix_r       pfix_make(tree_handler_fn h, srcpos_t pos,
-                              tree_r left, tree_r right);
+inline pfix_p       pfix_make(tree_handler_fn h, srcpos_t pos,
+                              tree_p left, tree_p right);
 extern tree_p       pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 extern tree_p       prefix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 extern tree_p       postfix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
@@ -79,17 +79,17 @@ extern tree_p       postfix_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline pfix_r pfix_make(tree_handler_fn handler, srcpos_t pos,
-                          tree_r left, tree_r right)
+inline pfix_p pfix_make(tree_handler_fn handler, srcpos_t pos,
+                          tree_p left, tree_p right)
 // ----------------------------------------------------------------------------
 //   Create a pfix with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (pfix_r) tree_make(handler, pos, left, right);
+    return (pfix_p) tree_make(handler, pos, left, right);
 }
 
 
-inline pfix_r pfix_new(srcpos_t position, tree_r left, tree_r right)
+inline pfix_p pfix_new(srcpos_t position, tree_p left, tree_p right)
 // ----------------------------------------------------------------------------
 //    Allocate a prefix with the given children
 // ----------------------------------------------------------------------------
@@ -118,12 +118,12 @@ inline tree_p pfix_right(pfix_p pfix)
 }
 
 
-inline prefix_r prefix_new(srcpos_t position, name_r left, tree_r right)
+inline prefix_p prefix_new(srcpos_t position, name_p left, tree_p right)
 // ----------------------------------------------------------------------------
 //    Allocate a prefix with the given children
 // ----------------------------------------------------------------------------
 {
-    return (prefix_r) pfix_make(prefix_handler, position, (tree_r) left, right);
+    return (prefix_p) pfix_make(prefix_handler, position, (tree_p) left, right);
 }
 
 
@@ -145,12 +145,12 @@ inline tree_p prefix_operand(prefix_p pfix)
 }
 
 
-inline postfix_r postfix_new(srcpos_t position, tree_r left, name_r right)
+inline postfix_p postfix_new(srcpos_t position, tree_p left, name_p right)
 // ----------------------------------------------------------------------------
 //    Allocate a postfix with the given children
 // ----------------------------------------------------------------------------
 {
-    return (postfix_r) pfix_make(postfix_handler, position, left,(tree_r)right);
+    return (postfix_p) pfix_make(postfix_handler, position, left,(tree_p)right);
 }
 
 

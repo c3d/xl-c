@@ -34,12 +34,12 @@ void blob_append_data(blob_p *blob_ptr, size_t sz, const char *data)
 //   - The realloc can extend memory without copy
 {
     blob_p blob = *blob_ptr;
-    blob_r in_place = (blob_r) blob;
+    blob_p in_place = blob;
     if (blob_ref(blob))
         in_place = NULL;
     size_t old_size = sizeof(blob_t) + blob->length;
     size_t new_size = old_size + sz;
-    blob_r result = (blob_r) tree_realloc((tree_r) in_place, new_size);
+    blob_p result = (blob_p) tree_realloc((tree_p) in_place, new_size);
     if (result)
     {
         if (!in_place)
@@ -72,7 +72,7 @@ void blob_range(blob_p *blob_ptr, size_t first, size_t length)
 //   We can move in place if there is only one user of this blob
 {
     blob_p blob = *blob_ptr;
-    blob_r in_place = (blob_r) blob;
+    blob_p in_place = blob;
     size_t end = first + length;
     if (end > blob->length)
         end = blob->length;
@@ -81,14 +81,14 @@ void blob_range(blob_p *blob_ptr, size_t first, size_t length)
     size_t resized = end - first;
     if (blob_ref(blob))
     {
-        in_place = (blob_r) tree_malloc(sizeof(blob_t) + resized);
+        in_place = (blob_p) tree_malloc(sizeof(blob_t) + resized);
         memcpy(in_place, blob, sizeof(blob_t));
         in_place->tree.refcount = 0;
     }
     memmove(in_place + 1, blob_data(blob) + first, resized);
     in_place->length = resized;
     if (in_place == blob)
-        in_place = (blob_r) tree_realloc((tree_r) in_place, sizeof(blob_t) + resized);
+        in_place = (blob_p) tree_realloc((tree_p) in_place, sizeof(blob_t) + resized);
     blob_unref(blob);
 
     if (in_place != blob)
@@ -123,7 +123,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for blobs deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    blob_r        blob = (blob_r) tree;
+    blob_p        blob = (blob_p) tree;
     size_t        size, idx;
     tree_io_fn    io;
     const char  * data;
@@ -156,7 +156,7 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         data = va_arg(va, const char *);
 
         // Create blob and copy data in it
-        blob = (blob_r) tree_malloc(sizeof(blob_t) + size);
+        blob = (blob_p) tree_malloc(sizeof(blob_t) + size);
         blob->length = size;
         if (size)
         {

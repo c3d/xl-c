@@ -123,7 +123,7 @@ void errorv(srcpos_t position, const char *message, va_list va)
 //    Process the error message
 // ----------------------------------------------------------------------------
 {
-    text_r err = text_vprintf(position, message, va);
+    text_p err = text_vprintf(position, message, va);
     if (errors)
         errors_push(&errors, err);
     else
@@ -186,7 +186,7 @@ void errors_commit(errors_p saved_errors)
     {
         // Append errors to previous ones
         errors_append(&saved_errors, errors);
-        errors_set(&errors, (errors_r) saved_errors);
+        errors_set(&errors, (errors_p) saved_errors);
     }
     else
     {

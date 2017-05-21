@@ -40,9 +40,9 @@ typedef struct delimited_text
 #endif
 
 tree_type(delimited_text);
-inline delimited_text_r delimited_text_new(srcpos_t position, text_p value,
+inline delimited_text_p delimited_text_new(srcpos_t position, text_p value,
                                            name_p opening, name_p closing);
-inline delimited_text_r delimited_text_make(tree_handler_fn h,
+inline delimited_text_p delimited_text_make(tree_handler_fn h,
                                             srcpos_t position, text_p value,
                                             name_p opening, name_p closing);
 extern tree_p dellmited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
@@ -56,17 +56,17 @@ extern tree_p dellmited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 //
 // ============================================================================
 
-inline delimited_text_r delimited_text_make(tree_handler_fn h,
+inline delimited_text_p delimited_text_make(tree_handler_fn h,
                                             srcpos_t position, text_p value,
                                             name_p opening, name_p closing)
 // ----------------------------------------------------------------------------
 //   Make a delimited text with a specific handler
 // ----------------------------------------------------------------------------
 {
-    return (delimited_text_r) tree_make(h, position, value, opening, closing);
+    return (delimited_text_p) tree_make(h, position, value, opening, closing);
 }
 
-inline delimited_text_r delimited_text_new(srcpos_t position, text_p value,
+inline delimited_text_p delimited_text_new(srcpos_t position, text_p value,
                                            name_p opening, name_p closing)
 // ----------------------------------------------------------------------------
 //   Build new delimited text

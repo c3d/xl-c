@@ -210,7 +210,7 @@ static inline int scanner_nextchar(scanner_p s, char c)
 }
 
 
-static name_r scanner_normalize(text_p input)
+static name_p scanner_normalize(text_p input)
 // ----------------------------------------------------------------------------
 //   Create an output name that is the normalized variant of the input
 // ----------------------------------------------------------------------------
@@ -235,13 +235,13 @@ static name_r scanner_normalize(text_p input)
     if (normalized)
     {
         // Force-cast text to name (assume otherwise identical representation)
-        name_r result = (name_r) input;
-        ((tree_r) result)->handler = name_handler;
+        name_p result = (name_p) input;
+        ((tree_p) result)->handler = name_handler;
         return result;
     }
 
     // It's not normalized. We need a new name to copy data into
-    name_r result = name_new(text_position(input), normalized_size, src);
+    name_p result = name_new(text_position(input), normalized_size, src);
     char *dst = (char *) name_data(result);
     for (unsigned i = 0; i < size; i++)
     {
@@ -563,7 +563,7 @@ token_t scanner_read(scanner_p s)
                     blob_append_data(&blob, 3, blob_bytes);
                 }
             }
-            blob_set(&s->scanned.blob, (blob_r) blob);
+            blob_set(&s->scanned.blob, (blob_p) blob);
             return tokBLOB;
         }
 
@@ -574,7 +574,7 @@ token_t scanner_read(scanner_p s)
             if (digit_value[mantissa_digit] >= base)
             {
                 // This is something else following an integer: 1..3, 1.(3)
-                natural_r n = natural_new(pos, natural_value);
+                natural_p n = natural_new(pos, natural_value);
                 scanner_ungetchar(s, mantissa_digit);
                 scanner_ungetchar(s, c);
                 s->had_space_after = false;
@@ -737,7 +737,7 @@ token_t scanner_read(scanner_p s)
             {
                 error(pos, "End of input in the middle of a text");
                 s->had_space_after = false;
-                text_set(&s->scanned.text, (text_r) text);
+                text_set(&s->scanned.text, (text_p) text);
                 return eos == '"' ? tokTEXT : tokCHARACTER;
             }
             char ch = (char) c;
@@ -778,7 +778,7 @@ token_t scanner_read(scanner_p s)
 
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
-    name_set(&s->scanned.name, (name_r) s->source);
+    name_set(&s->scanned.name, (name_p) s->source);
     return tok;
 }
 

@@ -30,11 +30,11 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for blocks deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    block_r    block = (block_r) tree;
+    block_p    block = (block_p) tree;
     tree_io_fn io;
     void *     stream;
-    tree_r     child;
-    name_r     open, close;
+    tree_p     child;
+    name_p     open, close;
 
     switch(cmd)
     {
@@ -62,12 +62,12 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see block_new)
-        child = va_arg(va, tree_r);
-        open = va_arg(va, name_r);
-        close = va_arg(va, name_r);
+        child = va_arg(va, tree_p);
+        open = va_arg(va, name_p);
+        close = va_arg(va, name_p);
 
         // Create block and copy data in it
-        block = (block_r) tree_malloc(sizeof(block_t));
+        block = (block_p) tree_malloc(sizeof(block_t));
         tree_set(&block->child, child);
         name_set(&block->opening, open);
         name_set(&block->closing, close);

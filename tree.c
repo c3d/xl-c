@@ -48,16 +48,16 @@ static unsigned allocs = 0;
 #endif
 
 
-tree_r tree_malloc_(const char *source, size_t size)
+tree_p tree_malloc_(const char *source, size_t size)
 // ----------------------------------------------------------------------------
 //   Allocate a tree, clear refcount and insert in global list
 // ----------------------------------------------------------------------------
 {
 #ifdef NDEBUG
-    tree_r result = malloc(size);
+    tree_p result = malloc(size);
 #else
     tree_debug_p debug = malloc(sizeof(tree_debug_t) + size);
-    tree_r result = (tree_r) (debug + 1);
+    tree_p result = (tree_p) (debug + 1);
 
     allocs++;
     debug->source = source;
@@ -77,7 +77,7 @@ tree_r tree_malloc_(const char *source, size_t size)
 }
 
 
-tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
+tree_p tree_realloc_(const char *source, tree_p old, size_t new_size)
 // ----------------------------------------------------------------------------
 //   Reallocate a tree
 // ----------------------------------------------------------------------------
@@ -88,13 +88,13 @@ tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
     assert(old->refcount <= 1 && "Do not create dangling pointers to tree");
 
 #ifdef NDEBUG
-    tree_r result = realloc(old, new_size);
+    tree_p result = realloc(old, new_size);
 #else
     tree_debug_p old_dbg = (tree_debug_p) old - 1;
     tree_debug_p previous = old_dbg->previous;
     tree_debug_p next = old_dbg->next;
     tree_debug_p debug = realloc(old_dbg, sizeof(tree_debug_t) + new_size);
-    tree_r result = (tree_r) (debug + 1);
+    tree_p result = (tree_p) (debug + 1);
 
     allocs++;
     if (debug != old_dbg)
@@ -117,7 +117,7 @@ tree_r tree_realloc_(const char *source, tree_r old, size_t new_size)
 }
 
 
-void tree_free_(const char *source, tree_r tree)
+void tree_free_(const char *source, tree_p tree)
 // ----------------------------------------------------------------------------
 //   Free a tree
 // ----------------------------------------------------------------------------
@@ -158,7 +158,7 @@ void tree_memcheck()
     for (tree_debug_p debug = trees; debug; debug = debug->next)
     {
         index++;
-        tree_r tree = (tree_r) (debug + 1);
+        tree_p tree = (tree_p) (debug + 1);
         if ((int) tree->refcount <= 0)
         {
             fprintf(stderr,
@@ -183,7 +183,7 @@ void tree_memcheck()
 }
 
 
-tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...)
+tree_p tree_make(tree_handler_fn handler, srcpos_t position, ...)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the given handler, position and pass extra args
 // ----------------------------------------------------------------------------
@@ -192,7 +192,7 @@ tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...)
 
     // Pass the va to TREE_INITIALIZE for dynamic types, e.g. text
     va_start(va, position);
-    tree_r tree = (tree_r) handler(TREE_INITIALIZE, NULL, va);
+    tree_p tree = (tree_p) handler(TREE_INITIALIZE, NULL, va);
     va_end(va);
 
     tree->handler = handler;
@@ -203,14 +203,14 @@ tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...)
 }
 
 
-tree_r tree_io(tree_cmd_t cmd, tree_r tree, ...)
+tree_p tree_io(tree_cmd_t cmd, tree_p tree, ...)
 // ----------------------------------------------------------------------------
 //   Perform some tree I/O operation, passed over using varargs
 // ----------------------------------------------------------------------------
 {
     va_list va;
     va_start(va, tree);                    // Should really be (io, stream)
-    tree_r result = (tree_r) tree->handler(cmd, tree, va);
+    tree_p result = (tree_p) tree->handler(cmd, tree, va);
     va_end(va);
     return result;
 }
@@ -228,14 +228,14 @@ static unsigned tree_text_output(void *stream, unsigned size, void *data)
 }
 
 
-text_r tree_text(tree_p tree)
+text_p tree_text(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Convert the tree to text by using the render callback
 // ----------------------------------------------------------------------------
 {
     if (!tree)
         return text_cnew(0, "<null>");
-    text_r result = text_cnew(tree->position, "");
+    text_p result = text_cnew(tree->position, "");
     tree_render(tree, tree_text_output, &result);
     return result;
 }
@@ -265,7 +265,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The default type handler for base trees
 // ----------------------------------------------------------------------------
 {
-    tree_r          copy;
+    tree_p          copy;
     size_t          size;
     tree_io_fn      io;
     void *          stream;
@@ -309,14 +309,14 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Free the memory associated with the tree
         assert(tree->refcount == 0 && "Cannot free tree if still referenced");
-        tree_free((tree_r)tree);
+        tree_free((tree_p)tree);
         return NULL;
 
     case TREE_COPY:
     case TREE_CLONE:
         // Perform a shallow or deep copy of the tree
         size = tree_size(tree);
-        copy = (tree_r) tree_malloc(size);
+        copy = (tree_p) tree_malloc(size);
         if (copy)
         {
             memcpy(copy, tree, size);

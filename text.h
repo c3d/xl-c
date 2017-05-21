@@ -40,12 +40,12 @@ typedef struct text
 #endif
 
 blob_type(char, text);
-extern text_r      text_printf(srcpos_t pos, const char *format, ...);
-extern text_r      text_vprintf(srcpos_t pos, const char *format, va_list va);
+extern text_p      text_printf(srcpos_t pos, const char *format, ...);
+extern text_p      text_vprintf(srcpos_t pos, const char *format, va_list va);
 inline bool        text_eq(text_p, const char *value);
 
 // Private text handler, should not be called directly in general
-inline text_r text_make(tree_handler_fn h, srcpos_t pos, size_t, const char *);
+inline text_p text_make(tree_handler_fn h, srcpos_t pos, size_t, const char *);
 extern tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant

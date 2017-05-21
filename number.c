@@ -30,7 +30,7 @@
                                                                         \
 tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
 {                                                                       \
-    number##_r    number = (number##_r) tree;                           \
+    number##_p    number = (number##_p) tree;                           \
     size_t        size;                                                 \
     tree_io_fn    io;                                                   \
     reptype       value;                                                \
@@ -55,7 +55,7 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
                                                                         \
 case TREE_INITIALIZE:                                                   \
         value = va_arg(va, va_type);                                    \
-        number = (number##_r) tree_malloc(sizeof(number##_t));          \
+        number = (number##_p) tree_malloc(sizeof(number##_t));          \
         number->value = value;                                          \
         return (tree_p) number;                                         \
                                                                         \
@@ -77,7 +77,7 @@ case TREE_INITIALIZE:                                                   \
                                                                         \
 tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
 {                                                                       \
-    based_##number##_r number = (based_##number##_r) tree;              \
+    based_##number##_p number = (based_##number##_p) tree;              \
     size_t             size;                                            \
     tree_io_fn         io;                                              \
     reptype            value;                                           \
@@ -104,7 +104,7 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
     case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
         base = va_arg(va, unsigned);                                    \
-        number = (based_##number##_r) tree_malloc(sizeof(*number));     \
+        number = (based_##number##_p) tree_malloc(sizeof(*number));     \
         number->number.value = value;                                   \
         number->base = base;                                            \
         return (tree_p) number;                                         \

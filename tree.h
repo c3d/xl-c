@@ -35,40 +35,19 @@
 //    Forward declaration of the major tree types
 //
 // ============================================================================
-//
-//    XL code uses a const convention to help with garbage collection
-//    - tree_p, aka const tree_t *, is used for referenced trees,
-//      including all trees stored in a structure.
-//    - tree_r (for raw), aka tree_t * is used for not-yet-referenced trees,
-//      notably newly-created trees created by tree_new.
-//
-//    Before being placed in a structure, newly created trees must have
-//    their reference count incremented, and they are then made const.
-//    This minimizes the chances of just storing them by mistake in a
-//    persistent structure without ref-counting them. Doing so is likely
-//    to cause a compilation error or warning, since you discard constness.
-//
-//    Many constructors like prefix_new will accept tree_r inputs, since
-//    they do the proper referencing inside. So they can be safely
-//    used with either tree_p or tree_r.
-//
-//    A hint to remember this convention: 'const' means that you can't
-//    modify it freely anymore, because someone else may reference it.
-//
 
-typedef const struct tree    *tree_p;
-typedef const struct integer *integer_p;
-typedef const struct real    *real_p;
-typedef const struct blob    *blob_p;
-typedef const struct text    *text_p;
-typedef       struct text    *text_r;
-typedef const struct name    *name_p;
-typedef const struct block   *block_p;
-typedef const struct pfix    *pfix_p;
-typedef const struct prefix  *prefix_p;
-typedef const struct postfix *postfix_p;
-typedef const struct infix   *infix_p;
-typedef const struct array   *array_p;
+typedef struct tree    *tree_p;
+typedef struct integer *integer_p;
+typedef struct real    *real_p;
+typedef struct blob    *blob_p;
+typedef struct text    *text_p;
+typedef struct name    *name_p;
+typedef struct block   *block_p;
+typedef struct pfix    *pfix_p;
+typedef struct prefix  *prefix_p;
+typedef struct postfix *postfix_p;
+typedef struct infix   *infix_p;
+typedef struct array   *array_p;
 
 // Macros to indicate source position
 #define SOURCE__(L)         #L
@@ -121,22 +100,18 @@ typedef struct tree
     tree_handler_fn     handler;      // Handler function for the tree
     unsigned            refcount;     // Reference count (garbage collection)
     srcpos_t            position;     // Source code position
-} tree_t;
-
-typedef       tree_t *tree_r;         // Non-persistent pointer
-typedef const tree_t *tree_p;         // Persistent pointer (ref-counted)
-
+} tree_t, *tree_p;
 
 #ifdef TREE_C
 #define inline extern inline
 #endif // TREE_C
 
 // Public interface for trees
-inline tree_r      tree_new(srcpos_t position);
+inline tree_p      tree_new(srcpos_t position);
 inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
 inline unsigned    tree_unref(tree_p tree);
-inline void        tree_set(tree_p *ptr, tree_r tree);
+inline void        tree_set(tree_p *ptr, tree_p tree);
 inline void        tree_dispose(tree_p *tree);
 inline const char *tree_typename(tree_p tree);
 inline size_t      tree_size(tree_p tree);
@@ -144,25 +119,25 @@ inline size_t      tree_arity(tree_p tree);
 inline srcpos_t    tree_position(tree_p tree);
 inline tree_p *    tree_children(tree_p tree);
 inline tree_p      tree_child(tree_p tree, unsigned index);
-inline tree_p      tree_set_child(tree_p tree, unsigned index, tree_r child);
-inline tree_r      tree_copy(tree_p tree);
-inline tree_r      tree_clone(tree_p tree);
-extern text_r      tree_text(tree_p tree);
+inline tree_p      tree_set_child(tree_p tree, unsigned index, tree_p child);
+inline tree_p      tree_copy(tree_p tree);
+inline tree_p      tree_clone(tree_p tree);
+extern text_p      tree_text(tree_p tree);
 extern bool        tree_print(FILE *stream, tree_p tree);
 inline bool        tree_render(tree_p tree, tree_io_fn output, void *stream);
 inline bool        tree_freeze(tree_p tree, tree_io_fn output, void *stream);
-inline tree_r      tree_thaw(tree_io_fn input, void *stream);
-extern tree_r      tree_io(tree_cmd_t cmd, tree_r tree, ...);
+inline tree_p      tree_thaw(tree_io_fn input, void *stream);
+extern tree_p      tree_io(tree_cmd_t cmd, tree_p tree, ...);
 inline tree_p      tree_cast_(tree_p tree, ...);
 
 
 // Internal tree operations - Normally no need to call directly
 extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
-extern tree_r tree_make(tree_handler_fn handler, srcpos_t position, ...);
+extern tree_p tree_make(tree_handler_fn handler, srcpos_t position, ...);
 extern void   tree_memcheck();
-extern tree_r tree_malloc_(const char *where, size_t size);
-extern tree_r tree_realloc_(const char *where, tree_r old, size_t new_size);
-extern void   tree_free_(const char *where, tree_r tree);
+extern tree_p tree_malloc_(const char *where, size_t size);
+extern tree_p tree_realloc_(const char *where, tree_p old, size_t new_size);
+extern void   tree_free_(const char *where, tree_p tree);
 inline tree_handler_fn tree_cast_handler(va_list va);
 #define tree_malloc(sz)         tree_malloc_(SOURCE, (sz))
 #define tree_realloc(old, sz)   tree_realloc_(SOURCE, (old), (sz))
@@ -197,7 +172,7 @@ inline tree_handler_fn tree_cast_handler(va_list va);
 //
 // ============================================================================
 
-inline tree_r tree_new(srcpos_t position)
+inline tree_p tree_new(srcpos_t position)
 // ----------------------------------------------------------------------------
 //   Create a new tree with the default tree handler
 // ----------------------------------------------------------------------------
@@ -243,9 +218,8 @@ inline unsigned tree_ref(tree_p tree)
 //   Increment reference count of the tree
 // ----------------------------------------------------------------------------
 {
-    tree_r t = (tree_r) tree;
     assert(tree->refcount + 1 != 0 && "Suspiciously too many references");
-    return tree_fetch_add(t->refcount, 1);
+    return tree_fetch_add(tree->refcount, 1);
 }
 
 
@@ -254,9 +228,8 @@ inline unsigned tree_unref(tree_p tree)
 //   Decrement reference count of the tree
 // ----------------------------------------------------------------------------
 {
-    tree_r t = (tree_r) tree;
     assert(tree->refcount && "Cannot unref if never referenced");
-    unsigned count = tree_add_fetch(t->refcount, -1);
+    unsigned count = tree_add_fetch(tree->refcount, -1);
     return count;
 }
 
@@ -276,7 +249,7 @@ inline void tree_dispose(tree_p *tree)
 }
 
 
-inline void tree_set(tree_p *ptr, tree_r tree)
+inline void tree_set(tree_p *ptr, tree_p tree)
 // ----------------------------------------------------------------------------
 //   Return a reference to the tree with incremented refcount
 // ----------------------------------------------------------------------------
@@ -348,7 +321,7 @@ inline tree_p tree_child(tree_p tree, unsigned index)
 }
 
 
-inline tree_p tree_set_child(tree_p tree, unsigned index, tree_r child)
+inline tree_p tree_set_child(tree_p tree, unsigned index, tree_p child)
 // ----------------------------------------------------------------------------
 //   Update the given child in the tree
 // ----------------------------------------------------------------------------
@@ -360,21 +333,21 @@ inline tree_p tree_set_child(tree_p tree, unsigned index, tree_r child)
 }
 
 
-inline tree_r tree_copy(tree_p tree)
+inline tree_p tree_copy(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Return a shallow copy of the current tree
 // ----------------------------------------------------------------------------
 {
-    return (tree_r) tree->handler(TREE_COPY, tree, NULL);
+    return tree->handler(TREE_COPY, tree, NULL);
 }
 
 
-inline tree_r tree_clone(tree_p tree)
+inline tree_p tree_clone(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Return a deep copy of the current tree
 // ----------------------------------------------------------------------------
 {
-    return (tree_r) tree->handler(TREE_CLONE, tree, NULL);
+    return tree->handler(TREE_CLONE, tree, NULL);
 }
 
 
@@ -383,7 +356,7 @@ inline bool tree_render(tree_p tree, tree_io_fn output, void *stream)
 //   Invoke the render function in the handler, returns true if successful
 // ----------------------------------------------------------------------------
 {
-    return tree_io(TREE_RENDER, (tree_r) tree, output, stream) == tree;
+    return tree_io(TREE_RENDER, tree, output, stream) == tree;
 }
 
 
@@ -392,16 +365,16 @@ inline bool tree_freeze(tree_p tree, tree_io_fn output, void *stream)
 //   Freeze (serialize) the tree and return true if successful
 // ----------------------------------------------------------------------------
 {
-    return tree_io(TREE_FREEZE, (tree_r) tree, output, stream) == tree;
+    return tree_io(TREE_FREEZE, tree, output, stream) == tree;
 }
 
 
-inline tree_r tree_thaw(tree_io_fn input, void *stream)
+inline tree_p tree_thaw(tree_io_fn input, void *stream)
 // ----------------------------------------------------------------------------
 //   Thaw (deserialize) the tree from the given input
 // ----------------------------------------------------------------------------
 {
-    return (tree_r) tree_io(TREE_THAW, NULL, input, stream);
+    return tree_io(TREE_THAW, NULL, input, stream);
 }
 
 
@@ -414,7 +387,7 @@ inline tree_p tree_cast_(tree_p tree, ...)
     {
         va_list va;
         va_start(va, tree);
-        tree = (tree_p) tree->handler(TREE_CAST, tree, va);
+        tree = tree->handler(TREE_CAST, tree, va);
         va_end(va);
     }
     return tree;
@@ -444,9 +417,9 @@ inline tree_handler_fn tree_cast_handler(va_list va)
 // Macro to create adapters for another type
 #define tree_type(type)                                                 \
                                                                         \
-    typedef       struct type *type##_r;                                \
-    typedef const struct type *type##_p;                                \
-    extern tree_p type##_handler(tree_cmd_t cmd,tree_p tree,va_list va); \
+    typedef struct type *type##_p;                                      \
+                                                                        \
+    extern tree_p type##_handler(tree_cmd_t cmd,tree_p tree,va_list va);\
                                                                         \
                                                                         \
     inline void type##_delete(type##_p type)                            \
@@ -464,9 +437,9 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_unref((tree_p) type);                               \
     }                                                                   \
                                                                         \
-    inline void type##_set(type##_p *type, type##_r value)              \
+    inline void type##_set(type##_p *type, type##_p value)              \
     {                                                                   \
-        tree_set((tree_p *) type, (tree_r) value);                      \
+        tree_set((tree_p *) type, (tree_p) value);                      \
     }                                                                   \
                                                                         \
     inline void type##_dispose(type##_p *type)                          \
@@ -494,21 +467,20 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_position((tree_p) type);                            \
     }                                                                   \
                                                                         \
-    inline type##_r type##_copy(type##_p type)                          \
+    inline type##_p type##_copy(type##_p type)                          \
     {                                                                   \
-        return (type##_r) tree_copy((tree_p) type);                     \
+        return (type##_p) tree_copy((tree_p) type);                     \
     }                                                                   \
                                                                         \
-    inline type##_r type##_clone(type##_p type)                         \
+    inline type##_p type##_clone(type##_p type)                         \
     {                                                                   \
-        return (type##_r) tree_clone((tree_p) type);                    \
+        return (type##_p) tree_clone((tree_p) type);                    \
     }                                                                   \
                                                                         \
-    inline text_r type##_text(type##_p type)                            \
+    inline text_p type##_text(type##_p type)                            \
     {                                                                   \
         return tree_text((tree_p) type);                                \
     }                                                                   \
-                                                                        \
                                                                         \
     inline bool type##_print(FILE *f, type##_p type)                    \
     {                                                                   \
@@ -528,9 +500,9 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_freeze((tree_p) type, output, stream);              \
     }                                                                   \
                                                                         \
-    inline type##_r type##_thaw(tree_io_fn input, void *stream)         \
+    inline type##_p type##_thaw(tree_io_fn input, void *stream)         \
     {                                                                   \
-        return (type##_r) tree_thaw(input, stream);                     \
+        return (type##_p) tree_thaw(input, stream);                     \
     }
 
 
@@ -561,7 +533,7 @@ inline tree_handler_fn tree_cast_handler(va_list va)
     }                                                                   \
                                                                         \
     inline tree_p type##_set_child(type##_p type,                       \
-                                   unsigned index, tree_r child)        \
+                                   unsigned index, tree_p child)        \
     {                                                                   \
         return tree_set_child((tree_p) type, index, child);             \
     }
