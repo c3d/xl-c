@@ -175,7 +175,7 @@ typedef struct scanner
     text_p      source;                 // Source form of the parsed token
     scanned_t   scanned;                // Scanned result
     indents_p   indents;                // Stack of indents
-    text_p      block_close;            // Matching block close
+    name_p      block_close;            // Matching block close
     unsigned    indent;                 // Current level of indentation
     unsigned    column;                 // Current column during indentation
     char        pending_char[2];        // Read-ahead pending chars

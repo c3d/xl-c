@@ -74,7 +74,7 @@ void scanner_delete(scanner_p s)
     text_dispose(&s->source);
     text_dispose(&s->scanned.text);
     indents_dispose(&s->indents);
-    text_dispose(&s->block_close);
+    name_dispose(&s->block_close);
     free(s);
 }
 
@@ -106,7 +106,8 @@ void scanner_close(scanner_p s, FILE *f)
 //    Close the given scanner file
 // ----------------------------------------------------------------------------
 {
-    fclose(f);
+    if (f)
+        fclose(f);
     scanner_close_stream(s, f);
 }
 
@@ -232,7 +233,12 @@ static name_r scanner_normalize(text_p input)
         normalized_size += relevant;
     }
     if (normalized)
-        return (name_r) input;  // Assumes identical internal representations
+    {
+        // Force-cast text to name (assume otherwise identical representation)
+        name_r result = (name_r) input;
+        ((tree_r) result)->handler = name_handler;
+        return result;
+    }
 
     // It's not normalized. We need a new name to copy data into
     name_r result = name_new(text_position(input), normalized_size, src);
@@ -683,17 +689,17 @@ token_t scanner_read(scanner_p s)
         s->had_space_after = isspace(c);
 
         // Check if this is a block marker
-        name_set(&s->scanned.name,scanner_normalize(s->source));
+        name_set(&s->scanned.name, scanner_normalize(s->source));
         if (s->syntax)
         {
-            if (syntax_is_block(s->syntax, s->scanned.text, &s->block_close))
+            if (syntax_is_block(s->syntax, s->scanned.name, &s->block_close))
             {
                 return tokOPEN;
             }
             else if (s->block_close &&
-                     text_compare(s->scanned.text, s->block_close))
+                     name_compare(s->scanned.name, s->block_close))
             {
-                text_dispose(&s->block_close);
+                name_dispose(&s->block_close);
                 return tokCLOSE;
             }
         }
@@ -746,17 +752,18 @@ token_t scanner_read(scanner_p s)
     {
         // Normal scanning mode: check if operators exist in syntax
         while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
-               syntax_is_operator(s->syntax, s->source))
+               syntax_is_operator(s->syntax, (name_p) s->source))
         {
             c = scanner_nextchar(s, c);
-            if (syntax_is_block(s->syntax, s->source, &s->block_close))
+            name_p name = (name_p) s->source;
+            if (syntax_is_block(s->syntax, name, &s->block_close))
             {
                 tok = tokOPEN;
                 break;
             }
-            else if (s->block_close && text_compare(s->source, s->block_close))
+            else if (s->block_close && name_compare(name, s->block_close))
             {
-                text_dispose(&s->block_close);
+                name_dispose(&s->block_close);
                 tok = tokCLOSE;
                 break;
             }

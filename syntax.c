@@ -362,7 +362,7 @@ void syntax_read(syntax_r syntax, scanner_p scanner)
 //
 // ============================================================================
 
-static int search_internal(array_p array, text_p key, size_t skip,
+static int search_internal(array_p array, name_p key, size_t skip,
                            unsigned first, unsigned last)
 // ----------------------------------------------------------------------------
 //   Binary search on sorted entries in array
@@ -387,7 +387,7 @@ static int search_internal(array_p array, text_p key, size_t skip,
     return ~mid;
 }
 
-static inline int search(array_p array, text_p key, size_t skip)
+static inline int search(array_p array, name_p key, size_t skip)
 // ----------------------------------------------------------------------------
 //   Binary search on array
 // ----------------------------------------------------------------------------
@@ -396,7 +396,7 @@ static inline int search(array_p array, text_p key, size_t skip)
 }
 
 
-int syntax_infix_priority(syntax_p s, text_p name)
+int syntax_infix_priority(syntax_p s, name_p name)
 // ----------------------------------------------------------------------------
 //    Return the priority for the given infix, or default_priority
 // ----------------------------------------------------------------------------
@@ -412,7 +412,7 @@ int syntax_infix_priority(syntax_p s, text_p name)
 }
 
 
-int syntax_prefix_priority(syntax_p s, text_p name)
+int syntax_prefix_priority(syntax_p s, name_p name)
 // ----------------------------------------------------------------------------
 //    Return the priority for the given infix, or default_priority
 // ----------------------------------------------------------------------------
@@ -428,7 +428,7 @@ int syntax_prefix_priority(syntax_p s, text_p name)
 }
 
 
-int syntax_postfix_priority(syntax_p s, text_p name)
+int syntax_postfix_priority(syntax_p s, name_p name)
 // ----------------------------------------------------------------------------
 //    Return the priority for the given infix, or default_priority
 // ----------------------------------------------------------------------------
@@ -444,7 +444,7 @@ int syntax_postfix_priority(syntax_p s, text_p name)
 }
 
 
-bool syntax_is_operator(syntax_p s, text_p name)
+bool syntax_is_operator(syntax_p s, name_p name)
 // ----------------------------------------------------------------------------
 //   Check if the given name is a known operator
 // ----------------------------------------------------------------------------
@@ -464,9 +464,9 @@ bool syntax_is_operator(syntax_p s, text_p name)
     {
         if (index < length)
         {
-            text_p key = (text_p) array_child(s->known, index);
-            if (text_length(name) < text_length(key) &&
-                memcmp(text_data(name), text_data(key), text_length(name)) == 0)
+            name_p key = (name_p) array_child(s->known, index);
+            if (name_length(name) < name_length(key) &&
+                memcmp(name_data(name), name_data(key), name_length(name)) == 0)
                 return true;
         }
     }
@@ -475,7 +475,7 @@ bool syntax_is_operator(syntax_p s, text_p name)
 }
 
 
-bool syntax_is_block(syntax_p s, text_p name, text_p *closing)
+bool syntax_is_block(syntax_p s, name_p name, name_p *closing)
 // ----------------------------------------------------------------------------
 //    Check if the given name opens a block
 // ----------------------------------------------------------------------------
@@ -483,14 +483,14 @@ bool syntax_is_block(syntax_p s, text_p name, text_p *closing)
     int index = search(s->blocks, name, 2);
     if (index >= 0)
     {
-        text_set(closing, (text_r) array_child(s->blocks, index+1));
+        name_set(closing, (name_r) array_child(s->blocks, index+1));
         return true;
     }
     return false;
 }
 
 
-bool syntax_is_text(syntax_p s, text_p name, text_p *closing)
+bool syntax_is_text(syntax_p s, name_p name, name_p *closing)
 // ----------------------------------------------------------------------------
 //    Check if the given name opens a block
 // ----------------------------------------------------------------------------
@@ -498,14 +498,14 @@ bool syntax_is_text(syntax_p s, text_p name, text_p *closing)
     int index = search(s->texts, name, 2);
     if (index >= 0)
     {
-        text_set(closing, (text_r) array_child(s->texts, index+1));
+        name_set(closing, (name_r) array_child(s->texts, index+1));
         return true;
     }
     return false;
 }
 
 
-bool syntax_is_comment(syntax_p s, text_p name, text_p *closing)
+bool syntax_is_comment(syntax_p s, name_p name, name_p *closing)
 // ----------------------------------------------------------------------------
 //    Check if the given name opens a block
 // ----------------------------------------------------------------------------
@@ -513,14 +513,14 @@ bool syntax_is_comment(syntax_p s, text_p name, text_p *closing)
     int index = search(s->comments, name, 2);
     if (index >= 0)
     {
-        text_set(closing, (text_r) array_child(s->comments, index+1));
+        name_set(closing, (name_r) array_child(s->comments, index+1));
         return true;
     }
     return false;
 }
 
 
-syntax_p syntax_is_special(syntax_p s, text_p name, text_p *closing)
+syntax_p syntax_is_special(syntax_p s, name_p name, name_p *closing)
 // ----------------------------------------------------------------------------
 //    Check if the given name opens a child syntax
 // ----------------------------------------------------------------------------
@@ -528,7 +528,7 @@ syntax_p syntax_is_special(syntax_p s, text_p name, text_p *closing)
     int index = search(s->comments, name, 3);
     if (index >= 0)
     {
-        text_set(closing, (text_r) array_child(s->comments, index+1));
+        name_set(closing, (name_r) array_child(s->comments, index+1));
         return (syntax_p) array_child(s->comments, index+2);
     }
     return NULL;
