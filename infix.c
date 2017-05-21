@@ -19,6 +19,7 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
+#define INFIX_C
 #include "infix.h"
 #include "name.h"
 #include <stdlib.h>
