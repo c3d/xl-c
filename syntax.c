@@ -518,3 +518,18 @@ bool syntax_is_comment(syntax_p s, text_p name, text_p *closing)
     }
     return false;
 }
+
+
+syntax_p syntax_is_special(syntax_p s, text_p name, text_p *closing)
+// ----------------------------------------------------------------------------
+//    Check if the given name opens a child syntax
+// ----------------------------------------------------------------------------
+{
+    int index = search(s->comments, name, 3);
+    if (index >= 0)
+    {
+        text_set(closing, (text_r) array_child(s->comments, index+1));
+        return (syntax_p) array_child(s->comments, index+2);
+    }
+    return NULL;
+}

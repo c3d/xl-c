@@ -77,13 +77,14 @@ extern void     syntax_read(syntax_r syntax, scanner_p scanner);
 extern tree_p   syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Checking syntax elements
-extern int  syntax_infix_priority(syntax_p, text_p name);
-extern int  syntax_prefix_priority(syntax_p, text_p name);
-extern int  syntax_postfix_priority(syntax_p, text_p name);
-extern bool syntax_is_operator(syntax_p, text_p name);
-extern bool syntax_is_block(syntax_p, text_p name, text_p *closing);
-extern bool syntax_is_text(syntax_p, text_p name, text_p *closing);
-extern bool syntax_is_comment(syntax_p, text_p name, text_p *closing);
+extern int      syntax_infix_priority(syntax_p, text_p name);
+extern int      syntax_prefix_priority(syntax_p, text_p name);
+extern int      syntax_postfix_priority(syntax_p, text_p name);
+extern bool     syntax_is_operator(syntax_p, text_p name);
+extern bool     syntax_is_block(syntax_p, text_p name, text_p *closing);
+extern bool     syntax_is_text(syntax_p, text_p name, text_p *closing);
+extern bool     syntax_is_comment(syntax_p, text_p name, text_p *closing);
+extern syntax_p syntax_is_special(syntax_p, text_p name, text_p *closing);
 
 // Internal representation of block indent and unindent
 #define SYNTAX_INDENT    "\t"
