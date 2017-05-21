@@ -198,6 +198,9 @@ extern void      scanner_close_stream(scanner_p scan, void *stream);
 extern token_t   scanner_read(scanner_p scan);
 extern text_p    scanner_skip(scanner_p scan, name_p closing);
 
+extern unsigned  scanner_open_parenthese(scanner_p s);
+extern void      scanner_close_parenthese(scanner_p s, unsigned oldIndent);
+
 #undef inline
 
 #endif // SCANNER_H

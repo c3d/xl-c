@@ -855,5 +855,32 @@ text_p scanner_skip(scanner_p s, name_p closing)
 }
 
 
+unsigned scanner_open_parenthese(scanner_p s)
+// ----------------------------------------------------------------------------
+//   Opening some parenthese: remember the settingIndent value
+// ----------------------------------------------------------------------------
+{
+    unsigned result = s->indent;
+    if (s->setting_indent)
+        result = ~result;
+    s->setting_indent = true;
+    return result;
+}
+
+
+void scanner_close_parenthese(scanner_p s, unsigned old_indent)
+// ----------------------------------------------------------------------------
+//   Closing some parenthese: reset the settingIndent value
+// ----------------------------------------------------------------------------
+{
+    bool was_set = (int) old_indent < 0;
+    s->indent = was_set ? ~old_indent : old_indent;
+    if (!s->setting_indent)
+        if (s->indent == indents_top(s->indents))
+            indents_pop(&s->indents);
+    s->setting_indent = was_set;
+}
+
+
 // Generate the default handler for indents
 blob_type_handler(indents);
