@@ -30,11 +30,11 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   The handler for blocks deals mostly with variable-sized initialization
 // ----------------------------------------------------------------------------
 {
-    block_r       block = (block_r) tree;
-    tree_io_fn    io;
-    void *        stream;
-    tree_r        child;
-    block_delim_p delim;
+    block_r    block = (block_r) tree;
+    tree_io_fn io;
+    void *     stream;
+    tree_r     child;
+    name_r     open, close;
 
     switch(cmd)
     {
@@ -47,8 +47,8 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return (tree_p) (sizeof(block_t));
 
     case TREE_ARITY:
-        // Blocks have one child
-        return (tree_p) 1;
+        // Blocks have three children (including opening and closing names)
+        return (tree_p) 3;
 
     case TREE_CAST:
         // Check if we cast to block type, if so, success
@@ -57,29 +57,30 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         break;                      // Pass on to base class handler
 
     case TREE_CHILDREN:
-        // Return pointer to only child
-        return (tree_p) &block->child;
+        // Return pointer to children
+        return (tree_p) (tree + 1);
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see block_new)
         child = va_arg(va, tree_r);
-        delim = va_arg(va, block_delim_p);
+        open = va_arg(va, name_r);
+        close = va_arg(va, name_r);
 
         // Create block and copy data in it
         block = (block_r) tree_malloc(sizeof(block_t));
         tree_set(&block->child, child);
-        block->delimiters = delim;
+        name_set(&block->opening, open);
+        name_set(&block->closing, close);
         return (tree_p) block;
 
     case TREE_RENDER:
         // Render the opening and closing, with child inbetween
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
-        delim = block->delimiters;
 
-        name_render(delim->opening, io, stream);
-        tree_render(tree, io, stream);
-        name_render(delim->closing, io, stream);
+        name_render(block->opening, io, stream);
+        tree_render(block->child, io, stream);
+        name_render(block->closing, io, stream);
         return tree;
 
     default:
@@ -88,17 +89,3 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     }
     return tree_handler(cmd, tree, va);
 }
-
-
-
-
-// ============================================================================
-//
-//   Global variables
-//
-// ============================================================================
-
-block_delim_p block_paren  = NULL;
-block_delim_p block_curly  = NULL;
-block_delim_p block_square = NULL;
-block_delim_p block_indent = NULL;

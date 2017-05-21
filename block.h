@@ -25,24 +25,14 @@
 #include "name.h"
 
 
-typedef struct block_delim
-// ----------------------------------------------------------------------------
-//   Block delimiters
-// ----------------------------------------------------------------------------
-{
-    name_p      opening;
-    name_p      closing;
-} block_delim_t, *block_delim_p;
-
-
 typedef struct block
 // ----------------------------------------------------------------------------
 //    Internal representation of a block
 // ----------------------------------------------------------------------------
 {
     tree_t        tree;
-    block_delim_p delimiters;
     tree_p        child;
+    name_p        opening, closing;
 } block_t;
 
 #ifdef BLOCK_C
@@ -50,24 +40,17 @@ typedef struct block
 #endif
 
 tree_arity_type(block);
-inline block_r       block_new(srcpos_t position, tree_r child, block_delim_p);
+inline block_r       block_new(srcpos_t position, tree_p child,
+                               name_p open, name_p close);
 inline tree_p        block_child(block_p block);
 inline tree_p        block_set_child(block_p block, tree_r child);
-inline block_delim_p block_delimiters(block_p block);
+inline name_p        block_opening(block_p block);
+inline name_p        block_closing(block_p block);
 
 // Private block handler, should not be called directly in general
 inline block_r block_make(tree_handler_fn h, srcpos_t pos,
-                           tree_r child, block_delim_p);
+                          tree_p child, name_p open, name_p close);
 extern tree_p  block_handler(tree_cmd_t cmd, tree_p tree, va_list va);
-
-
-// Standard block separators
-extern block_delim_p block_paren, block_curly, block_square, block_indent;
-
-#define paren_new(pos, child)   block_new(pos, child, block_paren)
-#define curly_new(pos, child)   block_new(pos, child, block_curly)
-#define square_new(pos, child)  block_new(pos, child, block_square)
-#define indent_new(pos, child)  block_new(pos, child, block_indent)
 
 #undef inline
 
@@ -80,21 +63,21 @@ extern block_delim_p block_paren, block_curly, block_square, block_indent;
 // ============================================================================
 
 inline block_r block_make(tree_handler_fn handler, srcpos_t pos,
-                          tree_r child, block_delim_p delim)
+                          tree_p child, name_p open, name_p close)
 // ----------------------------------------------------------------------------
 //   Create a block with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (block_r) tree_make(handler, pos, child, delim);
+    return (block_r) tree_make(handler, pos, child, open, close);
 }
 
 
-inline block_r block_new(srcpos_t pos, tree_r child, block_delim_p delim)
+inline block_r block_new(srcpos_t pos, tree_p child, name_p open, name_p close)
 // ----------------------------------------------------------------------------
 //    Allocate a block with the given data
 // ----------------------------------------------------------------------------
 {
-    return block_make(block_handler, pos, child, delim);
+    return block_make(block_handler, pos, child, open, close);
 }
 
 
@@ -123,12 +106,21 @@ inline tree_p block_set_child(block_p block, tree_r child)
 }
 
 
-inline block_delim_p block_delimiters(block_p block)
+inline name_p block_opening(block_p block)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
 {
-    return block->delimiters;
+    return block->opening;
+}
+
+
+inline name_p block_closing(block_p block)
+// ----------------------------------------------------------------------------
+//   Return the data for the block
+// ----------------------------------------------------------------------------
+{
+    return block->closing;
 }
 
 #endif // BLOCK_H
