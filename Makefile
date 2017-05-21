@@ -24,6 +24,7 @@ SOURCES     =			\
 	tree.c			\
 	blob.c			\
 	text.c			\
+	delimited_text.c	\
 	name.c			\
 	number.c		\
 	block.c			\
