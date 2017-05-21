@@ -149,8 +149,10 @@ typedef union scanned
 //    Possible outputs for the scanner
 // ----------------------------------------------------------------------------
 {
+    tree_p          tree;
     text_p          text;
     name_p          name;
+    character_p     character;
     natural_p       natural;
     based_natural_p based;
     real_p          real;

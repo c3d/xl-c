@@ -33,8 +33,8 @@ inline bool utf8_is_next(int c);
 inline bool utf8_isalpha(int c);
 inline unsigned utf8_previous(const char *text, unsigned position);
 inline unsigned utf8_next(const char *text, unsigned position);
-inline unsigned utf8_code(const char *text);
-inline unsigned utf8_length(const char *text);
+inline unsigned utf8_code(const char *text, unsigned len);
+inline unsigned utf8_length(const char *text, unsigned len);
 
 #undef inline
 
@@ -96,52 +96,63 @@ inline unsigned utf8_next(const char *text, unsigned position)
 }
 
 
-inline unsigned utf8_code(const char *text)
+inline unsigned utf8_code(const char *text, unsigned length)
 // ----------------------------------------------------------------------------
 //   Return the Unicode value for the character at the given position
 // ----------------------------------------------------------------------------
 {
-    unsigned code = text[0];
-    if (code & 0x80)
-    {
-        // Reference: Wikipedia UTF-8 description
-        unsigned c1 = text[1];
-        if (utf8_is_next(c1))
-        {
-            if ((code & 0xE0) == 0xC0)
-                return ((code & 0x1F) << 6)
-                    |   (c1   & 0x3F);
+    unsigned code = 0;
+    if (length == 0)
+        return code;
 
-            unsigned c2 = text[2];
-            if (utf8_is_next(c2))
-            {
-                if ((code & 0xF0) == 0xE0)
-                    return ((code & 0xF)   << 12)
-                        |  ((c1   & 0x3F)  << 6)
-                        |   (c2   & 0x3F);
-                unsigned c3 = text[3];
-                if (utf8_is_next(c3))
-                {
-                    if ((code & 0xF8) == 0xF0)
-                        return ((code & 0xF)  << 18)
-                            |  ((c1   & 0x3F) << 12)
-                            |  ((c2   & 0x3F) << 6)
-                            |   (c3   & 0x3F);
-                }
-            }
-        }
-    }
+    code = text[0];
+    if (length <= 1 || (code & 0x80) == 0)
+        return code;
+
+    unsigned c1 = text[1];
+    if (!utf8_is_next(c1))
+        return code;
+
+    if ((code & 0xE0) == 0xC0)
+        return ((code & 0x1F) << 6)
+            |   (c1   & 0x3F);
+
+    if (length <= 2)
+        return code;
+
+    unsigned c2 = text[2];
+    if (!utf8_is_next(c2))
+        return code;
+
+    if ((code & 0xF0) == 0xE0)
+        return ((code & 0xF)   << 12)
+            |  ((c1   & 0x3F)  << 6)
+            |   (c2   & 0x3F);
+
+    if (length <= 3)
+        return code;
+
+    unsigned c3 = text[3];
+    if (!utf8_is_next(c3))
+        return code;
+
+    if ((code & 0xF8) == 0xF0)
+        return ((code & 0xF)  << 18)
+            |  ((c1   & 0x3F) << 12)
+            |  ((c2   & 0x3F) << 6)
+            |   (c3   & 0x3F);
+
     return code;
 }
 
 
-inline unsigned utf8_length(const char *text)
+inline unsigned utf8_length(const char *text, unsigned bytes)
 // ----------------------------------------------------------------------------
 //    Return the length of the text in characters (not bytes)
 // ----------------------------------------------------------------------------
 {
     unsigned result = 0;
-    for (int c = *text++; c; c = *text++)
+    for (int c = *text++; bytes-- && c; c = *text++)
         result += !utf8_is_next(c);
     return result;
 }

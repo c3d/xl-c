@@ -248,6 +248,24 @@ static name_r scanner_normalize(text_p input)
 }
 
 
+static character_p scanner_character(text_p text)
+// ----------------------------------------------------------------------------
+//    Check if a character is valid and return it
+// ----------------------------------------------------------------------------
+{
+    srcpos_t     pos    = text_position(text);
+    char        *data   = text_data(text);
+    size_t       len    = text_length(text);
+    unsigned     code   = utf8_code(data, len);
+    character_p  result = character_new(pos, code);
+
+    if (utf8_length(data, len) != 1)
+        error(pos,"Character constant '%t' should contain one character",text);
+
+    return result;
+}
+
+
 token_t scanner_read(scanner_p s)
 // ----------------------------------------------------------------------------
 //    Scan input and return current token
@@ -698,8 +716,13 @@ token_t scanner_read(scanner_p s)
                 {
                     scanner_ungetchar(s, c);
                     s->had_space_after = isspace(c);
-                    s->scanned.text = text;
-                    return eos == '"' ? tokTEXT : tokCHARACTER;
+                    if (eos == '"')
+                    {
+                        s->scanned.text = text;
+                        return tokTEXT;
+                    }
+                    s->scanned.character = scanner_character(text);
+                    return tokCHARACTER;
                 }
 
                 // Double: put it in
