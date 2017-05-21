@@ -35,6 +35,7 @@ SOURCES     =			\
 	error.c			\
 	scanner.c		\
 	syntax.c		\
+	parser.c		\
 	utf8.c			\
 	recorder/recorder.c
 
