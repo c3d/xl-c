@@ -285,7 +285,7 @@ static tree_p parser_block(parser_p p, name_p closing)
     tree_p      left               = NULL;
     tree_p      right              = NULL;
     scanner_p   scanner            = p->scanner;
-    syntax_p    syntax             = scanner->syntax;
+    syntax_p    syntax             = syntax_use(scanner->syntax);
     positions_p positions          = scanner->positions;
     srcpos_t    pos                = position(positions);
     int         default_priority   = syntax->default_priority;
@@ -326,13 +326,14 @@ static tree_p parser_block(parser_p p, name_p closing)
                 infix_priority > (prev.priority & ~1))                  \
                 break;                                                  \
             if (prev.opcode == NULL) /* Prefix */                       \
-                result = parser_pfix_new(prev.argument, result);        \
+                tree_set(&result,                                       \
+                         parser_pfix_new(prev.argument, result));       \
             else                                                        \
-                result = (tree_p)                                       \
-                    infix_new(name_position(prev.opcode),               \
-                              prev.opcode,                              \
-                              prev.argument,                            \
-                              result);                                  \
+                tree_set(&result, (tree_p)                              \
+                         infix_new(name_position(prev.opcode),          \
+                                   prev.opcode,                         \
+                                   prev.argument,                       \
+                                   result));                            \
             pending_stack_pop(&stack);                                  \
         }                                                               \
     } while(0)
@@ -352,7 +353,7 @@ static tree_p parser_block(parser_p p, name_p closing)
     while (!done)
     {
         // Scan next token
-        right = NULL;
+        tree_dispose(&right);
         prefix_priority = infix_priority = default_priority;
         tok = parser_token(p);
 
@@ -370,14 +371,14 @@ static tree_p parser_block(parser_p p, name_p closing)
         case tokCHARACTER:
         case tokTEXT:
         case tokLONGTEXT:
-            right = scanner->scanned.tree;
+            tree_set(&right, scanner->scanned.tree);
             if (!result && new_statement)
                 is_expression = false;
             prefix_priority = function_priority;
             break;
         case tokNAME:
         case tokSYMBOL:
-            name = scanner->scanned.name;
+            name_set(&name, scanner->scanned.name);
             if (name == closing)
             {
                 done = true;

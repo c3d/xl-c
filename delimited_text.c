@@ -66,9 +66,9 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         closing = va_arg(va, name_p);
 
         dt = (delimited_text_p) tree_malloc(sizeof(delimited_text_t));
-        text_set(&dt->value, (text_p) value);
-        name_set(&dt->opening, (name_p) opening);
-        name_set(&dt->closing, (name_p) closing);
+        dt->value = text_use(value);
+        dt->opening = name_use(opening);
+        dt->closing = name_use(closing);
 
     case TREE_DELETE:
     case TREE_COPY:

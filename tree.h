@@ -111,6 +111,7 @@ inline tree_p      tree_new(srcpos_t position);
 inline void        tree_delete(tree_p tree);
 inline unsigned    tree_ref(tree_p tree);
 inline unsigned    tree_unref(tree_p tree);
+inline tree_p      tree_use(tree_p tree);
 inline void        tree_set(tree_p *ptr, tree_p tree);
 inline void        tree_dispose(tree_p *tree);
 inline const char *tree_typename(tree_p tree);
@@ -246,6 +247,17 @@ inline void tree_dispose(tree_p *tree)
             tree_delete(*tree);
         *tree = NULL;
     }
+}
+
+
+inline tree_p tree_use(tree_p tree)
+// ----------------------------------------------------------------------------
+//   Return a tree after increasing ref-count (for initialization purpose)
+// ----------------------------------------------------------------------------
+{
+    if (tree)
+        tree_ref(tree);
+    return tree;
 }
 
 
@@ -437,6 +449,11 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_unref((tree_p) type);                               \
     }                                                                   \
                                                                         \
+    inline type##_p type##_use(type##_p value)                          \
+    {                                                                   \
+        return (type##_p) tree_use((tree_p) value);                     \
+    }                                                                   \
+                                                                        \
     inline void type##_set(type##_p *type, type##_p value)              \
     {                                                                   \
         tree_set((tree_p *) type, (tree_p) value);                      \
@@ -450,6 +467,14 @@ inline tree_handler_fn tree_cast_handler(va_list va)
     inline type##_p type##_cast(const void * tree)                      \
     {                                                                   \
         return (type##_p) tree_cast(type, (tree_p) tree);               \
+    }                                                                   \
+                                                                        \
+    inline type##_p type##_ptr(const void * tree)                       \
+    {                                                                   \
+        type##_p ptr = (type##_p) tree;                                 \
+        assert (ptr == type##_cast(tree)                                \
+                && "Tree does not have expected type");                 \
+        return ptr;                                                     \
     }                                                                   \
                                                                         \
     inline const char *type##_typename(type##_p type)                   \

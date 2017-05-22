@@ -40,12 +40,11 @@ typedef struct block
 #endif
 
 tree_arity_type(block);
-inline block_p       block_new(srcpos_t position, tree_p child,
-                               name_p open, name_p close);
-inline tree_p        block_child(block_p block);
-inline tree_p        block_set_child(block_p block, tree_p child);
-inline name_p        block_opening(block_p block);
-inline name_p        block_closing(block_p block);
+inline block_p block_new(srcpos_t position, tree_p chld, name_p opn, name_p cl);
+inline tree_p  block_child(block_p block);
+inline tree_p  block_set_child(block_p block, tree_p child);
+inline name_p  block_opening(block_p block);
+inline name_p  block_closing(block_p block);
 
 // Private block handler, should not be called directly in general
 inline block_p block_make(tree_handler_fn h, srcpos_t pos,

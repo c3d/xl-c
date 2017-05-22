@@ -35,19 +35,19 @@ syntax_p syntax_new(const char *file)
     // Zero-initialize the memory
     syntax_p result = (syntax_p) tree_malloc(sizeof(syntax_t));
 
-    array_set(&result->infixes, square_array_new(0, 0, NULL));
-    array_set(&result->prefixes, square_array_new(0, 0, NULL));
-    array_set(&result->postfixes, square_array_new(0, 0, NULL));
+    result->infixes = array_use(square_array_new(0, 0, NULL));
+    result->prefixes = array_use(square_array_new(0, 0, NULL));
+    result->postfixes = array_use(square_array_new(0, 0, NULL));
 
-    array_set(&result->comments, square_array_new(0, 0, NULL));
-    array_set(&result->texts, square_array_new(0, 0, NULL));
-    array_set(&result->blocks, square_array_new(0, 0, NULL));
+    result->comments = array_use(square_array_new(0, 0, NULL));
+    result->texts = array_use(square_array_new(0, 0, NULL));
+    result->blocks = array_use(square_array_new(0, 0, NULL));
 
-    array_set(&result->syntaxes, square_array_new(0, 0, NULL));
+    result->syntaxes = array_use(square_array_new(0, 0, NULL));
 
     if (file)
     {
-        text_set(&result->filename, text_cnew(0, file));
+        result->filename = text_use(text_cnew(0, file));
         syntax_read_file(result, file);
     }
 
@@ -228,7 +228,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
             /* Fall through */
 
         case tokNAME:
-            text = scanner->scanned.text;
+            text_set(&text, scanner->scanned.text);
 
             if (eq(text, "NEWLINE"))
                 set(&text, "\n");
@@ -513,7 +513,7 @@ bool syntax_is_comment(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_p) array_child(s->comments, index+1));
+        name_set(closing, name_ptr(array_child(s->comments, index+1)));
         return true;
     }
     return false;
@@ -528,8 +528,8 @@ syntax_p syntax_is_special(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 3);
     if (index >= 0)
     {
-        name_set(closing, (name_p) array_child(s->comments, index+1));
-        return (syntax_p) array_child(s->comments, index+2);
+        name_set(closing, name_ptr(array_child(s->comments, index+1)));
+        return syntax_ptr(array_child(s->comments, index+2));
     }
     return NULL;
 }

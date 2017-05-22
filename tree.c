@@ -136,6 +136,8 @@ void tree_free_(const char *source, tree_p tree)
         next->previous = previous;
     else
         trees_end = previous;
+    tree->handler = (tree_handler_fn) abort;
+    tree->position = (srcpos_t) source;
     free(debug);
 #else
     free(tree);

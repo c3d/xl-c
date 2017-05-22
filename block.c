@@ -68,9 +68,9 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
         // Create block and copy data in it
         block = (block_p) tree_malloc(sizeof(block_t));
-        tree_set(&block->child, child);
-        name_set(&block->opening, open);
-        name_set(&block->closing, close);
+        block->child = tree_use(child);
+        block->opening = name_use(open);
+        block->closing = name_use(close);
         return (tree_p) block;
 
     case TREE_RENDER:

@@ -62,7 +62,7 @@ scanner_p scanner_new(positions_p positions, syntax_p syntax)
     s->setting_indent = false;
     s->had_space_before = false;
     s->had_space_after = false;
-    return false;
+    return s;
 }
 
 
@@ -72,7 +72,7 @@ void scanner_delete(scanner_p s)
 // ----------------------------------------------------------------------------
 {
     text_dispose(&s->source);
-    text_dispose(&s->scanned.text);
+    tree_dispose(&s->scanned.tree);
     indents_dispose(&s->indents);
     name_dispose(&s->block_close);
     free(s);
@@ -281,7 +281,7 @@ token_t scanner_read(scanner_p s)
 
     // Clear source and text if any
     text_dispose(&s->source);
-    text_dispose(&s->scanned.text);
+    tree_dispose(&s->scanned.tree);
 
     // Create new source text
     text_set(&s->source, text_new(pos, 0, NULL));

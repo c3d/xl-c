@@ -22,6 +22,7 @@
 #include "error.h"
 #include "name.h"
 #include "number.h"
+#include "parser.h"
 #include "position.h"
 #include "recorder.h"
 #include "text.h"
@@ -33,41 +34,23 @@ int main(int argc, char *argv[])
 {
     RECORD(MAIN, "Starting %s with %d args", argv[0], argc);
 
-    char *x = "Hello world";
-    integer_p n = integer_new(0, 42);
-    name_p name = name_new(0, 1, "X");
-    text_p t = text_printf(0,
-                           "Name X is %t\n"
-                           "The value of 42 is %t (%d).\n"
-                           "The value of x is %p (%s)\n", name, n, 42, x, x);
-    text_print(stdout, t);
+#ifndef PREFIX_PATH
+#define PREFIX_PATH  "/Users/ddd/Work/xl/"
+#endif
 
     positions_p positions = positions_new();
-    error_set_positions(positions);
-
-    position_open_source_file(positions, "/Users/ddd/Work/xl/main.c");
-    error(1390, "The position of main should be correct at %d", 766);
-
-    for (int commit = 0; commit <= 1; commit++)
+    syntax_p syntax = syntax_new(PREFIX_PATH "xl.syntax");
+    for (int arg = 1; arg < argc; arg++)
     {
-        errors_p errs = errors_save();
-        error(1558, "This error should be shown if commit %d is 1", commit);
-        error(1635, "The value of error pointer is %p", errs);
-        if (commit)
-            errors_commit(errs);
-        else
-            errors_clear(errs);
+        parser_p parser = parser_new(argv[arg], positions, syntax);
+        tree_p tree = parser_parse(parser);
+        tree_print(stdout, tree);
+        parser_delete(parser);
+        tree_dispose(&tree);
     }
-
-    text_dispose(&t);
-    name_dispose(&name);
-    integer_dispose(&n);
-
-    error_set_positions(NULL);
-    error(0,
-          "The variable %t does not have value %t (%f * 3)", name, n, 42.0/3);
-
+    syntax_dispose(&syntax);
     positions_delete(positions);
+
     tree_memcheck();
     return 0;
 }
