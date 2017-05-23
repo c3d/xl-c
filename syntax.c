@@ -34,6 +34,9 @@ syntax_p syntax_new(const char *file)
 {
     // Zero-initialize the memory
     syntax_p result = (syntax_p) tree_malloc(sizeof(syntax_t));
+    result->tree.handler = syntax_handler;
+
+    result->known = array_use(square_array_new(0, 0, NULL));
 
     result->infixes = array_use(square_array_new(0, 0, NULL));
     result->prefixes = array_use(square_array_new(0, 0, NULL));
@@ -71,8 +74,8 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return (tree_p) sizeof(syntax_t);
 
     case TREE_ARITY:
-        // There are ten children in a syntax
-        return (tree_p) 10;
+        // All tree-type fields in the syntax
+        return (tree_p) 9;
 
     case TREE_CAST:
         // Check if we cast to blob type, if so, success
@@ -166,7 +169,7 @@ static inline void sort(array_p array, size_t count)
 // ----------------------------------------------------------------------------
 {
     size_t elem_size = count * sizeof(tree_p);
-    qsort(array_data(array), array_length(array), elem_size, compare);
+    qsort(array_data(array), array_length(array)/count, elem_size, compare);
 }
 
 
