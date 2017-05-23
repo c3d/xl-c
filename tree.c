@@ -354,3 +354,12 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     }
     return tree;
 }
+
+
+void debug(void *p)
+// ----------------------------------------------------------------------------
+//   For use in the debugger
+// ----------------------------------------------------------------------------
+{
+    tree_print(stderr, (tree_p) p);
+}
