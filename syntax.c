@@ -63,6 +63,10 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //   Delete the given syntax configuration
 // ----------------------------------------------------------------------------
 {
+    syntax_p   s = (syntax_p) tree;
+    tree_io_fn io;
+    void *     stream;
+
     switch (cmd)
     {
     case TREE_TYPENAME:
@@ -86,6 +90,27 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     case TREE_CHILDREN:
         // Return the pointer to children for that tree type
         return (tree_p) (tree + 1);
+
+    case TREE_RENDER:
+        io = va_arg(va, tree_io_fn);
+        stream = va_arg(va, void *);
+
+#define ioputs(child)                                   \
+        io(stream, sizeof(#child "=")-1, #child "=");   \
+        tree_render((tree_p) s->child, io, stream);     \
+        io(stream, 1, "\n");
+
+        ioputs(filename);
+        ioputs(known);
+        ioputs(infixes);
+        ioputs(prefixes);
+        ioputs(postfixes);
+        ioputs(comments);
+        ioputs(texts);
+        ioputs(blocks);
+        ioputs(syntaxes);
+
+        break;
 
     default:
         break;
