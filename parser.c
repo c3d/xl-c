@@ -313,6 +313,15 @@ static tree_p parser_block(parser_p p,
     bool        new_statement      = true;
     bool        done               = false;
 
+#define STACK_PUSH(op, arg, prio)                       \
+    do                                                  \
+    {                                                   \
+        pending_t pending = { (op), (arg), (prio) };    \
+        if (pending.opcode)                             \
+            name_ref(pending.opcode);                   \
+        tree_ref(pending.argument);                     \
+        pending_stack_push(&stack, pending);            \
+    } while (0)
 
     // Check priorities compared to stack
     // A + B * C, we got '*': keep "A+..." on stack
@@ -330,14 +339,20 @@ static tree_p parser_block(parser_p p,
                 infix_priority > (prev.priority & ~1))                  \
                 break;                                                  \
             if (prev.opcode == NULL) /* Prefix */                       \
+            {                                                           \
                 tree_set(&result,                                       \
                          parser_pfix_new(prev.argument, result));       \
+            }                                                           \
             else                                                        \
+            {                                                           \
                 tree_set(&result, (tree_p)                              \
                          infix_new(name_position(prev.opcode),          \
                                    prev.opcode,                         \
                                    prev.argument,                       \
                                    result));                            \
+                name_dispose(&prev.opcode);                             \
+            }                                                           \
+            tree_dispose(&prev.argument);                               \
             pending_stack_pop(&stack);                                  \
         }                                                               \
     } while(0)
@@ -396,7 +411,7 @@ static tree_p parser_block(parser_p p,
         case tokNAME:
         case tokSYMBOL:
             name_set(&name, scanner->scanned.name);
-            if (name_compare(name, block_closing) == 0)
+            if (block && name_compare(name, block_closing) == 0)
             {
                 done = true;
                 break;
@@ -564,8 +579,7 @@ static tree_p parser_block(parser_p p,
             if (prefix_priority != default_priority)
             {
                 // Push "A and" in the above example
-                pending_t pending = { infix, left, infix_priority };
-                pending_stack_push(&stack, pending);
+                STACK_PUSH(infix, left, infix_priority);
                 left = NULL;
 
                 // Start over with "not"
@@ -585,8 +599,7 @@ static tree_p parser_block(parser_p p,
                 else
                 {
                     // Something like A+B+C, just got second +
-                    pending_t pending = { infix, left, infix_priority };
-                    pending_stack_push(&stack, pending);
+                    STACK_PUSH(infix, left, infix_priority);
                     result = NULL;
                 }
                 tree_dispose(&left);
@@ -617,8 +630,7 @@ static tree_p parser_block(parser_p p,
                         result_priority = statement_priority;
 
             // Push a recognized prefix op
-            pending_t pending = { NULL, result, result_priority };
-            pending_stack_push(&stack, pending);
+            STACK_PUSH(NULL, result, result_priority);
             tree_set(&result, right);
             result_priority = prefix_priority;
         }
