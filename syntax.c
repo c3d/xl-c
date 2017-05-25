@@ -96,7 +96,7 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         stream = va_arg(va, void *);
 
 #define ioputs(child)                                   \
-        io(stream, sizeof(#child "=")-1, #child "=");   \
+        io(stream, sizeof(#child ": ")-1, #child ": ");  \
         tree_render((tree_p) s->child, io, stream);     \
         io(stream, 1, "\n");
 
@@ -110,7 +110,7 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         ioputs(blocks);
         ioputs(syntaxes);
 
-        break;
+        return tree;
 
     default:
         break;
