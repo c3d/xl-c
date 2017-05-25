@@ -279,12 +279,9 @@ token_t scanner_read(scanner_p s)
 {
     srcpos_t pos = scanner_position(s);
 
-    // Clear source and text if any
-    text_dispose(&s->source);
-    tree_dispose(&s->scanned.tree);
-
-    // Create new source text
+    // Create new source text and clear scanned tree if it was set earlier
     text_set(&s->source, text_new(pos, 0, NULL));
+    tree_dispose(&s->scanned.tree);
 
     // Check if we have something to read
     if (!s->reader)
@@ -697,7 +694,7 @@ token_t scanner_read(scanner_p s)
                 return tokOPEN;
             }
             else if (s->block_close &&
-                     name_compare(s->scanned.name, s->block_close))
+                     name_compare(s->scanned.name, s->block_close) == 0)
             {
                 name_dispose(&s->block_close);
                 return tokCLOSE;
@@ -710,7 +707,7 @@ token_t scanner_read(scanner_p s)
     else if (c == '"' || c == '\'')
     {
         char eos = c;
-        text_p text = text_new(pos, 0, NULL);
+        text_p text = text_use(text_new(pos, 0, NULL));
         c = scanner_nextchar(s, c);
         for(;;)
         {
@@ -724,20 +721,24 @@ token_t scanner_read(scanner_p s)
                     s->had_space_after = isspace(c);
                     if (eos == '"')
                     {
-                        s->scanned.text = text;
+                        text_set(&s->scanned.text, text);
+                        text_dispose(&text);
                         return tokTEXT;
                     }
-                    s->scanned.character = scanner_character(text);
+                    character_set(&s->scanned.character,
+                                  scanner_character(text));
+                    text_dispose(&text);
                     return tokCHARACTER;
                 }
 
-                // Double: put it in
+                // Doubling the quoting character puts it in the text
             }
             if (c == EOF)
             {
                 error(pos, "End of input in the middle of a text");
                 s->had_space_after = false;
                 text_set(&s->scanned.text, (text_p) text);
+                text_dispose(&text);
                 return eos == '"' ? tokTEXT : tokCHARACTER;
             }
             char ch = (char) c;
@@ -761,7 +762,8 @@ token_t scanner_read(scanner_p s)
                 tok = tokOPEN;
                 break;
             }
-            else if (s->block_close && name_compare(name, s->block_close))
+            else if (s->block_close &&
+                     name_compare(name, s->block_close) == 0)
             {
                 name_dispose(&s->block_close);
                 tok = tokCLOSE;
