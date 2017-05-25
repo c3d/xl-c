@@ -778,7 +778,7 @@ token_t scanner_read(scanner_p s)
 
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
-    name_set(&s->scanned.name, (name_p) s->source);
+    name_set(&s->scanned.name, scanner_normalize(s->source));
     return tok;
 }
 
