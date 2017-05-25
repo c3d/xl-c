@@ -126,12 +126,12 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //
 // ============================================================================
 
-static inline bool eq(name_p text, const char *str)
+static inline bool eq(text_p text, const char *str)
 // ----------------------------------------------------------------------------
 //    Compare the name value with a C string
 // ----------------------------------------------------------------------------
 {
-    return name_eq(text, str);
+    return text_eq(text, str);
 }
 
 
@@ -198,24 +198,7 @@ static inline void sort(array_p array, size_t count)
 }
 
 
-void syntax_read_file(syntax_p syntax, const char *filename)
-// ----------------------------------------------------------------------------
-//   Read a whole syntax file
-// ----------------------------------------------------------------------------
-{
-    positions_p  positions = positions_new();
-    scanner_p    scanner   = scanner_new(positions, NULL);
-    FILE        *file      = scanner_open(scanner, filename);
-
-    syntax_read(syntax, scanner);
-
-    scanner_close(scanner, file);
-    scanner_delete(scanner);
-    positions_delete(positions);
-}
-
-
-void syntax_read(syntax_p syntax, scanner_p scanner)
+void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
 // ----------------------------------------------------------------------------
 //   Read syntax from the given scanner (either a whole file or a source code)
 // ----------------------------------------------------------------------------
@@ -241,6 +224,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
     {
         name_p known_token = NULL;
         name_p name = NULL;
+        text_p source = NULL;
 
         token = scanner_read(scanner);
 
@@ -257,34 +241,35 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
 
         case tokNAME:
             name_set(&name, scanner->scanned.name);
+            text_set(&source, scanner->source);
 
-            if (eq(name, "NEWLINE"))
+            if (eq(source, "NEWLINE"))
                 set(&name, "\n");
-            else if (eq(name, "INDENT"))
+            else if (eq(source, "INDENT"))
                 set(&name, SYNTAX_INDENT);
-            else if (eq(name, "UNINDENT"))
+            else if (eq(source, "UNINDENT"))
                 set(&name, SYNTAX_UNINDENT);
 
-            else if (eq(name, "INFIX"))
+            if (eq(source, "INFIX"))
                 state = INFIX;
-            else if (eq(name, "PREFIX"))
+            else if (eq(source, "PREFIX"))
                 state = PREFIX;
-            else if (eq(name, "POSTFIX"))
+            else if (eq(source, "POSTFIX"))
                 state = POSTFIX;
-            else if (eq(name, "BLOCK"))
+            else if (eq(source, "BLOCK"))
                 state = BLOCK;
-            else if (eq(name, "COMMENT"))
+            else if (eq(source, "COMMENT"))
                 state = COMMENT;
-            else if (eq(name, "TEXT"))
+            else if (eq(source, "TEXT"))
                 state = TEXT;
-            else if (eq(name, "SYNTAX"))
+            else if (eq(source, "SYNTAX"))
                 state = SYNTAX_NAME;
 
-            else if (eq(name, "STATEMENT"))
+            else if (eq(source, "STATEMENT"))
                 syntax->statement_priority = priority;
-            else if (eq(name, "FUNCTION"))
+            else if (eq(source, "FUNCTION"))
                 syntax->function_priority = priority;
-            else if (eq(name, "DEFAULT"))
+            else if (eq(source, "DEFAULT"))
                 syntax->default_priority = priority;
 
             else switch(state)
@@ -351,7 +336,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
             indent++;
             break;
         case tokUNINDENT:
-            done = (--indent == 0);
+            done = (--indent == 0) && indented;
             break;
 
         default:
@@ -361,7 +346,10 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
 
         // If we read an operator name, insert it in list of known operators
         if (known_token)
+        {
             array_push(&syntax->known, (tree_p) known_token);
+            name_dispose(&known_token);
+        }
 
         name_dispose(&name);
     } // while
@@ -380,6 +368,32 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
     sort(syntax->syntaxes, 3);
 
     name_dispose(&entry);
+}
+
+
+void syntax_read(syntax_p syntax, scanner_p scanner)
+// ----------------------------------------------------------------------------
+//    Read a child syntax, where we check indentation
+// ----------------------------------------------------------------------------
+{
+    syntax_read_internal(syntax, scanner, true);
+}
+
+
+void syntax_read_file(syntax_p syntax, const char *filename)
+// ----------------------------------------------------------------------------
+//   Read a whole syntax file
+// ----------------------------------------------------------------------------
+{
+    positions_p  positions = positions_new();
+    scanner_p    scanner   = scanner_new(positions, NULL);
+    FILE        *file      = scanner_open(scanner, filename);
+
+    syntax_read_internal(syntax, scanner, false);
+
+    scanner_close(scanner, file);
+    scanner_delete(scanner);
+    positions_delete(positions);
 }
 
 
