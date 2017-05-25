@@ -532,7 +532,7 @@ static tree_p parser_block(parser_p p,
                 scanner_close_parenthese(scanner, old_indent);
             break;
         default:
-            error(pos, "Unnknown token %u (for %t)", tok, scanner->source);
+            error(pos, "Unnknown token for %t, value %u", scanner->source, tok);
             break;
         } // switch(tok)
 
