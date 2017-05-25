@@ -92,13 +92,17 @@ typedef unsigned (*tree_io_fn)(void *stream, unsigned sz, void *data);
 // Position indicator in files
 typedef uintptr_t srcpos_t;
 
+// Reference counting
+typedef uintptr_t refcnt_t;
+
+
 typedef struct tree
 // ----------------------------------------------------------------------------
 //   Base tree structure
 // ----------------------------------------------------------------------------
 {
     tree_handler_fn     handler;      // Handler function for the tree
-    unsigned            refcount;     // Reference count (garbage collection)
+    refcnt_t            refcount;     // Reference count (garbage collection)
     srcpos_t            position;     // Source code position
 } tree_t, *tree_p;
 
@@ -109,8 +113,9 @@ typedef struct tree
 // Public interface for trees
 inline tree_p      tree_new(srcpos_t position);
 inline void        tree_delete(tree_p tree);
-inline unsigned    tree_ref(tree_p tree);
-inline unsigned    tree_unref(tree_p tree);
+inline refcnt_t    tree_refcount(tree_p tree);
+inline refcnt_t    tree_ref(tree_p tree);
+inline refcnt_t    tree_unref(tree_p tree);
 inline tree_p      tree_use(tree_p tree);
 inline void        tree_set(tree_p *ptr, tree_p tree);
 inline void        tree_dispose(tree_p *tree);
@@ -214,7 +219,16 @@ inline void tree_delete(tree_p tree)
 #endif
 
 
-inline unsigned tree_ref(tree_p tree)
+inline refcnt_t tree_refcount(tree_p tree)
+// ----------------------------------------------------------------------------
+//   Return reference count of the tree
+// ----------------------------------------------------------------------------
+{
+    return tree->refcount;
+}
+
+
+inline refcnt_t tree_ref(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Increment reference count of the tree
 // ----------------------------------------------------------------------------
@@ -224,13 +238,13 @@ inline unsigned tree_ref(tree_p tree)
 }
 
 
-inline unsigned tree_unref(tree_p tree)
+inline refcnt_t tree_unref(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Decrement reference count of the tree
 // ----------------------------------------------------------------------------
 {
     assert(tree->refcount && "Cannot unref if never referenced");
-    unsigned count = tree_add_fetch(tree->refcount, -1);
+    refcnt_t count = tree_add_fetch(tree->refcount, -1);
     return count;
 }
 
@@ -439,12 +453,17 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_delete((tree_p) type);                              \
     }                                                                   \
                                                                         \
-    inline unsigned type##_ref(type##_p type)                           \
+    inline refcnt_t type##_refcount(type##_p type)                      \
+    {                                                                   \
+        return tree_refcount((tree_p) type);                            \
+    }                                                                   \
+                                                                        \
+    inline refcnt_t type##_ref(type##_p type)                           \
     {                                                                   \
         return tree_ref((tree_p) type);                                 \
     }                                                                   \
                                                                         \
-    inline unsigned type##_unref(type##_p type)                         \
+    inline refcnt_t type##_unref(type##_p type)                         \
     {                                                                   \
         return tree_unref((tree_p) type);                               \
     }                                                                   \
@@ -564,6 +583,13 @@ inline tree_handler_fn tree_cast_handler(va_list va)
     }
 
 
+// ============================================================================
+//
+//    Debugging support
+//
+// ============================================================================
 
+// Print a tree in the debugger
+extern void debug(void *p);
 
 #endif // TREE_H
