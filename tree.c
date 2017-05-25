@@ -224,9 +224,10 @@ unsigned tree_memcheck(unsigned expected_tree_count)
         for (tree_debug_p debug = trees; debug; debug = debug->next)
         {
             tree_p tree = (tree_p) (debug + 1);
-            error(tree_position(tree),
-                  "Leaked tree %t index %u addr %p refcount %d\n",
-                  tree, debug->alloc, tree, (int) tree->refcount);
+            fprintf(stderr, "Leaked tree index %u addr %p refcount %d\n",
+                    debug->alloc, tree, (int) tree->refcount);
+            tree_print(stderr, tree);
+            fprintf(stderr, "\n");
         }
     }
 
