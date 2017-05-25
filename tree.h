@@ -590,6 +590,6 @@ inline tree_handler_fn tree_cast_handler(va_list va)
 // ============================================================================
 
 // Print a tree in the debugger
-extern void debug(void *p);
+extern void debugt(void *p);
 
 #endif // TREE_H

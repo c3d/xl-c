@@ -142,8 +142,9 @@ tree_p tree_double_free(tree_cmd_t cmd, tree_p tree, va_list va)
 //   Handler installed to detect double free
 // ----------------------------------------------------------------------------
 {
-    fprintf(stderr, "*** Freed tree %p received command %s ***\n",
-            tree, tree_cmd_name(cmd));
+    tree_debug_p debug = (tree_debug_p) tree - 1;
+    fprintf(stderr, "*** Freed tree %p alloc #%u received command %s ***\n",
+            tree, debug->alloc, tree_cmd_name(cmd));
     fprintf(stderr, "%s: Tree was probably freed here\n",
             (char *) tree->position);
     abort();
@@ -162,6 +163,9 @@ void tree_free_(const char *source, tree_p tree)
     tree_debug_p debug = (tree_debug_p) tree - 1;
     tree_debug_p previous = debug->previous;
     tree_debug_p next = debug->next;
+    if (debug->alloc == tree_debug_index)
+        tree_debug(debug, tree);
+
     if (previous)
         previous->next = next;
     else
@@ -431,7 +435,7 @@ const char *tree_cmd_name(tree_cmd_t cmd)
 }
 
 
-void debug(void *p)
+void debugt(void *p)
 // ----------------------------------------------------------------------------
 //   For use in the debugger
 // ----------------------------------------------------------------------------
