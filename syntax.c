@@ -354,6 +354,7 @@ void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
         }
 
         name_dispose(&name);
+        text_dispose(&source);
     } // while
 
     // Sort the various arrays

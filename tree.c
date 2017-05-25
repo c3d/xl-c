@@ -21,6 +21,7 @@
 #define TREE_C
 #include "tree.h"
 
+#include "error.h"
 #include "recorder.h"
 #include "text.h"
 
@@ -36,14 +37,26 @@ typedef struct tree_debug
 //   Header containing debug information for tree debugging
 // ----------------------------------------------------------------------------
 {
-    const char *        source; // Allocation position in source
-    struct tree_debug * previous; // Global chain of trees for memchecks
+    const char *        source;         // Allocation position in source
+    unsigned            alloc;          // Order of allocation
+    struct tree_debug * previous;       // Global chain of trees for memchecks
     struct tree_debug * next;
 } tree_debug_t, *tree_debug_p;
 
 // Global list of trees for memory allocation debugging
 static tree_debug_p trees = NULL, trees_end = NULL;
 static unsigned allocs = 0;
+
+
+unsigned tree_debug_index = ~0U;
+
+void tree_debug(tree_debug_p debug, tree_p tree)
+// ----------------------------------------------------------------------------
+//   Debug callback, called if we allocate the tree given in tree_debug_index
+// ----------------------------------------------------------------------------
+{
+    fprintf(stderr, "Allocated selected tree %p index %u", tree, debug->alloc);
+}
 
 #endif
 
@@ -59,8 +72,8 @@ tree_p tree_malloc_(const char *source, size_t size)
     tree_debug_p debug = malloc(sizeof(tree_debug_t) + size);
     tree_p result = (tree_p) (debug + 1);
 
-    allocs++;
     debug->source = source;
+    debug->alloc = allocs++;
     debug->next = NULL;
     debug->previous = trees_end;
     if (trees_end)
@@ -68,6 +81,9 @@ tree_p tree_malloc_(const char *source, size_t size)
     else
         trees = debug;
     trees_end = debug;
+
+    if (debug->alloc == tree_debug_index)
+        tree_debug(debug, result);
 #endif // NDEBUG
 
     RECORD(ALLOC, "%s: malloc(%zu)=%p", source, size, result);
@@ -96,7 +112,7 @@ tree_p tree_realloc_(const char *source, tree_p old, size_t new_size)
     tree_debug_p debug = realloc(old_dbg, sizeof(tree_debug_t) + new_size);
     tree_p result = (tree_p) (debug + 1);
 
-    allocs++;
+    debug->alloc = allocs++;
     if (debug != old_dbg)
     {
         if (next)
@@ -109,6 +125,9 @@ tree_p tree_realloc_(const char *source, tree_p old, size_t new_size)
             trees = debug;
     }
     debug->source = source;
+
+    if (debug->alloc == tree_debug_index)
+        tree_debug(debug, result);
 #endif // NDEBUG
 
     RECORD(ALLOC, "%s: realloc(%p,%zu)=%p", source, old, new_size, result);
@@ -161,7 +180,7 @@ void tree_free_(const char *source, tree_p tree)
 }
 
 
-void tree_memcheck()
+unsigned tree_memcheck(unsigned expected_tree_count)
 // ----------------------------------------------------------------------------
 //   Check the list of trees to see if we have non-referenced trees in it
 // ----------------------------------------------------------------------------
@@ -169,8 +188,8 @@ void tree_memcheck()
 //   all trees have been tree_use'd or disposed of.
 //   It will signal any leftover (leaked) tree.
 {
-#ifndef NDEBUG
     unsigned index = 0;
+#ifndef NDEBUG
     bool bad = false;
     for (tree_debug_p debug = trees; debug; debug = debug->next)
     {
@@ -180,7 +199,7 @@ void tree_memcheck()
         {
             fprintf(stderr,
                     "%s: Tree #%u (%p) has refcount %d\n",
-                    debug->source, index, tree, (int) tree->refcount);
+                    debug->source, debug->alloc, tree, (int) tree->refcount);
             bad = true;
         }
         if (index > allocs)
@@ -194,9 +213,23 @@ void tree_memcheck()
         }
     }
 
+    if (index > expected_tree_count)
+    {
+        fprintf(stderr, "Too many trees left, found %u, expected %u\n",
+                index, expected_tree_count);
+        for (tree_debug_p debug = trees; debug; debug = debug->next)
+        {
+            tree_p tree = (tree_p) (debug + 1);
+            error(tree_position(tree),
+                  "Leaked tree %t index %u addr %p refcount %d\n",
+                  tree, debug->alloc, tree, (int) tree->refcount);
+        }
+    }
+
     if (bad)
         recorder_dump();
 #endif // NDEBUG
+    return index;
 }
 
 

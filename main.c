@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
 
     positions_p positions = positions_new();
     syntax_p syntax = syntax_new(PREFIX_PATH "xl.syntax");
+    syntax_print(stderr, syntax);
+
     for (int arg = 1; arg < argc; arg++)
     {
         parser_p parser = parser_new(argv[arg], positions, syntax);
@@ -51,6 +53,6 @@ int main(int argc, char *argv[])
     syntax_dispose(&syntax);
     positions_delete(positions);
 
-    tree_memcheck();
+    tree_memcheck(0);
     return 0;
 }

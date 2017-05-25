@@ -138,13 +138,13 @@ inline tree_p      tree_cast_(tree_p tree, ...);
 
 
 // Internal tree operations - Normally no need to call directly
-extern tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
-extern tree_p tree_make(tree_handler_fn handler, srcpos_t position, ...);
-extern void   tree_memcheck();
-extern tree_p tree_malloc_(const char *where, size_t size);
-extern tree_p tree_realloc_(const char *where, tree_p old, size_t new_size);
-extern void   tree_free_(const char *where, tree_p tree);
-inline tree_handler_fn tree_cast_handler(va_list va);
+extern tree_p   tree_handler(tree_cmd_t cmd, tree_p tree, va_list va);
+extern tree_p   tree_make(tree_handler_fn handler, srcpos_t position, ...);
+extern unsigned tree_memcheck(unsigned tree_count);
+extern tree_p   tree_malloc_(const char *where, size_t size);
+extern tree_p   tree_realloc_(const char *where, tree_p old, size_t new_size);
+extern void     tree_free_(const char *where, tree_p tree);
+inline tree_handler_fn          tree_cast_handler(va_list va);
 #define tree_malloc(sz)         tree_malloc_(SOURCE, (sz))
 #define tree_realloc(old, sz)   tree_realloc_(SOURCE, (old), (sz))
 #define tree_free(t)            tree_free_(SOURCE, (t))
