@@ -224,7 +224,7 @@ inline refcnt_t tree_refcount(tree_p tree)
 //   Return reference count of the tree
 // ----------------------------------------------------------------------------
 {
-    return tree->refcount;
+    return tree ? tree->refcount : (refcnt_t) -1;
 }
 
 
