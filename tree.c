@@ -337,7 +337,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         if (copy)
         {
             memcpy(copy, tree, size);
-            copy->refcount = 1;
+            copy->refcount = 0;
             if (cmd == TREE_COPY)
                 tree_children_loop(copy, tree_ref(*child));
             else
