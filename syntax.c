@@ -89,7 +89,7 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_CHILDREN:
         // Return the pointer to children for that tree type
-        return (tree_p) (tree + 1);
+        return (tree_p) &s->filename;
 
     case TREE_RENDER:
         io = va_arg(va, tree_io_fn);
