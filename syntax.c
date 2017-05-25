@@ -21,6 +21,8 @@
 
 #define SYNTAX_C
 #include "syntax.h"
+
+#include "error.h"
 #include "scanner.h"
 
 #include <stdlib.h>
@@ -286,7 +288,7 @@ void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
                 set_priority(&syntax->infixes, priority, name);
                 break;
             case COMMENT:
-                name_set(&entry, (name_p) name);
+                name_set(&entry, name);
                 state = COMMENT_END;
                 break;
             case COMMENT_END:
@@ -294,7 +296,7 @@ void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
                 state = COMMENT;
                 break;
             case TEXT:
-                name_set(&entry, (name_p) name);
+                name_set(&entry, name);
                 state = TEXT_END;
                 break;
             case TEXT_END:
@@ -404,7 +406,7 @@ void syntax_read_file(syntax_p syntax, const char *filename)
 //
 // ============================================================================
 
-static int search_internal(array_p array, name_p key, size_t skip,
+static int search_internal(array_p array, name_p key, size_t stride,
                            unsigned first, unsigned last)
 // ----------------------------------------------------------------------------
 //   Binary search on sorted entries in array
@@ -415,7 +417,7 @@ static int search_internal(array_p array, name_p key, size_t skip,
 
     while (first < last)
     {
-        int cmp  = compare(data + mid * skip, &key);
+        int cmp  = compare(data + mid * stride, &key);
         if (cmp == 0)
             return mid;
         if(cmp > 0)
@@ -429,12 +431,12 @@ static int search_internal(array_p array, name_p key, size_t skip,
     return ~mid;
 }
 
-static inline int search(array_p array, name_p key, size_t skip)
+static inline int search(array_p array, name_p key, size_t stride)
 // ----------------------------------------------------------------------------
 //   Binary search on array
 // ----------------------------------------------------------------------------
 {
-    return search_internal(array, key, skip, 0, array_length(array));
+    return search_internal(array, key, stride, 0, array_length(array));
 }
 
 
