@@ -408,13 +408,15 @@ void syntax_read_file(syntax_p syntax, const char *filename)
 // ============================================================================
 
 static int search_internal(array_p array, name_p key, size_t stride,
-                           unsigned first, unsigned last)
+                           unsigned in_first, unsigned in_last)
 // ----------------------------------------------------------------------------
 //   Binary search on sorted entries in array
 // ----------------------------------------------------------------------------
 {
-    tree_p *data = array_data(array);
-    int     mid  = (first + last) / 2;
+    tree_p   *data = array_data(array);
+    unsigned  first = in_first;
+    unsigned  last = in_last;
+    unsigned  mid  = (first + last) / 2;
 
     while (first < last)
     {
@@ -426,6 +428,8 @@ static int search_internal(array_p array, name_p key, size_t stride,
         else
             last = mid;
         mid  = (first + last) / 2;
+        if (mid == first)
+            break;
     }
 
     // Not found - Return closest location
@@ -437,7 +441,7 @@ static inline int search(array_p array, name_p key, size_t stride)
 //   Binary search on array
 // ----------------------------------------------------------------------------
 {
-    return search_internal(array, key, stride, 0, array_length(array));
+    return search_internal(array, key, stride, 0, array_length(array)/stride);
 }
 
 
