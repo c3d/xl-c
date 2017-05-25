@@ -67,7 +67,7 @@ inline bool text_eq(text_p text, const char *str)
 {
     size_t len = text_length(text);
     const char *data = text_data(text);
-    return memcmp(str, data, len) && str[len] == 0;
+    return memcmp(str, data, len) == 0 && str[len] == 0;
 }
 
 #endif // TEXT_H
