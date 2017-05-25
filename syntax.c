@@ -151,6 +151,7 @@ static inline void set_priority(array_p *array, int priority, name_p name)
 //   Define a priority in a priority array
 // ----------------------------------------------------------------------------
 {
+    assert(name);
     natural_p prio = natural_new(0, priority);
     array_push(array, (tree_p) name);
     array_push(array, (tree_p) prio);
@@ -162,6 +163,7 @@ static inline void set_delimiter(array_p *array, name_p open, name_p close)
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
 {
+    assert(open && close);
     array_push(array, (tree_p) open);
     array_push(array, (tree_p) close);
 }
@@ -173,6 +175,7 @@ static inline void set_syntax(array_p *array,
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
 {
+    assert(open && close && syntax);
     array_push(array, (tree_p) open);
     array_push(array, (tree_p) close);
     array_push(array, (tree_p) syntax);
@@ -420,15 +423,16 @@ static int search_internal(array_p array, name_p key, size_t stride,
 
     while (first < last)
     {
-        int cmp  = compare(data + mid * stride, &key);
+        int cmp  = compare(&key, data + mid * stride);
         if (cmp == 0)
             return mid;
+        unsigned old = mid;
         if(cmp > 0)
             first = mid;
         else
             last = mid;
         mid  = (first + last) / 2;
-        if (mid == first)
+        if (mid == old)
             break;
     }
 
@@ -453,7 +457,7 @@ int syntax_infix_priority(syntax_p s, name_p name)
     int index = search(s->infixes, name, 2);
     if (index >= 0)
     {
-        natural_p n = (natural_p) array_child(s->infixes, index+1);
+        natural_p n = (natural_p) array_child(s->infixes, 2*index+1);
         return natural_value(n);
     }
     return s->default_priority;
@@ -469,7 +473,7 @@ int syntax_prefix_priority(syntax_p s, name_p name)
     int index = search(s->prefixes, name, 2);
     if (index >= 0)
     {
-        natural_p n = (natural_p) array_child(s->prefixes, index+1);
+        natural_p n = (natural_p) array_child(s->prefixes, 2*index+1);
         return natural_value(n);
     }
     return s->default_priority;
@@ -485,7 +489,7 @@ int syntax_postfix_priority(syntax_p s, name_p name)
     int index = search(s->postfixes, name, 2);
     if (index >= 0)
     {
-        natural_p n = (natural_p) array_child(s->postfixes, index+1);
+        natural_p n = (natural_p) array_child(s->postfixes, 2*index+1);
         return natural_value(n);
     }
     return s->default_priority;
@@ -532,7 +536,7 @@ bool syntax_is_block(syntax_p s, name_p name, name_p *closing)
     int index = search(s->blocks, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_p) array_child(s->blocks, index+1));
+        name_set(closing, (name_p) array_child(s->blocks, 2*index+1));
         return true;
     }
     return false;
@@ -547,7 +551,7 @@ bool syntax_is_text(syntax_p s, name_p name, name_p *closing)
     int index = search(s->texts, name, 2);
     if (index >= 0)
     {
-        name_set(closing, (name_p) array_child(s->texts, index+1));
+        name_set(closing, (name_p) array_child(s->texts, 2*index+1));
         return true;
     }
     return false;
@@ -562,7 +566,7 @@ bool syntax_is_comment(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 2);
     if (index >= 0)
     {
-        name_set(closing, name_ptr(array_child(s->comments, index+1)));
+        name_set(closing, name_ptr(array_child(s->comments, 2*index+1)));
         return true;
     }
     return false;
@@ -577,8 +581,8 @@ syntax_p syntax_is_special(syntax_p s, name_p name, name_p *closing)
     int index = search(s->comments, name, 3);
     if (index >= 0)
     {
-        name_set(closing, name_ptr(array_child(s->comments, index+1)));
-        return syntax_ptr(array_child(s->comments, index+2));
+        name_set(closing, name_ptr(array_child(s->comments, 3*index+1)));
+        return syntax_ptr(array_child(s->comments, 3*index+2));
     }
     return NULL;
 }
