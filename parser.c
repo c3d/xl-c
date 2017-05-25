@@ -102,27 +102,29 @@ static token_t parser_token(parser_p p)
     syntax_p    syntax    = scanner->syntax;
     name_p      opening   = NULL;
     name_p      closing   = NULL;
+    token_t     result    = tokNONE;
 
-    while (true)
+    while (result == tokNONE)
     {
         token_t pend = p->pending;
         if (pend != tokNONE && pend != tokNEWLINE)
         {
             p->pending = tokNONE;
             p->beginning_line = false;
-            return pend;
+            result = pend;
+            continue;
         }
 
         // Here, there's nothing pending or only a newline
-        token_t result = scanner_read(scanner);
+        token_t next = scanner_read(scanner);
         p->had_space_before = scanner->had_space_before;
         p->had_space_after = scanner->had_space_after;
 
-        switch(result)
+        switch(next)
         {
         case tokNAME:
         case tokSYMBOL:
-            opening = scanner->scanned.name;
+            name_set(&opening, scanner->scanned.name);
             if (name_eq(opening, "syntax"))
             {
                 syntax_read(scanner->syntax, scanner);
@@ -131,11 +133,12 @@ static token_t parser_token(parser_p p)
             else if (syntax_is_comment(syntax, opening, &closing))
             {
                 // Skip comments, keep looking to get the right indentation
-                text_p comment = scanner_skip(scanner, closing);
+                text_p comment = text_use(scanner_skip(scanner, closing));
                 if (p->comment)
                     text_append(&p->comment, comment);
                 else
-                    p->comment = comment;
+                    text_set(&p->comment, comment);
+                text_dispose(&comment);
                 if (name_eq(closing, "\n") && pend == tokNONE)
                 {
                     p->pending = tokNEWLINE;
@@ -150,11 +153,12 @@ static token_t parser_token(parser_p p)
                 name_p cl = (name_p) closing;
                 srcpos_t pos = name_position(op);
                 delimited_text_p dt = delimited_text_new(pos, val, op, cl);
-                scanner->scanned.tree = (tree_p) dt;
+                tree_set(&scanner->scanned.tree, (tree_p) dt);
                 if (pend == tokNEWLINE)
                 {
                     p->pending = tokLONGTEXT;
-                    return tokNEWLINE;
+                    result = tokNEWLINE;
+                    continue;
                 }
                 if (name_eq(closing, "\n") && pend == tokNONE)
                 {
@@ -165,7 +169,8 @@ static token_t parser_token(parser_p p)
                 {
                     p->beginning_line = false;
                 }
-                return tokLONGTEXT;
+                result = tokLONGTEXT;
+                continue;
             }
 
             // If the next token has a substatement infix priority,
@@ -177,7 +182,7 @@ static token_t parser_token(parser_p p)
                 {
                     int infixPrio = syntax_infix_priority(syntax, opening);
                     if (infixPrio < syntax->statement_priority)
-                        p->pending = pend = tokNONE;
+                        p->pending = tokNONE;
                 }
             }
 
@@ -195,28 +200,32 @@ static token_t parser_token(parser_p p)
             // Add newline if what comes next isn't an infix like 'else'
             p->pending = tokNEWLINE;
             p->beginning_line = true;
-            return result;
+            result = next;
+            continue;
+
         case tokINDENT:
             // If we had a new-line followed by indent, ignore the new line
             p->pending = tokNONE;
             p->beginning_line = true;
-            return result;
+            result = next;
+            continue;
+
         default:
             p->beginning_line = false;
             break;
-        } // switch (result)
+        } // switch (next)
 
         // If we have another token here and a pending newline, push
         // the other token back.
         if (pend != tokNONE)
         {
-            p->pending = result;
+            p->pending = next;
             p->beginning_line = true;
-            return pend;
+            result = pend;
         }
-
-        return result;
     } // While loop
+
+    return result;
 }
 
 
@@ -284,13 +293,23 @@ static tree_p parser_block(parser_p p,
 {
     typedef pending_stack_p stack_p;
 
+    scanner_p   scanner            = p->scanner;
+    positions_p positions          = scanner->positions;
+    srcpos_t    pos                = position(positions);
+
     tree_p      result             = NULL;
     tree_p      left               = NULL;
     tree_p      right              = NULL;
-    scanner_p   scanner            = p->scanner;
+    name_p      infix              = NULL;
+    name_p      name               = NULL;
+    name_p      opening            = NULL;
+    name_p      closing            = NULL;
+    block_p     block              = NULL;
+    stack_p     stack              = pending_stack_new(pos, 0, NULL);
     syntax_p    syntax             = syntax_use(scanner->syntax);
-    positions_p positions          = scanner->positions;
-    srcpos_t    pos                = position(positions);
+    syntax_p    child_syntax       = NULL;
+    name_p      child_syntax_end   = NULL;
+
     int         default_priority   = syntax->default_priority;
     int         function_priority  = syntax->function_priority;
     int         statement_priority = syntax->statement_priority;
@@ -300,18 +319,11 @@ static tree_p parser_block(parser_p p,
     int         postfix_priority   = 0;
     int         infix_priority     = 0;
     unsigned    old_indent         = 0;
-    name_p      infix              = NULL;
-    name_p      name               = NULL;
-    name_p      opening            = NULL;
-    name_p      closing            = NULL;
-    block_p     block              = NULL;
-    stack_p     stack              = pending_stack_new(pos, 0, NULL);
-    syntax_p    child_syntax       = NULL;
-    name_p      child_syntax_end   = NULL;
     token_t     tok                = tokNONE;
     bool        is_expression      = false;
     bool        new_statement      = true;
     bool        done               = false;
+
 
 #define STACK_PUSH(op, arg, prio)                       \
     do                                                  \
@@ -535,10 +547,10 @@ static tree_p parser_block(parser_p p,
         case tokOPEN:
             name_set(&opening, scanner->scanned.name);
             if (!syntax_is_block(syntax, opening, &closing))
-                error(pos, "Unknown parenthese type %t", opening);
+                assert(!"Internal error: Unknown parenthese type");
             if (tok == tokOPEN)
                 old_indent = scanner_open_parenthese(scanner);
-            prefix_priority = syntax_infix_priority(syntax, block_opening);
+            prefix_priority = syntax_infix_priority(syntax, opening);
 
             // Just like for names, parse the contents of the parentheses
             infix_priority = default_priority;
@@ -547,7 +559,7 @@ static tree_p parser_block(parser_p p,
                 scanner_close_parenthese(scanner, old_indent);
             break;
         default:
-            error(pos, "Unnknown token for %t, value %u", scanner->source, tok);
+            error(pos, "Unknown token for %t, value %u", scanner->source, tok);
             break;
         } // switch(tok)
 
@@ -657,6 +669,17 @@ static tree_p parser_block(parser_p p,
     }
 
     pending_stack_dispose(&stack);
+
+    tree_dispose(&left);
+    tree_dispose(&right);
+    name_dispose(&infix);
+    name_dispose(&name);
+    name_dispose(&opening);
+    name_dispose(&closing);
+    block_dispose(&block);
+    pending_stack_dispose(&stack);
+    syntax_dispose(&child_syntax);
+    name_dispose(&child_syntax_end);
 
     return result;
 }
