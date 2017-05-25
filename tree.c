@@ -117,6 +117,21 @@ tree_p tree_realloc_(const char *source, tree_p old, size_t new_size)
 }
 
 
+#ifndef NDEBUG
+tree_p tree_double_free(tree_cmd_t cmd, tree_p tree, va_list va)
+// ----------------------------------------------------------------------------
+//   Handler installed to detect double free
+// ----------------------------------------------------------------------------
+{
+    fprintf(stderr, "*** Freed tree %p received command %s ***\n",
+            tree, tree_cmd_name(cmd));
+    fprintf(stderr, "%s: Tree was probably freed here\n",
+            (char *) tree->position);
+    abort();
+}
+#endif // NDEBUG
+
+
 void tree_free_(const char *source, tree_p tree)
 // ----------------------------------------------------------------------------
 //   Free a tree
@@ -136,7 +151,7 @@ void tree_free_(const char *source, tree_p tree)
         next->previous = previous;
     else
         trees_end = previous;
-    tree->handler = (tree_handler_fn) abort;
+    tree->handler = tree_double_free;
     tree->position = (srcpos_t) source;
     free(debug);
 #else
@@ -353,6 +368,33 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         break;
     }
     return tree;
+}
+
+
+const char *tree_cmd_name(tree_cmd_t cmd)
+// ----------------------------------------------------------------------------
+//   Return the name associated with a tree cmd
+// ----------------------------------------------------------------------------
+{
+    static const char *names[] =
+    {
+        "TREE_EVALUATE",
+        "TREE_TYPENAME",
+        "TREE_SIZE",
+        "TREE_ARITY",
+        "TREE_CHILDREN",
+        "TREE_CAST",
+        "TREE_INITIALIZE",
+        "TREE_DELETE",
+        "TREE_COPY",
+        "TREE_CLONE",
+        "TREE_RENDER",
+        "TREE_FREEZE",
+        "TREE_THAW"
+    };
+    if (cmd < sizeof(names) / sizeof(names[0]))
+        return names[cmd];
+    return "<UNKNOWN>";
 }
 
 

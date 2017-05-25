@@ -81,7 +81,7 @@ typedef enum tree_cmd
     TREE_FREEZE,                        // Serialize tree
     TREE_THAW,                          // De-serialize tree
 } tree_cmd_t;
-
+extern const char *tree_cmd_name(tree_cmd_t);
 
 // Handler function for tree structures
 typedef tree_p (*tree_handler_fn)(tree_cmd_t cmd, tree_p tree, va_list va);
@@ -90,7 +90,7 @@ typedef tree_p (*tree_handler_fn)(tree_cmd_t cmd, tree_p tree, va_list va);
 typedef unsigned (*tree_io_fn)(void *stream, unsigned sz, void *data);
 
 // Position indicator in files
-typedef unsigned srcpos_t;
+typedef uintptr_t srcpos_t;
 
 typedef struct tree
 // ----------------------------------------------------------------------------

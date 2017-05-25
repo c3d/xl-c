@@ -22,8 +22,9 @@
 // ****************************************************************************
 
 #include <stdarg.h>
+#include <stdlib.h>
 
-typedef unsigned          srcpos_t;
+typedef uintptr_t         srcpos_t;
 typedef struct positions *positions_p;
 typedef struct errors    *errors_p;
 
