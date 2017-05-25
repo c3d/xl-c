@@ -261,7 +261,10 @@ static inline tree_p parser_pfix_new(tree_p left, tree_p right)
 }
 
 
-static tree_p parser_block(parser_p p, name_p closing)
+static tree_p parser_block(parser_p p,
+                           name_p   block_opening,
+                           name_p   block_closing,
+                           int      block_priority)
 // ----------------------------------------------------------------------------
 //    Parse input until we reach block_end
 // ----------------------------------------------------------------------------
@@ -296,18 +299,19 @@ static tree_p parser_block(parser_p p, name_p closing)
     int         prefix_vs_infix    = 0;
     int         postfix_priority   = 0;
     int         infix_priority     = 0;
-    int         paren_priority     = 0;
     unsigned    old_indent         = 0;
     name_p      infix              = NULL;
     name_p      name               = NULL;
-    token_t     tok                = tokNONE;
-    name_p      block_opening      = NULL;
-    name_p      block_closing      = NULL;
+    name_p      opening            = NULL;
+    name_p      closing            = NULL;
+    block_p     block              = NULL;
     stack_p     stack              = pending_stack_new(pos, 0, NULL);
+    syntax_p    child_syntax       = NULL;
+    name_p      child_syntax_end   = NULL;
+    token_t     tok                = tokNONE;
     bool        is_expression      = false;
     bool        new_statement      = true;
     bool        done               = false;
-    syntax_p    child_syntax       = NULL;
 
 
     // Check priorities compared to stack
@@ -338,12 +342,17 @@ static tree_p parser_block(parser_p p, name_p closing)
         }                                                               \
     } while(0)
 
-    if (closing)
+    if (block_opening)
     {
-        paren_priority = syntax_infix_priority(syntax, closing);
+        assert(block_closing && "Block needs opening and closing");
+        assert(syntax_infix_priority(syntax, block_opening) == block_priority);
+        assert(syntax_infix_priority(syntax, block_closing) == block_priority);
+
+        // We are creating a block for everything inside
+        block = block_use(block_new(pos, block_opening, block_closing));
 
         // When inside a () block, we are in 'expression' mode right away
-        if (paren_priority > statement_priority)
+        if (block_priority > statement_priority)
         {
             new_statement = false;
             is_expression = true;
@@ -363,8 +372,10 @@ static tree_p parser_block(parser_p p, name_p closing)
         case tokEOF:
         case tokERROR:
             done = true;
-            if (closing && !name_eq(closing, SYNTAX_UNINDENT))
-                error(pos, "Unexpected end of text, expected %t", closing);
+            if (block && !name_eq(block_closing, SYNTAX_UNINDENT))
+                error(pos,
+                      "Unexpected end of text, expected %t to close block",
+                      block_closing);
             break;
         case tokINTEGER:
         case tokREAL:
@@ -376,27 +387,33 @@ static tree_p parser_block(parser_p p, name_p closing)
                 is_expression = false;
             prefix_priority = function_priority;
             break;
+
+        case tokNEWLINE:
+            // Consider new-line as an infix operator
+            name_set(&scanner->scanned.name, name_cnew(pos, "\n"));
+            // Intentionally Fall-through
+
         case tokNAME:
         case tokSYMBOL:
             name_set(&name, scanner->scanned.name);
-            if (name == closing)
+            if (name_compare(name, block_closing) == 0)
             {
                 done = true;
                 break;
             }
             else if ((child_syntax = syntax_is_special(syntax, name,
-                                                       &block_closing)))
+                                                       &child_syntax_end)))
             {
                 // Read the input with the special syntax
+                int prio = syntax_infix_priority(syntax, name);
                 scanner->syntax = child_syntax;
-                right = parser_block(p, block_closing);
+                right = parser_block(p, name, child_syntax_end, prio);
                 scanner->syntax = syntax;
-                right = (tree_p) prefix_new(pos, name, right);
             }
             else if (!result)
             {
                 prefix_priority = syntax_prefix_priority(syntax, name);
-                right = (tree_p) name;
+                tree_set(&right, (tree_p) name);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
                 if (new_statement && tok == tokNAME)
@@ -410,7 +427,7 @@ static tree_p parser_block(parser_p p, name_p closing)
                 // parse this as "A and (not B)" rather than as
                 // "(A and not) B"
                 prefix_priority = syntax_prefix_priority(syntax, name);
-                right = (tree_p) name;
+                tree_set(&right, (tree_p) name);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
             }
@@ -423,9 +440,33 @@ static tree_p parser_block(parser_p p, name_p closing)
                     (prefix_vs_infix == default_priority ||
                      !p->had_space_before || p->had_space_after))
                 {
-                    // We got an infix
-                    left = result;
-                    infix = name;
+                    // If this infix matches the current block, append it
+                    if (block)
+                    {
+                        // Check that we have consistent separators within block
+                        if (!block->separator)
+                        {
+                            block->separator = name_use(name);
+                        }
+                        else if (name_compare(block->separator, name) != 0)
+                        {
+                            error(pos, "Inconsistent separator in block: "
+                                  "had %t, now %t", block->separator, name);
+                            error(name_position(block->separator),
+                                  "This is where separator %t was found",
+                                  block->separator);
+                        }
+
+                        // Append to block
+                        block_append_data(&block, 1, &result);
+                        tree_set(&result, (tree_p) block);
+                    }
+                    else
+                    {
+                        // We got an infix
+                        tree_set(&left, result);
+                        name_set(&infix, name);
+                    }
                 }
                 else
                 {
@@ -433,21 +474,21 @@ static tree_p parser_block(parser_p p, name_p closing)
                     if (postfix_priority != default_priority)
                     {
                         // We have a postfix operator
-                        right = (tree_p) name;
+                        tree_set(&right, (tree_p) name);
 
                         // Flush higher priority items on stack
                         // This is the case for X:integer!
                         STACK_FLUSH();
 
-                        right = (tree_p)
-                            postfix_new(pos, result, (name_p) right);
+                        tree_set(&right, (tree_p)
+                                 postfix_new(pos, result, (name_p) right));
                         prefix_priority = postfix_priority;
-                        result = NULL;
+                        tree_dispose(&result);
                     }
                     else
                     {
                         // No priority: take this as a prefix by default
-                        right = (tree_p) name;
+                        tree_set(&right, (tree_p) name);
                         prefix_priority = prefix_vs_infix;
                         if (prefix_priority == default_priority)
                         {
@@ -459,51 +500,36 @@ static tree_p parser_block(parser_p p, name_p closing)
                 }
             }
             break;
-        case tokNEWLINE:
-            // Consider new-line as an infix operator
-            infix = name_cnew(pos, "\n");
-            name = infix;
-            infix_priority = syntax_infix_priority(syntax, infix);
-            left = result;
-            break;
         case tokCLOSE:
             // Check for mismatched parenthese here
-            if (name_compare(scanner->scanned.name, closing) != 0)
+            if (name_compare(scanner->scanned.name, block_closing) != 0)
                 error(pos, "Mismatched parentheses: got %t, expected %t",
-                      scanner->scanned.name, closing);
+                      scanner->scanned.name, block_closing);
             done = true;
             break;
         case tokUNINDENT:
             // Check for mismatched blocks here
-            if (!name_eq(closing, SYNTAX_UNINDENT))
-                error(pos, "Mismatched identation, expected %t", closing);
+            if (!name_eq(block_closing, SYNTAX_UNINDENT))
+                error(pos, "Mismatched identation, expected %t", block_closing);
             done = true;
             break;
         case tokINDENT:
-            scanner->scanned.name = name_cnew(pos, SYNTAX_INDENT);
-            // Fall-through
+            name_set(&scanner->scanned.name, name_cnew(pos, SYNTAX_INDENT));
+            // Intentionally fall-through
 
         case tokOPEN:
-            block_opening = scanner->scanned.name;
-            if (!syntax_is_block(syntax, block_opening, &block_closing))
-                error(pos, "Unknown parenthese type %t", block_opening);
+            name_set(&opening, scanner->scanned.name);
+            if (!syntax_is_block(syntax, opening, &closing))
+                error(pos, "Unknown parenthese type %t", opening);
             if (tok == tokOPEN)
                 old_indent = scanner_open_parenthese(scanner);
-            name = block_opening;
-            paren_priority = syntax_infix_priority(syntax, name);
+            prefix_priority = syntax_infix_priority(syntax, block_opening);
 
             // Just like for names, parse the contents of the parentheses
-            prefix_priority = paren_priority;
             infix_priority = default_priority;
-            right = parser_block(p, block_closing);
+            right = parser_block(p, opening, closing, prefix_priority);
             if (tok == tokOPEN)
                 scanner_close_parenthese(scanner, old_indent);
-            if (!right)
-                right = (tree_p) name_cnew(pos, ""); // Case of ()
-            right = (tree_p) block_new(pos,
-                                       right,
-                                       block_opening,
-                                       block_closing);
             break;
         default:
             error(pos, "Unnknown token %u (for %t)", tok, scanner->source);
@@ -515,7 +541,7 @@ static tree_p parser_block(parser_p p, name_p closing)
         if (!result)
         {
             // First thing we parse
-            result = right;
+            tree_set(&result, right);
             result_priority = prefix_priority;
 
             // We are now in the middle of an expression
@@ -543,7 +569,7 @@ static tree_p parser_block(parser_p p, name_p closing)
                 left = NULL;
 
                 // Start over with "not"
-                result = right;
+                tree_set(&result, right);
                 result_priority = prefix_priority;
             }
             else
@@ -554,7 +580,7 @@ static tree_p parser_block(parser_p p, name_p closing)
                 if (done)
                 {
                     // End of text: the result is what we just got
-                    result = left;
+                    tree_set(&result, left);
                 }
                 else
                 {
@@ -563,7 +589,7 @@ static tree_p parser_block(parser_p p, name_p closing)
                     pending_stack_push(&stack, pending);
                     result = NULL;
                 }
-                left = NULL;
+                tree_dispose(&left);
             }
         }
         else if (right)
@@ -593,7 +619,7 @@ static tree_p parser_block(parser_p p, name_p closing)
             // Push a recognized prefix op
             pending_t pending = { NULL, result, result_priority };
             pending_stack_push(&stack, pending);
-            result = right;
+            tree_set(&result, right);
             result_priority = prefix_priority;
         }
 
@@ -607,9 +633,10 @@ static tree_p parser_block(parser_p p, name_p closing)
         {
             pending_t last = pending_stack_top(stack);
             if (last.opcode && !name_eq(last.opcode, "\n"))
-                result = (tree_p) postfix_new(pos, last.argument, last.opcode);
+                tree_set(&result, (tree_p)
+                         postfix_new(pos, last.argument, last.opcode));
             else
-                result = last.argument;
+                tree_set(&result, last.argument);
             pending_stack_pop(&stack);
         }
 
@@ -628,5 +655,5 @@ tree_p parser_parse(parser_p p)
 //   Parse input from the given parser
 // ----------------------------------------------------------------------------
 {
-    return parser_block(p, NULL);
+    return parser_block(p, NULL, NULL, 0);
 }

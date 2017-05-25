@@ -36,17 +36,17 @@ syntax_p syntax_new(const char *file)
     syntax_p result = (syntax_p) tree_malloc(sizeof(syntax_t));
     result->tree.handler = syntax_handler;
 
-    result->known = array_use(square_array_new(0, 0, NULL));
+    result->known = array_use(array_new(0, 0, NULL));
 
-    result->infixes = array_use(square_array_new(0, 0, NULL));
-    result->prefixes = array_use(square_array_new(0, 0, NULL));
-    result->postfixes = array_use(square_array_new(0, 0, NULL));
+    result->infixes = array_use(array_new(0, 0, NULL));
+    result->prefixes = array_use(array_new(0, 0, NULL));
+    result->postfixes = array_use(array_new(0, 0, NULL));
 
-    result->comments = array_use(square_array_new(0, 0, NULL));
-    result->texts = array_use(square_array_new(0, 0, NULL));
-    result->blocks = array_use(square_array_new(0, 0, NULL));
+    result->comments = array_use(array_new(0, 0, NULL));
+    result->texts = array_use(array_new(0, 0, NULL));
+    result->blocks = array_use(array_new(0, 0, NULL));
 
-    result->syntaxes = array_use(square_array_new(0, 0, NULL));
+    result->syntaxes = array_use(array_new(0, 0, NULL));
 
     if (file)
     {
@@ -126,36 +126,36 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //
 // ============================================================================
 
-static inline bool eq(text_p text, const char *str)
+static inline bool eq(name_p text, const char *str)
 // ----------------------------------------------------------------------------
 //    Compare the name value with a C string
 // ----------------------------------------------------------------------------
 {
-    return text_eq(text, str);
+    return name_eq(text, str);
 }
 
 
-static inline void set(text_p *text, const char *str)
+static inline void set(name_p *text, const char *str)
 // ----------------------------------------------------------------------------
 //   Replace the text
 // ----------------------------------------------------------------------------
 {
-    text_set(text, text_cnew(0, str));
+    name_set(text, name_cnew(0, str));
 }
 
 
-static inline void set_priority(array_p *array, int priority, text_p text)
+static inline void set_priority(array_p *array, int priority, name_p name)
 // ----------------------------------------------------------------------------
 //   Define a priority in a priority array
 // ----------------------------------------------------------------------------
 {
     natural_p prio = natural_new(0, priority);
-    array_push(array, (tree_p) text);
+    array_push(array, (tree_p) name);
     array_push(array, (tree_p) prio);
 }
 
 
-static inline void set_delimiter(array_p *array, text_p open, text_p close)
+static inline void set_delimiter(array_p *array, name_p open, name_p close)
 // ----------------------------------------------------------------------------
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
@@ -166,7 +166,7 @@ static inline void set_delimiter(array_p *array, text_p open, text_p close)
 
 
 static inline void set_syntax(array_p *array,
-                              text_p open, text_p close, syntax_p syntax)
+                              name_p open, name_p close, syntax_p syntax)
 // ----------------------------------------------------------------------------
 //   Record a set of delimiters
 // ----------------------------------------------------------------------------
@@ -182,9 +182,9 @@ static int compare(const void *d1, const void *d2)
 //   Comparison routine to sort priority arrays
 // ----------------------------------------------------------------------------
 {
-    text_p *tp1 = (text_p *) d1;
-    text_p *tp2 = (text_p *) d2;
-    return text_compare(*tp1, *tp2);
+    name_p *tp1 = (name_p *) d1;
+    name_p *tp2 = (name_p *) d2;
+    return name_compare(*tp1, *tp2);
 }
 
 
@@ -231,7 +231,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
 
     state_t  state    = UNKNOWN;
     int      priority = 0;
-    text_p   entry    = NULL;
+    name_p   entry    = NULL;
     syntax_p child    = NULL;
     token_t  token    = tokNONE;
     unsigned indent   = 0;
@@ -239,8 +239,8 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
 
     while (!done)
     {
-        text_p known_token = NULL;
-        text_p text = NULL;
+        name_p known_token = NULL;
+        name_p name = NULL;
 
         token = scanner_read(scanner);
 
@@ -252,39 +252,39 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
         case tokTEXT:
         case tokCHARACTER:
         case tokSYMBOL:
-            known_token = text;
+            name_set(&known_token, scanner->scanned.name);
             /* Fall through */
 
         case tokNAME:
-            text_set(&text, scanner->scanned.text);
+            name_set(&name, scanner->scanned.name);
 
-            if (eq(text, "NEWLINE"))
-                set(&text, "\n");
-            else if (eq(text, "INDENT"))
-                set(&text, SYNTAX_INDENT);
-            else if (eq(text, "UNINDENT"))
-                set(&text, SYNTAX_UNINDENT);
+            if (eq(name, "NEWLINE"))
+                set(&name, "\n");
+            else if (eq(name, "INDENT"))
+                set(&name, SYNTAX_INDENT);
+            else if (eq(name, "UNINDENT"))
+                set(&name, SYNTAX_UNINDENT);
 
-            else if (eq(text, "INFIX"))
+            else if (eq(name, "INFIX"))
                 state = INFIX;
-            else if (eq(text, "PREFIX"))
+            else if (eq(name, "PREFIX"))
                 state = PREFIX;
-            else if (eq(text, "POSTFIX"))
+            else if (eq(name, "POSTFIX"))
                 state = POSTFIX;
-            else if (eq(text, "BLOCK"))
+            else if (eq(name, "BLOCK"))
                 state = BLOCK;
-            else if (eq(text, "COMMENT"))
+            else if (eq(name, "COMMENT"))
                 state = COMMENT;
-            else if (eq(text, "TEXT"))
+            else if (eq(name, "TEXT"))
                 state = TEXT;
-            else if (eq(text, "SYNTAX"))
+            else if (eq(name, "SYNTAX"))
                 state = SYNTAX_NAME;
 
-            else if (eq(text, "STATEMENT"))
+            else if (eq(name, "STATEMENT"))
                 syntax->statement_priority = priority;
-            else if (eq(text, "FUNCTION"))
+            else if (eq(name, "FUNCTION"))
                 syntax->function_priority = priority;
-            else if (eq(text, "DEFAULT"))
+            else if (eq(name, "DEFAULT"))
                 syntax->default_priority = priority;
 
             else switch(state)
@@ -292,52 +292,52 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
             case UNKNOWN:
                 break;
             case PREFIX:
-                set_priority(&syntax->prefixes, priority, text);
+                set_priority(&syntax->prefixes, priority, name);
                 break;
             case POSTFIX:
-                set_priority(&syntax->postfixes, priority, text);
+                set_priority(&syntax->postfixes, priority, name);
                 break;
             case INFIX:
-                set_priority(&syntax->infixes, priority, text);
+                set_priority(&syntax->infixes, priority, name);
                 break;
             case COMMENT:
-                text_set(&entry, (text_p) text);
+                name_set(&entry, (name_p) name);
                 state = COMMENT_END;
                 break;
             case COMMENT_END:
-                set_delimiter(&syntax->comments, entry, text);
+                set_delimiter(&syntax->comments, entry, name);
                 state = COMMENT;
                 break;
             case TEXT:
-                text_set(&entry, (text_p) text);
+                name_set(&entry, (name_p) name);
                 state = TEXT_END;
                 break;
             case TEXT_END:
-                set_delimiter(&syntax->texts, entry, text);
+                set_delimiter(&syntax->texts, entry, name);
                 state = TEXT;
                 break;
             case BLOCK:
-                text_set(&entry, (text_p) text);
+                name_set(&entry, (name_p) name);
                 state = BLOCK_END;
-                set_priority(&syntax->infixes, priority, text);
+                set_priority(&syntax->infixes, priority, name);
                 break;
             case BLOCK_END:
-                set_delimiter(&syntax->blocks, entry, text);
-                set_priority(&syntax->infixes, priority, text);
+                set_delimiter(&syntax->blocks, entry, name);
+                set_priority(&syntax->infixes, priority, name);
                 state = BLOCK;
                 break;
             case SYNTAX_NAME:
                 // Nul-terminate file name
-                text_append_data(&text, 1, NULL);
-                child = syntax_new(text_data(text));
+                name_append_data(&name, 1, NULL);
+                child = syntax_new(name_data(name));
                 state = SYNTAX;
                 break;
             case SYNTAX:
-                text_set(&entry, (text_p) text);
+                name_set(&entry, (name_p) name);
                 state = SYNTAX_END;
                 break;
             case SYNTAX_END:
-                set_syntax(&syntax->syntaxes, entry, text, child);
+                set_syntax(&syntax->syntaxes, entry, name, child);
                 state = SYNTAX;
                 break;
             }
@@ -363,7 +363,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
         if (known_token)
             array_push(&syntax->known, (tree_p) known_token);
 
-        text_dispose(&text);
+        name_dispose(&name);
     } // while
 
     // Sort the various arrays
@@ -379,7 +379,7 @@ void syntax_read(syntax_p syntax, scanner_p scanner)
 
     sort(syntax->syntaxes, 3);
 
-    text_dispose(&entry);
+    name_dispose(&entry);
 }
 
 

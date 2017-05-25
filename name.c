@@ -64,6 +64,18 @@ bool name_is_valid(size_t size, const char *data)
             }
             return true;
         }
+        else if (size == 1)
+        {
+            switch(*data)
+            {
+            case '\n':  // NEWLINE
+            case '\t':  // SYNTAX_INDENT
+            case '\b':  // SYNTAX_UNINDENT
+                return true;
+            default:
+                break;
+            }
+        }
     }
     return false;
 }

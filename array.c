@@ -135,8 +135,8 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
     void *        stream;
     size_t        size;
     tree_p        child;
-    tree_p *      children;
-    array_delim_p delim;
+    tree_p *      children_src;
+    tree_p *      children_dst;
 
     switch(cmd)
     {
@@ -164,19 +164,17 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_INITIALIZE:
         // Fetch pointer to data and size from varargs list (see array_new)
-        delim = va_arg(va, array_delim_p);
         size = va_arg(va, size_t);
-        children = va_arg(va, tree_p *);
+        children_src = va_arg(va, tree_p *);
 
         // Create array and copy data in it
         array = (array_p) tree_malloc(sizeof(array_t) + size * sizeof(tree_p));
         array->length = size;
-        array->delimiters = delim;
-        children = (tree_p *) (array + 1);
+        children_dst = (tree_p *) (array + 1);
         while (size--)
         {
-            child = va_arg(va, tree_p);
-            tree_set(children++, child);
+            child = *children_src++;
+            *children_dst++ = tree_use(child);
         }
         return (tree_p) array;
 
@@ -184,18 +182,24 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         // Render the opening and closing, with child inbetween
         io = va_arg(va, tree_io_fn);
         stream = va_arg(va, void *);
-        delim = array->delimiters;
         size = array->length;
-        children = (tree_p *) (array + 1);
+        children_src = (tree_p *) (array + 1);
 
-        name_render(delim->opening, io, stream);
+        if (array_opening)
+            name_render(array_opening, io, stream);
         while (size--)
         {
-            tree_render(*children++, io, stream);
+            tree_render(*children_src++, io, stream);
             if (size)
-                name_render(delim->separating, io, stream);
+            {
+                if (array_separator)
+                    name_render(array_separator, io, stream);
+                else
+                    io(stream, 1, " ");
+            }
         }
-        name_render(delim->closing, io, stream);
+        if (array_closing)
+            name_render(array_closing, io, stream);
         return tree;
 
     default:
@@ -214,7 +218,6 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 //
 // ============================================================================
 
-array_delim_p array_paren  = NULL;
-array_delim_p array_curly  = NULL;
-array_delim_p array_square = NULL;
-array_delim_p array_indent = NULL;
+name_p array_opening   = NULL;
+name_p array_closing   = NULL;
+name_p array_separator = NULL;

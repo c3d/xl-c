@@ -45,7 +45,7 @@ inline bool name_eq(name_p, const char *value);
 extern tree_p   name_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 
 // Helper macro to initialize with a C constant
-#define name_cnew(pos, name)    name_new(pos, sizeof(name), name)
+#define name_cnew(pos, name)    name_new(pos, strlen(name), name)
 
 #undef inline
 

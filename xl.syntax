@@ -1,10 +1,9 @@
 INFIX
-        11      NEWLINE
+        11      NEWLINE ;
         21      -> =>
         31      else into
         40      loop while until
         50      then require ensure
-        61      ;
         75      with as
         85      := += -= *= /= ^= |= &=
         100     STATEMENT
@@ -46,9 +45,8 @@ POSTFIX
         420     ++ --
 
 BLOCK
-        5       INDENT UNINDENT
-        25      '{' '}'
-        500     '(' ')' '[' ']'
+        11      INDENT UNINDENT '{' '}'
+        231     '(' ')' '[' ']'
 
 TEXT
         "<<" ">>"

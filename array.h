@@ -6,10 +6,9 @@
 //
 //   File Description:
 //
-//    Arrays are inner nodes with variable arity, used to represent large
-//    sequeences of objects, like [A, B, C, D, E].
-//    They are identified by opening, closing and separating symbols.
-//
+//    Arrays are inner nodes with variable arity, used to represent
+//    possibly large sequences of objects, like [A, B, C, D, E].
+//    Arrays do not have separators, but can inerit them from blocks
 //
 //
 //
@@ -25,25 +24,13 @@
 #include "name.h"
 
 
-typedef struct array_delim
-// ----------------------------------------------------------------------------
-//   Array delimiters
-// ----------------------------------------------------------------------------
-{
-    name_p      opening;
-    name_p      separating;
-    name_p      closing;
-} array_delim_t, *array_delim_p;
-
-
 typedef struct array
 // ----------------------------------------------------------------------------
 //    Internal representation of a array
 // ----------------------------------------------------------------------------
 {
-    tree_t        tree;
-    array_delim_p delimiters;
-    size_t        length;
+    tree_t tree;
+    size_t length;
 } array_t;
 
 #ifdef ARRAY_C
@@ -51,37 +38,27 @@ typedef struct array
 #endif
 
 tree_arity_type(array);
-inline array_p       array_new(srcpos_t position, array_delim_p delim,
-                               size_t length, tree_p *data);
-inline tree_p        array_child(array_p array, size_t index);
-inline tree_p        array_set_child(array_p array, size_t index, tree_p val);
-inline array_delim_p array_delimiters(array_p array);
-inline tree_p *      array_data(array_p array);
-inline size_t        array_length(array_p array);
+inline array_p  array_new(srcpos_t position, size_t length, tree_p *data);
+inline tree_p   array_child(array_p array, size_t index);
+inline tree_p   array_set_child(array_p array, size_t index, tree_p val);
+inline tree_p * array_data(array_p array);
+inline size_t   array_length(array_p array);
 
-extern void          array_append_data(array_p *, size_t count, tree_p *trees);
-inline void          array_append(array_p *array, array_p other);
-extern void          array_range(array_p *array, size_t start, size_t len);
-inline void          array_push(array_p *array, tree_p value);
-inline tree_p        array_top(array_p array);
-inline void          array_pop(array_p *array);
-
+extern void     array_append_data(array_p *, size_t count, tree_p *trees);
+inline void     array_append(array_p *array, array_p other);
+extern void     array_range(array_p *array, size_t start, size_t len);
+inline void     array_push(array_p *array, tree_p value);
+inline tree_p   array_top(array_p array);
+inline void     array_pop(array_p *array);
 
 // Private array handler, should not be called directly in general
 extern tree_p  array_handler(tree_cmd_t cmd, tree_p tree, va_list va);
-inline array_p array_make(tree_handler_fn h, srcpos_t pos, array_delim_p delim,
-                          size_t sz, tree_p *data);
+inline array_p array_make(tree_handler_fn h, srcpos_t, size_t, tree_p *data);
+
+// Formatting of array rendering
+extern name_p  array_opening, array_closing, array_separator;
 
 #undef inline
-
-
-// Standard array separators
-extern array_delim_p array_paren, array_curly, array_square, array_indent;
-
-#define paren_array_new(pos, size, ...)   array_new(pos, array_paren, size, ## __VA_ARGS__)
-#define curly_array_new(pos, size, ...)   array_new(pos, array_curly, size, ## __VA_ARGS__)
-#define square_array_new(pos, size, ...)  array_new(pos, array_square, size, ## __VA_ARGS__)
-#define indent_array_new(pos, size, ...)  array_new(pos, array_indent, size, ## __VA_ARGS__)
 
 
 
@@ -91,23 +68,22 @@ extern array_delim_p array_paren, array_curly, array_square, array_indent;
 //
 // ============================================================================
 
-inline array_p array_make(tree_handler_fn h, srcpos_t pos, array_delim_p delim,
-                          size_t sz, tree_p *data)
+inline array_p array_make(tree_handler_fn h,
+                          srcpos_t pos, size_t sz, tree_p *data)
 // ----------------------------------------------------------------------------
 //   Create an array with the given parameters
 // ----------------------------------------------------------------------------
 {
-    return (array_p) tree_make(h, pos, delim, sz, data);
+    return (array_p) tree_make(h, pos, sz, data);
 }
 
 
-inline array_p array_new(srcpos_t position, array_delim_p delim,
-                         size_t length, tree_p *data)
+inline array_p array_new(srcpos_t position, size_t length, tree_p *data)
 // ----------------------------------------------------------------------------
 //    Allocate a array with the given data
 // ----------------------------------------------------------------------------
 {
-    return array_make(array_handler, position, delim, length, data);
+    return array_make(array_handler, position, length, data);
 }
 
 
@@ -136,15 +112,6 @@ inline tree_p array_set_child(array_p array, size_t index, tree_p child)
         children[index] = child;
     }
     return child;
-}
-
-
-inline array_delim_p array_delimiters(array_p array)
-// ----------------------------------------------------------------------------
-//   Return the data for the array
-// ----------------------------------------------------------------------------
-{
-    return array->delimiters;
 }
 
 
@@ -218,7 +185,7 @@ inline void array_pop(array_p *array)
                                                                         \
     inline type##_p type##_new(srcpos_t pos, size_t sz, item##_p *data) \
     {                                                                   \
-        return (type##_p) square_array_new(pos, sz, (tree_p *) data);   \
+        return (type##_p) array_new(pos, sz, (tree_p *) data);          \
     }                                                                   \
                                                                         \
     inline void type##_append(type##_p *t1, type##_p t2)                \
