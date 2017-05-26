@@ -225,6 +225,8 @@ static token_t parser_token(parser_p p)
         }
     } // While loop
 
+    name_dispose(&opening);
+    name_dispose(&closing);
     return result;
 }
 
