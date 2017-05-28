@@ -163,5 +163,5 @@ extern text_p text_vprintf(srcpos_t pos, const char *format, va_list va)
     memmove((char *) format, base + size + 1, act_size);
     text_range(&result, 0, offset + act_size);
 
-    return (text_p) result;
+    return result;
 }
