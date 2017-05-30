@@ -62,6 +62,7 @@ void parser_delete(parser_p p)
 {
     scanner_close(p->scanner, (FILE *) p->scanner->stream);
     scanner_delete(p->scanner);
+    text_dispose(&p->comment);
     free(p);
 }
 
@@ -419,12 +420,14 @@ static tree_p parser_block(parser_p p,
 
         case tokNEWLINE:
             // Consider new-line as an infix operator
-            name_set(&scanner->scanned.name, name_cnew(pos, "\n"));
-            // Intentionally Fall-through
+            name_set(&name, name_cnew(pos, "\n"));
+            goto common_symbols;
 
         case tokNAME:
         case tokSYMBOL:
             name_set(&name, scanner->scanned.name);
+
+        common_symbols:
             if (block && name_compare(name, block_closing) == 0)
             {
                 done = true;
@@ -663,6 +666,8 @@ static tree_p parser_block(parser_p p,
                          postfix_new(pos, last.argument, last.opcode));
             else
                 tree_set(&result, last.argument);
+            name_dispose(&last.opcode);
+            tree_dispose(&last.argument);
             pending_stack_pop(&stack);
         }
 
