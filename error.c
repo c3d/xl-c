@@ -80,7 +80,7 @@ static void error_display(text_p error)
     }
     else
     {
-        fprintf(stderr, "<unknown position>: %.*s\n",
+        fprintf(stderr, "%.*s\n",
                 (int) text_length(error), text_data(error));
     }
 }
