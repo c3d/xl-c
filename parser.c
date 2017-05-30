@@ -617,7 +617,7 @@ static tree_p parser_block(parser_p p,
                 {
                     // Something like A+B+C, just got second +
                     STACK_PUSH(infix, left, infix_priority);
-                    result = NULL;
+                    tree_set(&result, NULL);
                 }
                 tree_dispose(&left);
             }
@@ -687,6 +687,7 @@ static tree_p parser_block(parser_p p,
     pending_stack_dispose(&stack);
     syntax_dispose(&child_syntax);
     name_dispose(&child_syntax_end);
+    tree_unref(result);
 
     return result;
 }
