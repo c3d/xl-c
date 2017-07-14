@@ -213,8 +213,8 @@ inline void tree_delete(tree_p tree)
 
 #warning "Compiler not supported yet - Not thread safe"
 #define tree_fetch_add(Value, OFfset)   (Value += Offset)
-#define tree_add_fetch(Value, Offset)   ((Value += Offset) + Offset)
-#define tree_compare_exchange(Value, Expected, New)   Value = New
+#define tree_add_fetch(Value, Offset)   ((Value += Offset), Value)
+#define tree_compare_exchange(Value, Expected, New)   ((Value = New), true)
 
 #endif
 
