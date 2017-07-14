@@ -125,6 +125,145 @@ void array_range(array_p *array_ptr, size_t first, size_t length)
 }
 
 
+void array_sort(array_p array, compare_fn compare, size_t stride)
+// ----------------------------------------------------------------------------
+//   An implementation of qsort for arrays
+// ----------------------------------------------------------------------------
+//   This is inspired by the glibc implementation of qsort, but is
+//   inlined here so that we can use a compare_fn, where we pass tree_p
+//   and not tree_p *
+{
+    tree_p *data = array_data(array);
+    size_t length = array_length(array);
+    size_t item_count = length/stride;
+
+#define SWAP(x, y)                              \
+    do                                          \
+    {                                           \
+	tree_p *px = (x);                       \
+	tree_p *py = (y);                       \
+        for (size_t i = 0; i < stride; i++)     \
+        {                                       \
+            tree_p tmp = *px;                   \
+            *px++ = *py;                        \
+            *py++ = tmp;                        \
+        }                                       \
+    } while(0)
+
+    struct stack_node
+    {
+        tree_p *lo;
+        tree_p *hi;
+    } stack[64], *top = stack;
+
+#define PUSH(l, h)      do { top->lo = (l); top->hi = (h); top++; } while(0)
+#define POP(l, h)       do { --top; (l) = top->lo; (h) = top->hi; } while(0)
+#define EMPTY           (top <= stack)
+
+    if (item_count > 1)
+    {
+        tree_p *lo = data;
+        tree_p *hi = &data[length - stride];
+
+        PUSH(lo, hi);
+        do
+        {
+            tree_p *mid = lo + stride * ((hi - lo) / stride >> 1);
+
+            if (compare(*mid, *lo) < 0)
+                SWAP (mid, lo);
+            if (compare(*hi, *mid) < 0)
+            {
+                SWAP (mid, hi);
+                if (compare(*mid, *lo) < 0)
+                    SWAP (mid, lo);
+            }
+            tree_p *left  = lo + stride;
+            tree_p *right = hi - stride;
+
+            do
+            {
+                while (compare(*left, *mid) < 0)
+                    left += stride;
+                while (compare(*mid, *right) < 0)
+                    right -= stride;
+
+                if (left < right)
+                {
+                    SWAP (left, right);
+                    if (mid == left)
+                        mid = right;
+                    else if (mid == right)
+                        mid = left;
+                    left += stride;
+                    right -= stride;
+                }
+                else if (left == right)
+                {
+                    left += stride;
+                    right -= stride;
+                    break;
+                }
+            }
+            while (left <= right);
+
+            if ((size_t) (right - lo) < stride)
+            {
+                if ((size_t) (hi - left) < stride)
+                    POP (lo, hi);
+                else
+                    lo = left;
+            }
+            else if ((size_t) (hi - left) < stride)
+            {
+                hi = right;
+            }
+            else if ((right - lo) > (hi - left))
+            {
+                PUSH (lo, right);
+                lo = left;
+            }
+            else
+            {
+                PUSH (left, hi);
+                hi = right;
+            }
+        } while (!EMPTY);
+    }
+}
+
+
+int array_search(array_p array, tree_p key,
+                 compare_fn compare, size_t stride)
+// ----------------------------------------------------------------------------
+//   Search the array for the given key, using given compare function
+// ----------------------------------------------------------------------------
+{
+    tree_p *data  = array_data(array);
+    size_t  first = 0;
+    size_t  last  = array_length(array) / stride;
+    size_t  mid   = (first + last) / 2;
+
+    while (first < last)
+    {
+        int cmp  = compare(key, data[mid * stride]);
+        if (cmp == 0)
+            return mid;
+        size_t old = mid;
+        if(cmp > 0)
+            first = mid;
+        else
+            last = mid;
+        mid  = (first + last) / 2;
+        if (mid == old)
+            break;
+    }
+
+    // Not found - Return closest location
+    return ~mid;
+}
+
+
 tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 //   The handler for arrays deals mostly with variable-sized initialization

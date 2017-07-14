@@ -182,24 +182,12 @@ static inline void set_syntax(array_p *array,
 }
 
 
-static int compare(const void *d1, const void *d2)
-// ----------------------------------------------------------------------------
-//   Comparison routine to sort priority arrays
-// ----------------------------------------------------------------------------
-{
-    name_p *tp1 = (name_p *) d1;
-    name_p *tp2 = (name_p *) d2;
-    return name_compare(*tp1, *tp2);
-}
-
-
-static inline void sort(array_p array, size_t count)
+static inline void sort(array_p array, size_t stride)
 // ----------------------------------------------------------------------------
 //   Sort priority array
 // ----------------------------------------------------------------------------
 {
-    size_t elem_size = count * sizeof(tree_p);
-    qsort(array_data(array), array_length(array)/count, elem_size, compare);
+    array_sort(array, (compare_fn) name_compare, stride);
 }
 
 
@@ -410,42 +398,12 @@ void syntax_read_file(syntax_p syntax, const char *filename)
 //
 // ============================================================================
 
-static int search_internal(array_p array, name_p key, size_t stride,
-                           unsigned in_first, unsigned in_last)
-// ----------------------------------------------------------------------------
-//   Binary search on sorted entries in array
-// ----------------------------------------------------------------------------
-{
-    tree_p   *data = array_data(array);
-    unsigned  first = in_first;
-    unsigned  last = in_last;
-    unsigned  mid  = (first + last) / 2;
-
-    while (first < last)
-    {
-        int cmp  = compare(&key, data + mid * stride);
-        if (cmp == 0)
-            return mid;
-        unsigned old = mid;
-        if(cmp > 0)
-            first = mid;
-        else
-            last = mid;
-        mid  = (first + last) / 2;
-        if (mid == old)
-            break;
-    }
-
-    // Not found - Return closest location
-    return ~mid;
-}
-
 static inline int search(array_p array, name_p key, size_t stride)
 // ----------------------------------------------------------------------------
 //   Binary search on array
 // ----------------------------------------------------------------------------
 {
-    return search_internal(array, key, stride, 0, array_length(array)/stride);
+    return array_search(array, (tree_p) key, (compare_fn) name_compare, stride);
 }
 
 

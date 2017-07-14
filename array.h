@@ -51,6 +51,12 @@ inline void     array_push(array_p *array, tree_p value);
 inline tree_p   array_top(array_p array);
 inline void     array_pop(array_p *array);
 
+// Sorting and searching
+typedef int     (*compare_fn) (tree_p elem1, tree_p elem2);
+extern void     array_sort(array_p array, compare_fn compare, size_t stride);
+extern int      array_search(array_p array, tree_p key,
+                             compare_fn compare, size_t stride);
+
 // Private array handler, should not be called directly in general
 extern tree_p  array_handler(tree_cmd_t cmd, tree_p tree, va_list va);
 inline array_p array_make(tree_handler_fn h, srcpos_t, size_t, tree_p *data);
