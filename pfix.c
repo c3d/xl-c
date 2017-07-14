@@ -20,6 +20,7 @@
 
 #define PFIX_C
 #include "pfix.h"
+#include "renderer.h"
 #include <stdlib.h>
 #include <strings.h>
 
@@ -30,8 +31,7 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     pfix_p     pfix = (pfix_p) tree;
-    tree_io_fn io;
-    void *     stream;
+    renderer_p renderer;
     tree_p     left, right;
 
     switch(cmd)
@@ -71,10 +71,9 @@ tree_p pfix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Render left then right
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
-        tree_render(pfix->left, io, stream);
-        tree_render(pfix->right, io, stream);
+        renderer = va_arg(va, renderer_p);
+        render(renderer, pfix->left);
+        render(renderer, pfix->right);
         return tree;
 
     default:

@@ -38,6 +38,7 @@ array_type(text, errors);
 
 static errors_p    errors    = NULL;
 static positions_p positions = NULL;
+static renderer_p  renderer  = NULL;
 
 
 
@@ -154,6 +155,33 @@ positions_p error_set_positions(positions_p new_pos)
 {
     positions_p old = positions;
     positions = new_pos;
+    return old;
+}
+
+
+
+// ============================================================================
+//
+//    Error renderer
+//
+// ============================================================================
+
+renderer_p error_renderer()
+// ----------------------------------------------------------------------------
+//   Return current renderer records for errors
+// ----------------------------------------------------------------------------
+{
+    return renderer;
+}
+
+
+renderer_p error_set_renderer(renderer_p new_pos)
+// ----------------------------------------------------------------------------
+//    Set renderer records for errors, return old one
+// ----------------------------------------------------------------------------
+{
+    renderer_p old = renderer;
+    renderer = new_pos;
     return old;
 }
 

@@ -21,6 +21,7 @@
 
 #define NAME_C
 #include "name.h"
+#include "renderer.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -88,9 +89,8 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 {
     name_p        name = (name_p) tree;
     size_t        size;
-    tree_io_fn    io;
-    const char  * data;
-    void *        stream;
+    renderer_p    renderer;
+    const char *  data;
 
     switch(cmd)
     {
@@ -118,14 +118,11 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Dump the name as a string of characters, doubling quotes
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
-
+        renderer = va_arg(va, renderer_p);
         name = (name_p) tree;
         data = name_data(name);
         size = name_length(name);
-        if (io(stream, size, (void *) data) != size)
-            return NULL;
+        render_text(renderer, size, data);
         return tree;
 
     default:

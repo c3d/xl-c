@@ -21,6 +21,7 @@
 
 #define DELIMITED_TEXT_C
 #include "delimited_text.h"
+#include "renderer.h"
 
 tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
@@ -28,8 +29,7 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     size_t           size;
-    tree_io_fn       io;
-    void *           stream;
+    renderer_p       renderer;
     tree_handler_fn  cast_type;
     delimited_text_p dt;
     text_p           value;
@@ -78,16 +78,12 @@ tree_p delimited_text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Default rendering simply shows the tree address and handler address
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
         dt = (delimited_text_p) tree;
-        if (!name_render(dt->opening, io, stream))
-            return NULL;
+        render(renderer, (tree_p) dt->opening);
         size = text_length(dt->value);
-        if (io(stream, size, text_data(dt->value)) != size)
-            return NULL;
-        if (!name_render(dt->closing, io, stream))
-            return NULL;
+        render_text(renderer, size, text_data(dt->value));
+        render(renderer, (tree_p) dt->closing);
         return tree;
 
     case TREE_FREEZE:

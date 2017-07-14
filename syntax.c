@@ -23,6 +23,7 @@
 #include "syntax.h"
 
 #include "error.h"
+#include "renderer.h"
 #include "scanner.h"
 
 #include <stdlib.h>
@@ -66,8 +67,7 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     syntax_p   s = (syntax_p) tree;
-    tree_io_fn io;
-    void *     stream;
+    renderer_p renderer;
 
     switch (cmd)
     {
@@ -94,13 +94,12 @@ tree_p syntax_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return (tree_p) &s->filename;
 
     case TREE_RENDER:
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
 
-#define ioputs(child)                                   \
-        io(stream, sizeof(#child ": ")-1, #child ": ");  \
-        tree_render((tree_p) s->child, io, stream);     \
-        io(stream, 1, "\n");
+#define ioputs(child)                                                   \
+        render_text(renderer, sizeof(#child " -> ")-1, #child " -> ");  \
+        render(renderer, (tree_p) s->child);                            \
+        render_text(renderer, 1, "\n");
 
         ioputs(filename);
         ioputs(known);

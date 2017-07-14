@@ -26,6 +26,7 @@
 
 typedef uintptr_t         srcpos_t;
 typedef struct positions *positions_p;
+typedef struct renderer  *renderer_p;
 typedef struct errors    *errors_p;
 
 // Reporting errors - This accepts an extended printf format with %t for trees
@@ -34,6 +35,8 @@ extern void         error(srcpos_t position, const char *message, ...);
 extern void         errorv(srcpos_t position, const char *message, va_list);
 extern positions_p  error_positions(void);
 extern positions_p  error_set_positions(positions_p);
+extern renderer_p   error_renderer(void);
+extern renderer_p   error_set_renderer(renderer_p);
 
 // Providing an error context for complex, hierarchical errors
 extern errors_p     errors_save(void);

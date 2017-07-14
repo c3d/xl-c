@@ -39,6 +39,8 @@ int main(int argc, char *argv[])
 #endif
 
     positions_p positions = positions_new();
+    error_set_positions(positions);
+
     syntax_p syntax = syntax_new(PREFIX_PATH "xl.syntax");
     syntax_print(stderr, syntax);
 

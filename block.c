@@ -21,6 +21,7 @@
 
 #define BLOCK_C
 #include "block.h"
+#include "renderer.h"
 #include <stdlib.h>
 #include <strings.h>
 
@@ -131,8 +132,7 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     block_p    block = (block_p) tree;
-    tree_io_fn io;
-    void *     stream;
+    renderer_p renderer;
     size_t     size;
     tree_p     child;
     tree_p *   children_src;
@@ -187,19 +187,17 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Render the opening and closing, with child inbetween
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
         size = block->length;
         children_src = (tree_p *) (block + 1);
-
-        name_render(block->opening, io, stream);
+        render(renderer, (tree_p) block->opening);
         while (size--)
         {
-            tree_render(*children_src++, io, stream);
+            render(renderer, *children_src++);
             if (size)
-                name_render(block->separator, io, stream);
+                render(renderer, (tree_p) block->separator);
         }
-        name_render(block->closing, io, stream);
+        render(renderer, (tree_p) block->closing);
         return tree;
 
     default:

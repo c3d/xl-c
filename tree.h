@@ -36,18 +36,19 @@
 //
 // ============================================================================
 
-typedef struct tree    *tree_p;
-typedef struct integer *integer_p;
-typedef struct real    *real_p;
-typedef struct blob    *blob_p;
-typedef struct text    *text_p;
-typedef struct name    *name_p;
-typedef struct block   *block_p;
-typedef struct pfix    *pfix_p;
-typedef struct prefix  *prefix_p;
-typedef struct postfix *postfix_p;
-typedef struct infix   *infix_p;
-typedef struct array   *array_p;
+typedef struct tree     *tree_p;
+typedef struct integer  *integer_p;
+typedef struct real     *real_p;
+typedef struct blob     *blob_p;
+typedef struct text     *text_p;
+typedef struct name     *name_p;
+typedef struct block    *block_p;
+typedef struct pfix     *pfix_p;
+typedef struct prefix   *prefix_p;
+typedef struct postfix  *postfix_p;
+typedef struct infix    *infix_p;
+typedef struct array    *array_p;
+typedef struct renderer *renderer_p;
 
 // Macros to indicate source position
 #define SOURCE__(L)         #L
@@ -129,8 +130,8 @@ inline tree_p      tree_set_child(tree_p tree, unsigned index, tree_p child);
 inline tree_p      tree_copy(tree_p tree);
 inline tree_p      tree_clone(tree_p tree);
 extern text_p      tree_text(tree_p tree);
-extern bool        tree_print(FILE *stream, tree_p tree);
-inline bool        tree_render(tree_p tree, tree_io_fn output, void *stream);
+extern void        tree_print(FILE *stream, tree_p tree);
+extern void        tree_render(tree_p tree, renderer_p renderer);
 inline bool        tree_freeze(tree_p tree, tree_io_fn output, void *stream);
 inline tree_p      tree_thaw(tree_io_fn input, void *stream);
 extern tree_p      tree_io(tree_cmd_t cmd, tree_p tree, ...);
@@ -148,7 +149,7 @@ inline tree_handler_fn          tree_cast_handler(va_list va);
 #define tree_malloc(sz)         tree_malloc_(SOURCE, (sz))
 #define tree_realloc(old, sz)   tree_realloc_(SOURCE, (old), (sz))
 #define tree_free(t)            tree_free_(SOURCE, (t))
-#define tree_cast(type, tree)   tree_cast_(tree, type##_handler)
+#define tree_cast(type, tree)   ((type##_p) tree_cast_(tree, type##_handler))
 
 // Macro to loop on tree children
 #define tree_children_loop(tree, body)            \
@@ -323,7 +324,7 @@ inline srcpos_t tree_position(tree_p tree)
 //   Return the arity (number of children) of the tree in bytes
 // ----------------------------------------------------------------------------
 {
-    return tree->position;
+    return tree ? tree->position : 0;
 }
 
 
@@ -374,15 +375,6 @@ inline tree_p tree_clone(tree_p tree)
 // ----------------------------------------------------------------------------
 {
     return tree->handler(TREE_CLONE, tree, NULL);
-}
-
-
-inline bool tree_render(tree_p tree, tree_io_fn output, void *stream)
-// ----------------------------------------------------------------------------
-//   Invoke the render function in the handler, returns true if successful
-// ----------------------------------------------------------------------------
-{
-    return tree_io(TREE_RENDER, tree, output, stream) == tree;
 }
 
 
@@ -526,16 +518,15 @@ inline tree_handler_fn tree_cast_handler(va_list va)
         return tree_text((tree_p) type);                                \
     }                                                                   \
                                                                         \
-    inline bool type##_print(FILE *f, type##_p type)                    \
+    inline void type##_print(FILE *f, type##_p type)                    \
     {                                                                   \
-        return tree_print(f, (tree_p) type);                            \
+        tree_print(f, (tree_p) type);                                   \
     }                                                                   \
                                                                         \
                                                                         \
-    inline bool type##_render(type##_p type,                            \
-                              tree_io_fn output, void *stream)          \
+    inline void type##_render(type##_p type, renderer_p renderer)       \
     {                                                                   \
-        return tree_render((tree_p) type, output, stream);              \
+        tree_render((tree_p) type, renderer);                           \
     }                                                                   \
                                                                         \
     inline bool type##_freeze(type##_p type,                            \

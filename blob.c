@@ -21,6 +21,9 @@
 
 #define BLOB_C
 #include "blob.h"
+
+#include "renderer.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -125,9 +128,8 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 {
     blob_p        blob = (blob_p) tree;
     size_t        size, idx;
-    tree_io_fn    io;
+    renderer_p    renderer;
     const char  * data;
-    void *        stream;
     char          buffer[32];
 
     switch(cmd)
@@ -169,17 +171,13 @@ tree_p blob_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Dump the blob as an hexadecimal string
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
-
-        if (io(stream, 1, "$") != 1)
-            return NULL;        // Some error happened, report
+        renderer = va_arg(va, renderer_p);
+        render_text(renderer, 1, "$");
         data = (const char *) (blob + 1);
         for (idx = 0; idx < blob->length;idx++)
         {
             size = snprintf(buffer, sizeof(buffer), "%02X", data[idx]);
-            if (io(stream, size, buffer) != size)
-                return NULL;
+            render_text(renderer, size, buffer);
         }
         return tree;
 

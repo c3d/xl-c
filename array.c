@@ -21,6 +21,7 @@
 
 #define ARRAY_C
 #include "array.h"
+#include "renderer.h"
 #include <stdlib.h>
 #include <strings.h>
 
@@ -270,8 +271,7 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     array_p       array = (array_p) tree;
-    tree_io_fn    io;
-    void *        stream;
+    renderer_p    renderer;
     size_t        size;
     tree_p        child;
     tree_p *      children_src;
@@ -319,26 +319,24 @@ tree_p array_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Render the opening and closing, with child inbetween
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
         size = array->length;
         children_src = (tree_p *) (array + 1);
-
         if (array_opening)
-            name_render(array_opening, io, stream);
+            render(renderer, (tree_p) array_opening);
         while (size--)
         {
-            tree_render(*children_src++, io, stream);
+            render(renderer, *children_src++);
             if (size)
             {
                 if (array_separator)
-                    name_render(array_separator, io, stream);
+                    render(renderer, (tree_p) array_separator);
                 else
-                    io(stream, 1, " ");
+                    render_text(renderer, 1, " ");
             }
         }
         if (array_closing)
-            name_render(array_closing, io, stream);
+            render(renderer, (tree_p) array_closing);
         return tree;
 
     default:

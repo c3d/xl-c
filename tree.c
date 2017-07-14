@@ -23,6 +23,7 @@
 
 #include "error.h"
 #include "recorder.h"
+#include "renderer.h"
 #include "text.h"
 
 #include <stdio.h>
@@ -271,6 +272,15 @@ tree_p tree_io(tree_cmd_t cmd, tree_p tree, ...)
 }
 
 
+void tree_render(tree_p tree, renderer_p renderer)
+// ----------------------------------------------------------------------------
+//   Render the tree to the given renderer
+// ----------------------------------------------------------------------------
+{
+    render(renderer, tree);
+}
+
+
 static unsigned tree_text_output(void *stream, unsigned size, void *data)
 // ----------------------------------------------------------------------------
 //   Append incoming text to the text
@@ -283,6 +293,20 @@ static unsigned tree_text_output(void *stream, unsigned size, void *data)
 }
 
 
+static void render_to(tree_p tree, tree_io_fn out, void *stream)
+// ----------------------------------------------------------------------------
+//   Use the error render to render to a specific I/O function
+// ----------------------------------------------------------------------------
+{
+    renderer_p  renderer    = error_renderer();
+    tree_io_fn  save_out    = renderer_output_function(renderer, out);
+    void       *save_stream = renderer_output_stream(renderer, stream);
+    render(renderer, tree);
+    renderer_output_function(renderer, save_out);
+    renderer_output_stream(renderer, save_stream);
+}
+
+
 text_p tree_text(tree_p tree)
 // ----------------------------------------------------------------------------
 //   Convert the tree to text by using the render callback
@@ -291,7 +315,7 @@ text_p tree_text(tree_p tree)
     if (!tree)
         return text_cnew(0, "<null>");
     text_p result = text_cnew(tree->position, "");
-    tree_render(tree, tree_text_output, &result);
+    render_to(tree, tree_text_output, &result);
     return result;
 }
 
@@ -306,12 +330,12 @@ static unsigned tree_print_output(void *stream, unsigned size, void *data)
 }
 
 
-bool tree_print(FILE *stream, tree_p tree)
+void tree_print(FILE *stream, tree_p tree)
 // ----------------------------------------------------------------------------
 //    Print the tree to the given file output (typically stdout)
 // ----------------------------------------------------------------------------
 {
-    return tree_render(tree, tree_print_output, stream);
+    render_to(tree, tree_print_output, stream);
 }
 
 
@@ -322,8 +346,7 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 {
     tree_p          copy;
     size_t          size;
-    tree_io_fn      io;
-    void *          stream;
+    renderer_p      renderer;
     char            buffer[32];
 
     switch(cmd)
@@ -385,13 +408,11 @@ tree_p tree_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Default rendering simply shows the tree address and handler address
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
         size = snprintf(buffer, sizeof(buffer),
                         "<%s:%p:%p>",
                         tree_typename(tree), tree,tree->handler);
-        if (io(stream, size, buffer) != size)
-            return NULL;        // Some error happened, report
+        render_text(renderer, size, buffer);
         return tree;
 
     case TREE_FREEZE:

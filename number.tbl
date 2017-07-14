@@ -22,7 +22,7 @@
 
 NUMBER(integer,         "%lld", long long,              long long)
 NUMBER(natural,         "%llu", unsigned long long,     unsigned long long)
-NUMBER(character,       "%lc",  wchar_t,                wint_t)
+NUMBER(character,       "'%lc'",wchar_t,                wint_t)
 NUMBER(pointer,         "%p",   char *,                 char *)
 
 NUMBER(i8,              "%d",   int8_t,                 int)

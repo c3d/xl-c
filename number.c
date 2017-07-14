@@ -21,6 +21,7 @@
 
 #define NUMBER_C
 #include "number.h"
+#include "renderer.h"
 #include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,9 +33,8 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
 {                                                                       \
     number##_p    number = (number##_p) tree;                           \
     size_t        size;                                                 \
-    tree_io_fn    io;                                                   \
     reptype       value;                                                \
-    void *        stream;                                               \
+    renderer_p    renderer;                                             \
     char          buffer[32];                                           \
                                                                         \
     switch(cmd)                                                         \
@@ -53,19 +53,18 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
             return tree;                                                \
         break;                                                          \
                                                                         \
-case TREE_INITIALIZE:                                                   \
+    case TREE_INITIALIZE:                                               \
         value = va_arg(va, va_type);                                    \
         number = (number##_p) tree_malloc(sizeof(number##_t));          \
         number->value = value;                                          \
         return (tree_p) number;                                         \
                                                                         \
     case TREE_RENDER:                                                   \
-        io = va_arg(va, tree_io_fn);                                    \
-        stream = va_arg(va, void *);                                    \
+        /* Revisit: Add quote for character */                          \
+        renderer = va_arg(va, renderer_p);                              \
         value = number->value;                                          \
         size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
-        if (io(stream, size, buffer) != size)                           \
-            return NULL;                                                \
+        render_text(renderer, size, buffer);                            \
         return tree;                                                    \
                                                                         \
     default:                                                            \
@@ -79,10 +78,9 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
 {                                                                       \
     based_##number##_p number = (based_##number##_p) tree;              \
     size_t             size;                                            \
-    tree_io_fn         io;                                              \
     reptype            value;                                           \
     unsigned           base;                                            \
-    void *             stream;                                          \
+    renderer_p         renderer;                                        \
     char               buffer[32];                                      \
                                                                         \
     switch(cmd)                                                         \
@@ -110,16 +108,14 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
         return (tree_p) number;                                         \
                                                                         \
     case TREE_RENDER:                                                   \
-        io = va_arg(va, tree_io_fn);                                    \
-        stream = va_arg(va, void *);                                    \
+        /* REVISIT: Does not print correctly in base */                 \
+        renderer = va_arg(va, renderer_p);                              \
         base = number->base;                                            \
         size = snprintf(buffer, sizeof(buffer), "%u#", base);           \
-        if (io(stream, size, buffer) != size)                           \
-            return NULL;                                                \
+        render_text(renderer, size, buffer);                            \
         value = number->number.value;                                   \
         size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
-        if (io(stream, size, buffer) != size)                           \
-            return NULL;                                                \
+        render_text(renderer, size, buffer);                            \
         return tree;                                                    \
                                                                         \
     default:                                                            \

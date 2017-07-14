@@ -22,6 +22,8 @@
 #define TEXT_C
 #include "text.h"
 
+#include "renderer.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -33,10 +35,8 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 {
     text_p        text = (text_p) tree;
     size_t        size;
-    tree_io_fn    io;
     const char  * data;
-    void *        stream;
-    bool          failed;
+    renderer_p    renderer;
 
     switch(cmd)
     {
@@ -52,23 +52,15 @@ tree_p text_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Dump the text as a string of characters, doubling quotes
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
+        renderer = va_arg(va, renderer_p);
 
         text = (text_p) tree;
         data = text_data(text);
         size = text_length(text);
-        failed = io(stream, 1, "\"") != 1;
-        while (size--)
-        {
-            char c = *data++;
-            if (c == '"')
-                failed |= io(stream, 2, "\"\"") != 2;
-            else
-                failed |= io(stream, 1, &c) != 1;
-        }
-        failed |= io(stream, 1, "\"") != 1;
-        return failed ? NULL : tree;
+        render_open_quote(renderer, '"');
+        render_text(renderer, size, data);
+        render_close_quote(renderer, '"');
+        return tree;
 
     default:
         break;

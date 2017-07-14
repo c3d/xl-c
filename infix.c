@@ -22,6 +22,7 @@
 #define INFIX_C
 #include "infix.h"
 #include "name.h"
+#include "renderer.h"
 #include <stdlib.h>
 #include <strings.h>
 
@@ -32,8 +33,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 // ----------------------------------------------------------------------------
 {
     infix_p    infix = (infix_p) tree;
-    tree_io_fn io;
-    void *     stream;
+    renderer_p renderer;
     tree_p     left, right;
     name_p     opcode;
 
@@ -48,7 +48,7 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         return (tree_p) (sizeof(infix_t));
 
     case TREE_ARITY:
-        // Prefix and postfix have three children
+        // Infix nodes have three children
         return (tree_p) 3;
 
     case TREE_CAST:
@@ -76,11 +76,10 @@ tree_p infix_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_RENDER:
         // Render left then right
-        io = va_arg(va, tree_io_fn);
-        stream = va_arg(va, void *);
-        tree_render(infix->left, io, stream);
-        name_render(infix->opcode, io, stream);
-        tree_render(infix->right, io, stream);
+        renderer = va_arg(va, renderer_p);
+        render(renderer, (tree_p) infix->left);
+        render(renderer, (tree_p) infix->opcode);
+        render(renderer, (tree_p) infix->right);
         return tree;
 
     default:
