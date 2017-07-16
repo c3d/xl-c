@@ -45,8 +45,8 @@ POSTFIX
         420     ++ --
 
 BLOCK
-        11      INDENT UNINDENT '{' '}'
-        231     '(' ')' '[' ']'
+        11      INDENT UNINDENT "{" "}"
+        231     "(" ")" "[" "]"
 
 TEXT
         "<<" ">>"
