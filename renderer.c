@@ -80,13 +80,15 @@ renderer_p renderer_new(const char *style)
 {
     renderer_p result = malloc(sizeof(renderer_t));
     memset(result, 0, sizeof(renderer_t));
-    text_set(&result->cr, text_cnew(0, "\n"));
-    text_set(&result->space, text_cnew(0, " "));
-    text_set(&result->indent, text_cnew(0, "indent"));
-    text_set(&result->begin, text_cnew(0, "begin"));
-    text_set(&result->end, text_cnew(0, "end"));
     if (style)
+    {
+        text_set(&result->cr, text_cnew(0, "\n"));
+        text_set(&result->space, text_cnew(0, " "));
+        text_set(&result->indent, text_cnew(0, "indent"));
+        text_set(&result->begin, text_cnew(0, "begin"));
+        text_set(&result->end, text_cnew(0, "end"));
         renderer_style(result, style);
+    }
     return result;
 }
 
@@ -371,6 +373,10 @@ static bool render_format(renderer_p r, text_p format)
 //   Render a given format if found
 // ----------------------------------------------------------------------------
 {
+    // During emergency rendering, we may not have 'cr', 'space', etc
+    if (!format)
+        return false;
+
     // Find if format has text form, e.g "ABC" or 'ABC'
     size_t length = text_length(format);
     if (length >= 2)
