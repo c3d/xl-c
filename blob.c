@@ -91,7 +91,8 @@ void blob_range(blob_p *blob_ptr, size_t first, size_t length)
     memmove(in_place + 1, blob_data(blob) + first, resized);
     in_place->length = resized;
     if (in_place == blob)
-        in_place = (blob_p) tree_realloc((tree_p) in_place, sizeof(blob_t) + resized);
+        in_place = (blob_p) tree_realloc((tree_p) in_place,
+                                         sizeof(blob_t) + resized);
     blob_unref(blob);
 
     if (in_place != blob)
