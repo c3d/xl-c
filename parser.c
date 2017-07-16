@@ -688,6 +688,7 @@ static tree_p parser_block(parser_p p,
     pending_stack_dispose(&stack);
     syntax_dispose(&child_syntax);
     name_dispose(&child_syntax_end);
+    syntax_dispose(&syntax);
     if (result)
         tree_unref(result);
 
