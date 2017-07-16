@@ -798,7 +798,7 @@ text_p scanner_skip(scanner_p s, name_p closing)
     bool        skip     = false;
 
     // Clear source and scanned value if any
-    text_dispose(&s->source);
+    text_set(&s->source, text_new(position, 0, NULL));
     text_dispose(&s->scanned.text);
 
     while (*match && c != EOF)
