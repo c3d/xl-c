@@ -213,6 +213,7 @@ static token_t parser_token(parser_p p)
 
         default:
             p->beginning_line = false;
+            result = next;
             break;
         } // switch (next)
 
@@ -687,7 +688,8 @@ static tree_p parser_block(parser_p p,
     pending_stack_dispose(&stack);
     syntax_dispose(&child_syntax);
     name_dispose(&child_syntax_end);
-    tree_unref(result);
+    if (result)
+        tree_unref(result);
 
     return result;
 }
