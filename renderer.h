@@ -26,7 +26,7 @@
 
 
 typedef struct renderer *renderer_p;
-extern renderer_p       renderer_new(void);
+extern renderer_p       renderer_new(const char *style);
 extern void             renderer_delete(renderer_p renderer);
 
 extern syntax_p         renderer_syntax(renderer_p, syntax_p);

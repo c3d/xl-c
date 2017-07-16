@@ -73,7 +73,7 @@ typedef struct renderer
 //
 // ============================================================================
 
-renderer_p renderer_new(void)
+renderer_p renderer_new(const char *style)
 // ----------------------------------------------------------------------------
 //   Create a default-initialized renderer
 // ----------------------------------------------------------------------------
@@ -85,6 +85,8 @@ renderer_p renderer_new(void)
     text_set(&result->indent, text_cnew(0, "indent"));
     text_set(&result->begin, text_cnew(0, "begin"));
     text_set(&result->end, text_cnew(0, "end"));
+    if (style)
+        renderer_style(result, style);
     return result;
 }
 
@@ -155,8 +157,7 @@ static inline bool eq(text_p text, const char *str)
 }
 
 
-void renderer_style(renderer_p   renderer,
-                    const char  *style)
+void renderer_style(renderer_p renderer, const char  *style)
 // ----------------------------------------------------------------------------
 //    Load a style from the given style file
 // ----------------------------------------------------------------------------

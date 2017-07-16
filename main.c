@@ -25,6 +25,7 @@
 #include "parser.h"
 #include "position.h"
 #include "recorder.h"
+#include "renderer.h"
 #include "text.h"
 
 #include <stdio.h>
@@ -41,6 +42,9 @@ int main(int argc, char *argv[])
     positions_p positions = positions_new();
     error_set_positions(positions);
 
+    renderer_p renderer = renderer_new(PREFIX_PATH "xl.stylesheet");
+    error_set_renderer(renderer);
+
     syntax_p syntax = syntax_new(PREFIX_PATH "xl.syntax");
     syntax_print(stderr, syntax);
 
@@ -53,6 +57,7 @@ int main(int argc, char *argv[])
         tree_dispose(&tree);
     }
     syntax_dispose(&syntax);
+    renderer_delete(renderer);
     positions_delete(positions);
 
     tree_memcheck(0);
