@@ -339,13 +339,12 @@ void render(renderer_p r, tree_p tree)
 {
     const char *type = tree_typename(tree);
     text_p format = text_cnew(tree_position(tree), type);
-    tree_p save_self = tree_use(r->self);
-    tree_set(&r->self, tree);
+    tree_p save_self = r->self;
+    r->self = tree;
     if (!render_format(r, format))
         tree_io(TREE_RENDER, tree, r);
+    r->self = save_self;
     text_dispose(&format);
-    tree_set(&r->self, save_self);
-    tree_dispose(&save_self);
 }
 
 
