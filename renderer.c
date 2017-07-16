@@ -167,7 +167,7 @@ void renderer_style(renderer_p renderer, const char  *style)
     FILE        *file            = scanner_open(scanner, style);
     text_p       entry           = NULL;
     array_p      format          = NULL;
-    array_p      formats         = array_new(0, 0, NULL);
+    array_p      formats         = array_use(array_new(0, 0, NULL));
     token_t      token           = tokNONE;
     name_p       end_c_comment   = name_cnew(0, "*/");
     name_p       end_cpp_comment = name_cnew(0, "\n");
@@ -203,7 +203,7 @@ void renderer_style(renderer_p renderer, const char  *style)
                 {
                     error(pos, "No text or symbol precedes equal sign");
                 }
-                format = array_new(pos, 0, NULL);
+                array_set(&format, array_new(pos, 0, NULL));
             }
             else if (eq(source, "/*"))
             {
