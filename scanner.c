@@ -48,7 +48,7 @@ scanner_p scanner_new(positions_p positions, syntax_p syntax)
     s->positions = positions;
     s->reader = NULL;
     s->stream = NULL;
-    s->syntax = syntax;
+    s->syntax = syntax_use(syntax);
     s->source = NULL;
     s->scanned.text = NULL;
     s->indents = indents_new(position(positions), 0, NULL);
@@ -75,6 +75,7 @@ void scanner_delete(scanner_p s)
     tree_dispose(&s->scanned.tree);
     indents_dispose(&s->indents);
     name_dispose(&s->block_close);
+    syntax_dispose(&s->syntax);
     free(s);
 }
 
