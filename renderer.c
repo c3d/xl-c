@@ -207,11 +207,13 @@ void renderer_style(renderer_p renderer, const char  *style)
             }
             else if (eq(source, "/*"))
             {
-                scanner_skip(scanner, end_c_comment);
+                text_p comment = scanner_skip(scanner, end_c_comment);
+                text_dispose(&comment);
             }
             else if (eq(source, "//"))
             {
-                scanner_skip(scanner, end_cpp_comment);
+                text_p comment = scanner_skip(scanner, end_cpp_comment);
+                text_dispose(&comment);
             }
             else if (format)
             {
