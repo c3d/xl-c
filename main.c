@@ -45,21 +45,26 @@ int main(int argc, char *argv[])
     renderer_p renderer = renderer_new(PREFIX_PATH "xl.stylesheet");
     error_set_renderer(renderer);
 
-    syntax_p syntax = syntax_new(PREFIX_PATH "xl.syntax");
+    syntax_p syntax = syntax_use(syntax_new(PREFIX_PATH "xl.syntax"));
     syntax_print(stderr, syntax);
 
     for (int arg = 1; arg < argc; arg++)
     {
         parser_p parser = parser_new(argv[arg], positions, syntax);
-        tree_p tree = parser_parse(parser);
+        tree_p tree = tree_use(parser_parse(parser));
         tree_print(stdout, tree);
         parser_delete(parser);
         tree_dispose(&tree);
     }
+
     syntax_dispose(&syntax);
     renderer_delete(renderer);
     positions_delete(positions);
 
+    renderer_p last_renderer = renderer_new(NULL);
+    error_set_renderer(last_renderer);
     tree_memcheck(0);
+    renderer_delete(last_renderer);
+
     return 0;
 }

@@ -468,31 +468,35 @@ static bool render_format(renderer_p r, text_p format)
     }
 
     // Find if format was declared in style sheet
-    int index = array_search(r->formats,
-                             (tree_p)format,
-                             (compare_fn) text_compare,
-                             2);
-    if (index >= 0)
+    if (r->formats)
     {
-        // It was found: render all elements in array in turn
-        array_p seq  = (array_p) array_child(r->formats, 2*index+1);
-        size_t  len  = array_length(seq);
-        text_p *data = (text_p *) array_data(seq);
-        bool    err  = false;
-        for (size_t i = 0; i < len; i++)
+        int index = array_search(r->formats,
+                                 (tree_p)format,
+                                 (compare_fn) text_compare,
+                                 2);
+        if (index >= 0)
         {
-            if (!render_format(r, *data++))
+            // It was found: render all elements in array in turn
+            array_p seq  = (array_p) array_child(r->formats, 2*index+1);
+            size_t  len  = array_length(seq);
+            text_p *data = (text_p *) array_data(seq);
+            bool    err  = false;
+            for (size_t i = 0; i < len; i++)
             {
-                if (err == false)
+                if (!render_format(r, *data++))
                 {
-                    err = true;
-                    error(text_position(format), "While rendering %t", format);
-                    error(text_position(data[-1]),
-                          "Invalid format directive %t", data[-1]);
+                    if (err == false)
+                    {
+                        err = true;
+                        error(text_position(format),
+                              "While rendering %t", format);
+                        error(text_position(data[-1]),
+                              "Invalid format directive %t", data[-1]);
+                    }
                 }
             }
+            return true;
         }
-        return true;
     }
 
     // Nothing found
