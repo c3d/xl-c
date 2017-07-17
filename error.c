@@ -20,12 +20,14 @@
 // ****************************************************************************
 
 #include "error.h"
-#include "text.h"
+
+#include "array.h"
+#include "array.h"
 #include "blob.h"
 #include "position.h"
-#include "array.h"
-#include "position.h"
-#include "array.h"
+#include "recorder.h"
+#include "text.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +42,7 @@ static errors_p    errors    = NULL;
 static positions_p positions = NULL;
 static renderer_p  renderer  = NULL;
 
+RECORDER(ERROR, 64, "Error messages being recorder");
 
 
 // ============================================================================
@@ -125,6 +128,7 @@ void errorv(srcpos_t position, const char *message, va_list va)
 // ----------------------------------------------------------------------------
 {
     text_p err = text_vprintf(position, message, va);
+    RECORD(ERROR, "Error message '%s' = '%s'", message, text_data(err));
     if (errors)
         errors_push(&errors, err);
     else
