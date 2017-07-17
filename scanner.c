@@ -713,6 +713,12 @@ token_t scanner_read(scanner_p s)
         for(;;)
         {
             // Check end of text
+            if (c == EOF)
+            {
+                error(pos, "End of input in the middle of a text");
+                s->had_space_after = false;
+                c = eos;
+            }
             if (c == eos)
             {
                 c = scanner_nextchar(s, c);
@@ -733,14 +739,6 @@ token_t scanner_read(scanner_p s)
                 }
 
                 // Doubling the quoting character puts it in the text
-            }
-            if (c == EOF)
-            {
-                error(pos, "End of input in the middle of a text");
-                s->had_space_after = false;
-                text_set(&s->scanned.text, (text_p) text);
-                text_dispose(&text);
-                return eos == '"' ? tokTEXT : tokCHARACTER;
             }
             char ch = (char) c;
             text_append_data(&text, 1, &ch);
