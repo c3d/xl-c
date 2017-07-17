@@ -31,6 +31,8 @@
 #include <string.h>
 
 
+RECORDER(ALLOC, 128, "Tree allocations");
+
 #ifndef NDEBUG
 
 typedef struct tree_debug
@@ -457,10 +459,40 @@ const char *tree_cmd_name(tree_cmd_t cmd)
 }
 
 
+void debugi(tree_p tree, unsigned indent, unsigned index)
+// ----------------------------------------------------------------------------
+//   For use in the debugger
+// ----------------------------------------------------------------------------
+{
+    if (!tree)
+    {
+        printf("NULL\n");
+    }
+    else
+    {
+        const char *type = tree_typename(tree);
+        size_t arity = tree_arity(tree);
+        printf("%*s%u: %p=%s*%zu: ", indent*2, "", index, tree,type, arity);
+        if (arity)
+        {
+            printf("\n");
+            tree_p *children = tree_children(tree);
+            for (size_t i = 0; i < arity; i++)
+                debugi(children[i], indent + 1, i);
+        }
+        else
+        {
+            tree_print(stdout, tree);
+            printf("\n");
+        }
+    }
+}
+
+
 void debugt(void *p)
 // ----------------------------------------------------------------------------
 //   For use in the debugger
 // ----------------------------------------------------------------------------
 {
-    tree_print(stderr, (tree_p) p);
+    debugi(p, 0, 0);
 }

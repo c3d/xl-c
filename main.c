@@ -31,6 +31,9 @@
 #include <stdio.h>
 #include <string.h>
 
+
+RECORDER(MAIN, 32, "Main function");
+
 int main(int argc, char *argv[])
 {
     RECORD(MAIN, "Starting %s with %d args", argv[0], argc);

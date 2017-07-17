@@ -38,9 +38,12 @@ SOURCES     =			\
 	parser.c		\
 	renderer.c		\
 	utf8.c			\
-	recorder/recorder.c
+	recorder/recorder.c	\
+	recorder/ring.c
 
 PRODUCTS=xl.exe
+
+CONFIG= struct_sigaction
 
 INCLUDES=recorder .
 
