@@ -46,13 +46,12 @@ int main(int argc, char *argv[])
     error_set_renderer(renderer);
 
     syntax_p syntax = syntax_use(syntax_new(PREFIX_PATH "xl.syntax"));
-    syntax_print(stderr, syntax);
-
     for (int arg = 1; arg < argc; arg++)
     {
         parser_p parser = parser_new(argv[arg], positions, syntax);
         tree_p tree = tree_use(parser_parse(parser));
-        tree_print(stdout, tree);
+        fprintf(stderr, "File #%d: %s: ", arg, argv[arg]);
+        tree_print(stderr, tree);
         parser_delete(parser);
         tree_dispose(&tree);
     }
