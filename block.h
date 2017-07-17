@@ -97,6 +97,9 @@ inline tree_p block_child(block_p block, size_t index)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
+//   WARNING: index does not match that of tree_child.
+//   block_child(block, N) == tree_child(block, N+3)
+//   That's because tree_child also includes opening, closing and separator
 {
     assert(index < block->length && "Block index must be within bounds");
     tree_p *children = (tree_p *) (block + 1);
@@ -108,6 +111,9 @@ inline tree_p block_set_child(block_p block, size_t index, tree_p child)
 // ----------------------------------------------------------------------------
 //   Return the data for the block
 // ----------------------------------------------------------------------------
+//   WARNING: index does not match that of tree_child.
+//   block_child(block, N) == tree_child(block, N+3)
+//   That's because tree_child also includes opening, closing and separator
 {
     assert(index < block->length && "Block index must be within bounds");
     tree_p *children = (tree_p *) (block + 1);
