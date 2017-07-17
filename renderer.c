@@ -359,7 +359,8 @@ static bool render_child(renderer_p r, unsigned child)
         size_t arity = tree_arity(self);
         if (child < arity)
         {
-            render(r, tree_child(self, child));
+            tree_p child_tree = tree_child(self, child);
+            render(r, child_tree);
             return true;
         }
     }
