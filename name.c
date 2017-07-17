@@ -122,7 +122,10 @@ tree_p name_handler(tree_cmd_t cmd, tree_p tree, va_list va)
         name = (name_p) tree;
         data = name_data(name);
         size = name_length(name);
-        render_text(renderer, size, data);
+        if (name_eq(name, "\n"))
+            render_text(renderer, 2, "\\n");
+        else
+            render_text(renderer, size, data);
         return tree;
 
     default:
