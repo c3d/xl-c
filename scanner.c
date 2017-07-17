@@ -24,12 +24,16 @@
 
 #include "error.h"
 #include "name.h"
+#include "recorder.h"
 #include "utf8.h"
 
 #include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+RECORDER(SCANNER, 64, "Recording tokens that were scanned");
 
 
 
@@ -98,6 +102,7 @@ FILE *scanner_open(scanner_p s, const char *file)
     FILE *f = fopen(file, "r");
     if (f)
         scanner_open_stream(s, file, scanner_file_read, f);
+    RECORD(SCANNER, "Open file '%s' = %p", file, f);
     return f;
 }
 
@@ -109,6 +114,7 @@ void scanner_close(scanner_p s, FILE *f)
 {
     if (f)
         fclose(f);
+    RECORD(SCANNER, "Close file %p", f);
     scanner_close_stream(s, f);
 }
 
@@ -286,12 +292,17 @@ token_t scanner_read(scanner_p s)
 
     // Check if we have something to read
     if (!s->reader)
+    {
+        RECORD(SCANNER, "At pos %u return EOF", pos);
         return tokEOF;
+    }
 
     // Check if we unindented far enough for multiple indents
     s->had_space_before = true;
     if (indents_length(s->indents) > 0 && indents_top(s->indents) > s->indent)
     {
+        RECORD(SCANNER, "At pos %u return UNINDENT, indent %u > %u",
+               pos, indents_top(s->indents), s->indent);
         indents_pop(&s->indents);
         return tokUNINDENT;
     }
@@ -338,6 +349,8 @@ token_t scanner_read(scanner_p s)
         {
             // We set a new indent, for instance after opening paren
             indents_push(&s->indents, s->indent);
+            RECORD(SCANNER, "At pos %u return NEWLINE, indent %u -> %u",
+                   pos, s->indent, s->column);
             s->indent = s->column;
             s->setting_indent = false;
             return tokNEWLINE;
@@ -345,6 +358,8 @@ token_t scanner_read(scanner_p s)
         else if (s->column > s->indent)
         {
             // Strictly deeper indent : report
+            RECORD(SCANNER, "At pos %u return INDENT, indent %u -> %u",
+                   pos, s->indent, s->column);
             s->indent = s->column;
             indents_push(&s->indents, s->indent);
             return tokINDENT;
@@ -353,6 +368,8 @@ token_t scanner_read(scanner_p s)
         {
             // Unindenting: remove rightmost indent level
             indents_pop(&s->indents);
+            RECORD(SCANNER, "At pos %u return UNINDENT, indent %u -> %u",
+                   pos, s->indent, s->column);
             s->indent = s->column;
 
             // If we unindented, but did not go as far as the
@@ -371,13 +388,17 @@ token_t scanner_read(scanner_p s)
         else
         {
             // Exactly the same indent level as before
+            RECORD(SCANNER, "At pos %u return NEWLINE, same indent", pos);
             return tokNEWLINE;
         }
     }
 
-    // Report end of input if that's what we've got at that sage
+    // Report end of input if that's what we've got at that stage
     if (!s->reader)
+    {
+        RECORD(SCANNER, "At pos %u return EOF after spaces", pos);
 	return tokEOF;
+    }
 
     // Clear spelling from whitespaces
     text_range(&s->source, 0, 0);
@@ -562,6 +583,7 @@ token_t scanner_read(scanner_p s)
                 }
             }
             blob_set(&s->scanned.blob, (blob_p) blob);
+            RECORD(SCANNER, "At pos %u return BLOB %p", pos, blob);
             return tokBLOB;
         }
 
@@ -577,6 +599,8 @@ token_t scanner_read(scanner_p s)
                 scanner_ungetchar(s, c);
                 s->had_space_after = false;
                 natural_set(&s->scanned.natural, n);
+                RECORD(SCANNER, "At pos %u return INTEGER %p after %c%c",
+                       pos, n, c, mantissa_digit);
                 return tokINTEGER;
             }
             else
@@ -672,9 +696,11 @@ token_t scanner_read(scanner_p s)
         if (floating_point)
         {
             real_set(&s->scanned.real, real_new(pos, real_value));
+            RECORD(SCANNER, "At pos %u return REAL %p", pos, s->scanned.real);
             return tokREAL;
         }
         natural_set(&s->scanned.natural, natural_new(pos, natural_value));
+        RECORD(SCANNER, "At pos %u return INTEGER %p", pos, s->scanned.natural);
         return tokINTEGER;
     } // End of numbers
 
@@ -692,15 +718,21 @@ token_t scanner_read(scanner_p s)
         {
             if (syntax_is_block(s->syntax, s->scanned.name, &s->block_close))
             {
+                RECORD(SCANNER, "At pos %u return OPEN %p",
+                       pos, s->scanned.name);
                 return tokOPEN;
             }
             else if (s->block_close &&
                      name_compare(s->scanned.name, s->block_close) == 0)
             {
                 name_dispose(&s->block_close);
+                RECORD(SCANNER, "At pos %u return CLOSE %p",
+                       pos, s->scanned.name);
                 return tokCLOSE;
             }
         }
+        RECORD(SCANNER, "At pos %u return NAME %p",
+               pos, s->scanned.name);
         return tokNAME;
     } // End of names
 
@@ -729,12 +761,15 @@ token_t scanner_read(scanner_p s)
                     if (eos == '"')
                     {
                         text_set(&s->scanned.text, text);
+                        RECORD(SCANNER, "At pos %u return TEXT %p", pos, text);
                         text_dispose(&text);
                         return tokTEXT;
                     }
                     character_set(&s->scanned.character,
                                   scanner_character(text));
                     text_dispose(&text);
+                    RECORD(SCANNER, "At pos %u return CHARACTER %p",
+                           pos, s->scanned.character);
                     return tokCHARACTER;
                 }
 
@@ -780,6 +815,10 @@ token_t scanner_read(scanner_p s)
     scanner_ungetchar(s, c);
     s->had_space_after = isspace(c);
     name_set(&s->scanned.name, scanner_normalize(s->source));
+    RECORD(SCANNER, "At pos %u return %s %p",
+           pos,
+           tok == tokOPEN ? "OPEN" : tok == tokCLOSE ? "CLOSE" : "SYMBOL",
+           s->scanned.name);
     return tok;
 }
 
