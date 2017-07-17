@@ -196,6 +196,7 @@ static token_t parser_token(parser_p p)
             // Combine newline with any previous pending indent
             p->pending = tokNEWLINE;
             p->beginning_line = true;
+            result = tokNONE;
             continue;
 
         case tokUNINDENT:
@@ -209,6 +210,11 @@ static token_t parser_token(parser_p p)
             p->pending = tokNONE;
             p->beginning_line = true;
             continue;
+
+        case tokEOF:
+            if (pend == tokNEWLINE)
+                pend = tokNONE;
+            break;
 
         default:
             p->beginning_line = false;
@@ -341,7 +347,7 @@ static tree_p parser_block(parser_p p,
     // A + B * C, we got '*': keep "A+..." on stack
     // Odd priorities are made right-associative by turning the
     // low-bit off (with ~1) in the comparison below
-#define STACK_FLUSH()                                                   \
+#define STACK_FLUSH(target)                                             \
     do                                                                  \
     {                                                                   \
         while (pending_stack_length(stack))                             \
@@ -354,16 +360,16 @@ static tree_p parser_block(parser_p p,
                 break;                                                  \
             if (prev.opcode == NULL) /* Prefix */                       \
             {                                                           \
-                tree_set(&result,                                       \
-                         parser_pfix_new(prev.argument, result));       \
+                tree_set(&target,                                       \
+                         parser_pfix_new(prev.argument, target));       \
             }                                                           \
             else                                                        \
             {                                                           \
-                tree_set(&result, (tree_p)                              \
+                tree_set(&target, (tree_p)                              \
                          infix_new(name_position(prev.opcode),          \
                                    prev.opcode,                         \
                                    prev.argument,                       \
-                                   result));                            \
+                                   target));                            \
                 name_dispose(&prev.opcode);                             \
             }                                                           \
             tree_dispose(&prev.argument);                               \
@@ -509,7 +515,7 @@ static tree_p parser_block(parser_p p,
 
                         // Flush higher priority items on stack
                         // This is the case for X:integer!
-                        STACK_FLUSH();
+                        STACK_FLUSH(result);
 
                         tree_set(&right, (tree_p)
                                  postfix_new(pos, result, (name_p) right));
@@ -604,7 +610,7 @@ static tree_p parser_block(parser_p p,
             }
             else
             {
-                STACK_FLUSH();
+                STACK_FLUSH(left);
 
                 // Now, we want to restart with the rightmost operand
                 if (done)
@@ -635,7 +641,7 @@ static tree_p parser_block(parser_p p,
             // low bit off for the previous priority
             if (prefix_priority <= result_priority)
             {
-                STACK_FLUSH();
+                STACK_FLUSH(result);
             }
 
             // Check if new statement
@@ -671,7 +677,7 @@ static tree_p parser_block(parser_p p,
         }
 
         // Check if some stuff remains on stack
-        STACK_FLUSH();
+        STACK_FLUSH(result);
     }
 
     pending_stack_dispose(&stack);
