@@ -151,7 +151,7 @@ tree_p block_handler(tree_cmd_t cmd, tree_p tree, va_list va)
 
     case TREE_ARITY:
         // Blocks have a variable number of children
-        return (tree_p) block->length + 3;
+        return (tree_p) (block->length + 3);
 
     case TREE_CHILDREN:
         // Return pointer to first child, which is right after the block
