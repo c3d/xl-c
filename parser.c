@@ -120,6 +120,7 @@ static token_t parser_token(parser_p p)
         token_t next = scanner_read(scanner);
         p->had_space_before = scanner->had_space_before;
         p->had_space_after = scanner->had_space_after;
+        result = next;
 
         switch(next)
         {
@@ -201,19 +202,16 @@ static token_t parser_token(parser_p p)
             // Add newline if what comes next isn't an infix like 'else'
             p->pending = tokNEWLINE;
             p->beginning_line = true;
-            result = next;
             continue;
 
         case tokINDENT:
             // If we had a new-line followed by indent, ignore the new line
             p->pending = tokNONE;
             p->beginning_line = true;
-            result = next;
             continue;
 
         default:
             p->beginning_line = false;
-            result = next;
             break;
         } // switch (next)
 
