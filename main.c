@@ -37,6 +37,7 @@ RECORDER(MAIN, 32, "Main function");
 int main(int argc, char *argv[])
 {
     RECORD(MAIN, "Starting %s with %d args", argv[0], argc);
+    recorder_dump_on_common_signals(0,0);
 
 #ifndef PREFIX_PATH
 #define PREFIX_PATH  "/Users/ddd/Work/xl/"
