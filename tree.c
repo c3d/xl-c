@@ -466,7 +466,7 @@ void debugi(tree_p tree, unsigned indent, unsigned index)
 {
     if (!tree)
     {
-        printf("NULL\n");
+        printf("%*s%u: NULL\n", indent*2, "", index);
     }
     else
     {
