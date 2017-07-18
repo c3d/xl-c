@@ -444,7 +444,7 @@ static tree_p parser_block(parser_p p,
                 // Read the input with the special syntax
                 int prio = syntax_infix_priority(syntax, name);
                 scanner->syntax = child_syntax;
-                right = parser_block(p, name, child_syntax_end, prio);
+                tree_set(&right, parser_block(p, name, child_syntax_end, prio));
                 scanner->syntax = syntax;
             }
             else if (!result)
@@ -564,7 +564,7 @@ static tree_p parser_block(parser_p p,
 
             // Just like for names, parse the contents of the parentheses
             infix_priority = default_priority;
-            right = parser_block(p, opening, closing, prefix_priority);
+            tree_set(&right, parser_block(p, opening,closing, prefix_priority));
             if (tok == tokOPEN)
                 scanner_close_parenthese(scanner, old_indent);
             break;
