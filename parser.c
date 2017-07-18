@@ -478,7 +478,7 @@ static tree_p parser_block(parser_p p,
                      !p->had_space_before || p->had_space_after))
                 {
                     // If this infix matches the current block, append it
-                    if (block)
+                    if (block && block_priority == infix_priority)
                     {
                         // Check that we have consistent separators within block
                         if (!block->separator)
@@ -493,10 +493,10 @@ static tree_p parser_block(parser_p p,
                                   "This is where separator %t was found",
                                   block->separator);
                         }
-
-                        // Append to block
                         block_append_data(&block, 1, &result);
-                        tree_set(&result, (tree_p) block);
+
+                        // Restart with next item
+                        tree_set(&result, NULL);
                     }
                     else
                     {
@@ -682,13 +682,20 @@ static tree_p parser_block(parser_p p,
 
     pending_stack_dispose(&stack);
 
+    if (block)
+    {
+        if (result)
+            block_append_data(&block, 1, &result);
+        tree_set(&result, (tree_p) block);
+        block_dispose(&block);
+    }
+
     tree_dispose(&left);
     tree_dispose(&right);
     name_dispose(&infix);
     name_dispose(&name);
     name_dispose(&opening);
     name_dispose(&closing);
-    block_dispose(&block);
     pending_stack_dispose(&stack);
     syntax_dispose(&child_syntax);
     name_dispose(&child_syntax_end);
