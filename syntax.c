@@ -214,9 +214,10 @@ void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
 
     while (!done)
     {
-        name_p known_token = NULL;
-        name_p name = NULL;
-        text_p source = NULL;
+        name_p   known_token = NULL;
+        name_p   name        = NULL;
+        text_p   source      = NULL;
+        unsigned offset      = 0;
 
         token = scanner_read(scanner);
 
@@ -225,9 +226,18 @@ void syntax_read_internal(syntax_p syntax, scanner_p scanner, bool indented)
         case tokINTEGER:
             priority = natural_value(scanner->scanned.natural);
             break;
+
         case tokTEXT:
+            offset = 1;
+            /* Fall through */
+
         case tokCHARACTER:
         case tokSYMBOL:
+            text_set(&source, scanner->source);
+            name_set(&scanner->scanned.name,
+                     name_new(text_position(source),
+                              text_length(source) - 2 * offset,
+                              text_data(source) + offset));
             name_set(&known_token, scanner->scanned.name);
             /* Fall through */
 
