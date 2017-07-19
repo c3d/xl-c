@@ -368,6 +368,28 @@ static bool render_child(renderer_p r, unsigned child)
 }
 
 
+static bool render_children(renderer_p r)
+// ----------------------------------------------------------------------------
+//   Render the children for blocks in turn
+// ----------------------------------------------------------------------------
+{
+    block_p block = tree_cast(block, r->self);
+    if (block)
+    {
+        size_t length = block_length(block);
+        for (size_t i = 0; i < length; i++)
+        {
+            tree_p child_tree = block_child(block, i);
+            render(r, child_tree);
+            if (i < length && block->separator)
+                render(r, (tree_p) block->separator);
+        }
+        return true;
+    }
+    return false;
+}
+
+
 static bool render_format(renderer_p r, text_p format)
 // ----------------------------------------------------------------------------
 //   Render a given format if found
@@ -427,11 +449,7 @@ static bool render_format(renderer_p r, text_p format)
         r->need_newline = true;
         return true;
     }
-    KEYWORD("child")
-    {
-        if (render_child(r, 0))
-            return true;
-    }
+    // Convenient for infix, prefix and postfix
     KEYWORD("left")
     {
         if (render_child(r, 0))
@@ -447,26 +465,26 @@ static bool render_format(renderer_p r, text_p format)
         if (render_child(r, 2))
             return true;
     }
-    KEYWORD("block_opening")
+    // Convenient for blocks
+    KEYWORD("opening")
     {
-        block_p block = tree_cast(block, r->self);
-        if (block)
-            render(r, (tree_p) block->opening);
-        return true;
+        if (render_child(r, 0))
+            return true;
     }
-    KEYWORD("block_closing")
+    KEYWORD("closing")
     {
-        block_p block = tree_cast(block, r->self);
-        if (block)
-            render(r, (tree_p) block->closing);
-        return true;
+        if (render_child(r, 1))
+            return true;
     }
-    KEYWORD("block_separator")
+    KEYWORD("child")
     {
-        block_p block = tree_cast(block, r->self);
-        if (block)
-            render(r, (tree_p) block->separator);
-        return true;
+        if (render_children(r))
+            return true;
+    }
+    KEYWORD("children")
+    {
+        if (render_children(r))
+            return true;
     }
     KEYWORD("space")
     {
