@@ -19,27 +19,27 @@
 #  See LICENSE file for details.
 #******************************************************************************
 
-SOURCES     =			\
-	main.c			\
-	tree.c			\
-	blob.c			\
-	text.c			\
-	delimited_text.c	\
-	name.c			\
-	number.c		\
-	block.c			\
-	pfix.c			\
-	infix.c			\
-	array.c			\
-	position.c		\
-	error.c			\
-	scanner.c		\
-	syntax.c		\
-	parser.c		\
-	renderer.c		\
-	utf8.c			\
-	recorder/recorder.c	\
-	recorder/ring.c
+SOURCES     =				\
+	main.c				\
+	tree.c				\
+	blob.c				\
+	text.c				\
+	delimited_text.c		\
+	name.c				\
+	number.c			\
+	block.c				\
+	pfix.c				\
+	infix.c				\
+	array.c				\
+	position.c			\
+	error.c				\
+	scanner.c			\
+	syntax.c			\
+	parser.c			\
+	renderer.c			\
+	utf8.c				\
+	recorder/recorder.c		\
+	recorder/recorder_ring.c
 
 PRODUCTS=xl.exe
 
