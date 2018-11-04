@@ -47,10 +47,10 @@ CONFIG= struct_sigaction
 
 INCLUDES=recorder .
 
-BUILD=build/
-include $(BUILD)rules.mk
+MIQ=make-it-quick/
+include $(MIQ)rules.mk
 
-test: xl_tests
+.tests: xl_tests
 xl_tests:
 	cd tests; ./alltests
 
