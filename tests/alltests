@@ -2,18 +2,18 @@
 # *****************************************************************************
 #  alltests                                         XL - An extensible language
 # *****************************************************************************
-# 
+#
 #   File Description:
-# 
+#
 #    Script for testing the compiler
 #
 #    This file runs through every possible test. It looks for all files
 #    ending in .elfe below the current directory, and executes them.
-# 
-# 
-# 
-# 
-# 
+#
+#
+#
+#
+#
 # *****************************************************************************
 #  (C) 2017 Christophe de Dinechin <christophe@dinechin.org>
 #   This software is licensed under the GNU Library General Public License
@@ -24,7 +24,9 @@
 OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
-XL=xl
+LIBPATH="../"
+LIBOPT="-libpath $LIBPATH"
+ELFE="../xl"
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -44,33 +46,29 @@ MISSING_REFERENCE=0
 EXCLUDED=0
 TOTAL_TESTS=0
 
-if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
-if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
-    shift; RUNTIME="$1"; shift;
-fi
-if [ "$1" == "-i" ]; then
-    RUNTIME="O0"
-    shift;
-fi
-if [ "$1" == "-O1" ]; then
-    RUNTIME="O1"
-    shift;
-fi
-if [ "$1" == "-dir" -o "$1" == "-d" ]; then
-    SUBDIRS="$2"; shift; shift;
-fi
-if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
-   shift; BASELINE='*'; PATTERN="$BASELINE";
-fi
-if [ "$1" == "-update" -o "$1" == "-u" ]; then
-   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
-fi
-if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -xl)                    XL="$2"; shift ;;
+        -install)               LIBPATH="$2"; LIBOPT="-libpath $2"; shift ;;
+        -installed)             XL="xl";
+                                LIBPATH="$(xl -show_library_path)" ;
+                                LIBOPT="" ;;
+        -r|-runtime)            RUNTIME="$2"; shift ;;
+        -i|-interactive)        RUNTIME="O0" ;;
+        -O1|-O2|-O3)            RUNTIME="${1/-/}" ;;
+        -d|-dir)                SUBDIRS="$2"; shift ;;
+        -b|-baseline)           BASELINE='*'; PATTERN="$BASELINE" ;;
+        -u|-update)             UPDATE='*'"$1"'*'; PATTERN="$UPDATE"; ;;
+        *)                      PATTERN='*'"$1"'*' ;;
+    esac
+    shift
+done
 
 SUCCESS="$TESTDIR/success-"$RUNTIME".out"
 FAILURE="$TESTDIR/failure-"$RUNTIME".out"
 EXPECTED="$TESTDIR/expected-"$RUNTIME".out"
 BASEFILE="$TESTDIR/baseline-"$RUNTIME".txt"
+XL="$XL $LIBOPT"
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 
@@ -81,7 +79,6 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 echo Tests successfully run on $(date) on $HOSTNAME > "$SUCCESS"
 echo Failed tests on $(date) on $HOSTNAME > "$FAILURE"
 echo Expected test failures on $(date) on $HOSTNAME > "$EXPECTED"
-export XL
 
 # Clear the baseline if we are updating it
 if [ ! -z "$BASELINE" ]; then
@@ -153,8 +150,11 @@ do
                 UNEXPECTED_FAILURES=$(($UNEXPECTED_FAILURES+1))
             fi
         elif [ ! -z "$REF" ]; then
-            sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
-            sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            sed -e 's@'$TESTDIR'@TESTS@g'                       \
+                -e 's@'library/runtime/$RUNTIME'@RUNTIME@g'     \
+                -e 's@'$LIBPATH'@LIB/@g'                        \
+                < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+
             if diff $REF $LOG > /dev/null 2>&1; then
                 THIS=ok
             elif diff $REFR $LOG > /dev/null 2>&1; then
@@ -247,7 +247,9 @@ done
 done
 
 
+IFS=$SAVEIFS
 if [ "$ONE_FAILED" ]; then
+    cat $FAILURE
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
     echo "  Positive success           : " $POSITIVE_SUCCESS
     echo "  Negative success           : " $NEGATIVE_SUCCESS
@@ -259,6 +261,7 @@ if [ "$ONE_FAILED" ]; then
     echo "  Missing references         : " $MISSING_REFERENCE
     echo "  Missing patterns           : " $MISSING_PATTERN
     echo "  Excluded from run          : " $EXCLUDED
+    exit 1
 else
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
     echo "  Positive success           : " $POSITIVE_SUCCESS
@@ -266,4 +269,3 @@ else
     echo "  Expected test failures     : " $EXPECTED_FAILURES
     echo "  Excluded from run          : " $EXCLUDED
 fi
-IFS=$SAVEIFS
