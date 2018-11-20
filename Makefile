@@ -55,5 +55,5 @@ xl_tests:
 	cd tests; ./alltests
 
 # Get the rules.mk file if missing
-$(BUILD)rules.mk:
+$(MIQ)rules.mk:
 	git submodule update --init --recursive
