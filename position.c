@@ -19,10 +19,12 @@
 // ****************************************************************************
 
 #include "position.h"
+#include "recorder.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+RECORDER(position_warning, 16, "Warnings about position module in XL");
 
 
 // ============================================================================
@@ -155,7 +157,7 @@ bool position_info(positions_p p, srcpos_t pos, position_p result)
 }
 
 
-bool position_source(position_p posinfo, char *buffer, unsigned size)
+bool position_source(position_p posinfo, char *buffer, size_t size)
 // ----------------------------------------------------------------------------
 //   Read the source code based on the position information into target buffer
 // ----------------------------------------------------------------------------
@@ -166,7 +168,10 @@ bool position_source(position_p posinfo, char *buffer, unsigned size)
     fseek(f, posinfo->line_offset, SEEK_SET);
     if (size > posinfo->line_length + 1)
         size = posinfo->line_length + 1;
-    fread(buffer, 1, size-1, f);
+    size_t rs = fread(buffer, 1, size-1, f);
+    if (rs != size-1)
+        record(position_warning, "Reading %s offset %zu read %zu of %zu bytes",
+               posinfo->file, posinfo->line_offset, rs, size-1);
     buffer[size-1] = 0;
     fclose(f);
     return true;
