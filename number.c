@@ -63,7 +63,8 @@ tree_p number##_handler(tree_cmd_t cmd, tree_p tree, va_list va)        \
         /* Revisit: Add quote for character */                          \
         renderer = va_arg(va, renderer_p);                              \
         value = number->value;                                          \
-        size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
+        size = snprintf(buffer, sizeof(buffer),                         \
+                        printf_format, (va_type) value);                \
         render_text(renderer, size, buffer);                            \
         return tree;                                                    \
                                                                         \
@@ -114,7 +115,8 @@ tree_p based_##number##_handler(tree_cmd_t cmd,tree_p tree,va_list va)  \
         size = snprintf(buffer, sizeof(buffer), "%u#", base);           \
         render_text(renderer, size, buffer);                            \
         value = number->number.value;                                   \
-        size = snprintf(buffer, sizeof(buffer), printf_format, value);  \
+        size = snprintf(buffer, sizeof(buffer),                         \
+                        printf_format, (va_type) value);                \
         render_text(renderer, size, buffer);                            \
         return tree;                                                    \
                                                                         \
