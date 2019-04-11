@@ -43,7 +43,8 @@ SOURCES     =				\
 
 PRODUCTS=xl.exe
 
-CONFIG= struct_sigaction
+CONFIG= struct_sigaction		\
+	libpthread
 
 INCLUDES=recorder .
 
