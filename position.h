@@ -23,6 +23,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef uintptr_t srcpos_t;
 
@@ -78,6 +79,6 @@ srcpos_t position_open_source_file(positions_p p, const char *name);
 bool     position_info(positions_p p, srcpos_t pos, position_p result);
 
 // Getting the source code
-bool     position_source(position_p posinfo, char *buffer, unsigned size);
+bool     position_source(position_p posinfo, char *buffer, size_t size);
 
 #endif // POSITION_H

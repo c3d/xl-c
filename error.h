@@ -23,6 +23,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef uintptr_t         srcpos_t;
 typedef struct positions *positions_p;
